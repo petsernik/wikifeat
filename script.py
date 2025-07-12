@@ -11,7 +11,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Настройки
-TELEGRAM_BOT_TOKEN = sys.argv[1]
+TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TELEGRAM_CHANNELS = ['@wikifeat']  # Список каналов Telegram
 WIKI_URL = 'https://ru.wikipedia.org/wiki/Заглавная_страница'
 RULES_URL = 'https://t.me/wikifeat/4'

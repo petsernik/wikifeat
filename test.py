@@ -12,7 +12,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Настройки
-TELEGRAM_BOT_TOKEN = sys.argv[1]
+TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TELEGRAM_CHANNELS = ['@wikifeattest']
 WIKI_URL = 'https://ru.wikipedia.org/wiki/Заглавная_страница'
 RULES_URL = 'https://t.me/wikifeat/4'
@@ -27,7 +27,7 @@ def get_featured_article():
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    featured_block = soup.find('div', id='main-tfa')
+    featured_block = soup.find('div', id='main-tga')
     title = featured_block.find('b').text.strip()
     paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
     link_tag = featured_block.find('a', href=True)
