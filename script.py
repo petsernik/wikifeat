@@ -1,18 +1,19 @@
 import io
 import os
+import re
 import sys
 
 import requests
 import telebot
 from bs4 import BeautifulSoup
 
-# Устанавливаем stdout/stderr на UTF-8 для корректного отображения русских символов в MINGW64
+# Устанавливаем stdout/stderr на UTF-8 для корректного отображения кириллицы в MINGW64
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Настройки
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
-TELEGRAM_CHANNELS = ['@wikifeat']  # Список каналов Telegram
+TELEGRAM_CHANNELS = ['@wikifeat']
 WIKI_URL = 'https://ru.wikipedia.org/wiki/Заглавная_страница'
 RULES_URL = 'https://t.me/wikifeat/4'
 LAST_ARTICLE_FILE = 'last_article.txt'
@@ -21,7 +22,7 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
 def get_featured_article():
-    """Получает заголовок и полный текст текущей избранной статьи."""
+    """Получает статью и собирает все лицензии изображения"""
     response = requests.get(WIKI_URL)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -32,20 +33,36 @@ def get_featured_article():
     link_tag = featured_block.find('a', href=True)
     article_link = f"https://ru.wikipedia.org{link_tag['href']}"
     img_tag = featured_block.find('img')
-    if img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href'):
-        thumbnail_url = 'https:' + img_tag['src']
-        image_page_link = 'https://ru.wikipedia.org' + img_tag.parent['href']
-        image_response = requests.get(image_page_link)
-        image_soup = BeautifulSoup(image_response.text, 'html.parser')
-        file_link_tag = image_soup.find('a', class_='internal')
-        full_image_url = (
-            'https:' + file_link_tag['href']
-            if file_link_tag.has_attr('href') else thumbnail_url
-        )
-    else:
-        full_image_url = None
 
-    return title, paragraphs, full_image_url, article_link
+    full_image_url = None
+    image_licenses = []  # Список всех лицензий
+    image_page_url = None
+
+    if img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href'):
+        image_page_url = 'https://ru.wikipedia.org' + img_tag.parent['href']
+        image_response = requests.get(image_page_url)
+        image_soup = BeautifulSoup(image_response.text, 'html.parser')
+
+        # URL полного изображения
+        file_link_tag = image_soup.find('a', class_='internal')
+        if file_link_tag and file_link_tag.has_attr('href'):
+            full_image_url = 'https:' + file_link_tag['href']
+
+        # Собираем ВСЕ лицензии изображения со страницы
+        license_tags = image_soup.find_all(class_=re.compile('licensetpl_short'))
+        for tag in license_tags:
+            license_text = tag.get_text(strip=True)
+
+            # Очистка текста
+            clean_text = re.sub(r'\s+', ' ', license_text).strip()
+
+            # Сохраняем как текст
+            image_licenses.append(clean_text)
+
+    # унифицируем названия лицензий на случай повторов
+    image_licenses = list(set(image_licenses))
+
+    return title, paragraphs, full_image_url, article_link, image_licenses, image_page_url
 
 
 def trim_paragraphs(paragraphs, max_length=900):
@@ -62,7 +79,7 @@ def trim_paragraphs(paragraphs, max_length=900):
 
     if len(trimmed_paragraphs) == 0 and len(paragraphs) > 0:
         text = paragraphs[0]
-        return text[:max_length].rsplit('.', 1)[0]+'.'
+        return text[:max_length].rsplit('.', 1)[0] + '.'
 
     return '\n\n'.join(trimmed_paragraphs)
 
@@ -81,14 +98,23 @@ def write_last_article(title):
         file.write(title)
 
 
-def send_to_telegram(title, paragraphs, image_url, link):
-    """Отправляет краткое сообщение с избранной статьёй в Telegram-каналы."""
+def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url):
+    """Отправка сообщения в канал"""
     trimmed_text = trim_paragraphs(paragraphs)
     caption = (
         f"<b>{title}</b>\n\n{trimmed_text}\n\n"
         f"<a href='{link}'>Читать статью</a>\n\n"
-        f"<a href='{RULES_URL}'>Лицензия на текст: CC BY-SA</a>"
+        f"<a href='{RULES_URL}'>Лицензия на текст: CC BY-SA</a>\n"
     )
+
+    # Добавляем все лицензии изображения
+    if image_licenses:
+        if "Public domain" in image_licenses or "PDM" in image_licenses:
+            caption += f"<a href='{image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
+        elif len(image_licenses) == 1:
+            caption += f"<a href='{image_page_url}'>Лицензия на изображение: {image_licenses[0]}</a>"
+        else:
+            caption += f"<a href='{image_page_url}'>Лицензии на изображение: " + ", ".join(image_licenses) + "</a>"
 
     for channel in TELEGRAM_CHANNELS:
         if image_url:
@@ -107,16 +133,15 @@ def send_to_telegram(title, paragraphs, image_url, link):
 
 
 def main():
-    """Выполняет проверку один раз и завершает работу."""
-    title, paragraphs, image_url, link = get_featured_article()
+    title, paragraphs, image_url, link, image_licenses, image_page_url = get_featured_article()
     last_title = read_last_article()
 
     if title != last_title:
-        print(f'Избрана новая статья: {title}.')
-        send_to_telegram(title, paragraphs, image_url, link)
+        print(f'Избрана новая статья: {title}')
+        send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url)
         write_last_article(title)
     else:
-        print('Избранная статья не изменилась.')
+        print('Избранная статья не изменилась')
 
 
 if __name__ == '__main__':

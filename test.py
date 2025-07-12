@@ -7,14 +7,14 @@ import requests
 import telebot
 from bs4 import BeautifulSoup
 
-# Устанавливаем stdout/stderr на UTF-8
+# Устанавливаем stdout/stderr на UTF-8 для корректного отображения кириллицы в MINGW64
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Настройки
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TELEGRAM_CHANNELS = ['@wikifeattest']
-WIKI_URL = 'https://ru.wikipedia.org/wiki/Заглавная_страница'
+WIKI_URL = 'https://ru.wikipedia.org/wiki/Число_зверя_(роман)'
 RULES_URL = 'https://t.me/wikifeat/4'
 LAST_ARTICLE_FILE = 'last_article_test.txt'
 
@@ -27,7 +27,7 @@ def get_featured_article():
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    featured_block = soup.find('div', id='main-tga')
+    featured_block = soup.find('div', id='mw-content-text' if 1 else 'main-tfa')
     title = featured_block.find('b').text.strip()
     paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
     link_tag = featured_block.find('a', href=True)
@@ -39,7 +39,6 @@ def get_featured_article():
     image_page_url = None
 
     if img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href'):
-        thumbnail_url = 'https:' + img_tag['src']
         image_page_url = 'https://ru.wikipedia.org' + img_tag.parent['href']
         image_response = requests.get(image_page_url)
         image_soup = BeautifulSoup(image_response.text, 'html.parser')
@@ -49,36 +48,30 @@ def get_featured_article():
         if file_link_tag and file_link_tag.has_attr('href'):
             full_image_url = 'https:' + file_link_tag['href']
 
-        # Собираем ВСЕ лицензии со страницы
+        # Собираем ВСЕ лицензии изображения со страницы
         license_tags = image_soup.find_all(class_=re.compile('licensetpl_short'))
         for tag in license_tags:
             license_text = tag.get_text(strip=True)
-            license_link = tag.find('a', href=True)
-            license_url = license_link['href'] if license_link else None
 
             # Очистка текста
             clean_text = re.sub(r'\s+', ' ', license_text).strip()
 
-            # Нормализация URL
-            if license_url:
-                if license_url.startswith('//'):
-                    license_url = 'https:' + license_url
-                elif license_url.startswith('/'):
-                    license_url = 'https://commons.wikimedia.org' + license_url
+            # Сохраняем как текст
+            image_licenses.append(clean_text)
 
-            # Сохраняем как (текст, url)
-            image_licenses.append((clean_text, license_url))
+    # унифицируем названия лицензий на случай повторов
+    image_licenses = list(set(image_licenses))
 
     return title, paragraphs, full_image_url, article_link, image_licenses, image_page_url
 
 
-def trim_paragraphs(paragraphs, max_length=800):
-    """Оптимизация текста для Telegram"""
+def trim_paragraphs(paragraphs, max_length=900):
+    """Выделяет абзацы с суммарной длиной <= max_length."""
     trimmed_paragraphs = []
     total_length = 0
 
     for paragraph in paragraphs:
-        paragraph_length = len(paragraph) + 2  # +2 для переносов
+        paragraph_length = len(paragraph) + 2  # +2 для двух переносов строк
         if total_length + paragraph_length > max_length:
             break
         trimmed_paragraphs.append(paragraph)
@@ -92,68 +85,63 @@ def trim_paragraphs(paragraphs, max_length=800):
 
 
 def read_last_article():
+    """Читает заголовок последней опубликованной статьи из файла."""
     if not os.path.exists(LAST_ARTICLE_FILE):
         return ''
-    with open(LAST_ARTICLE_FILE, 'r', encoding='utf-8') as f:
-        return f.read().strip()
+    with open(LAST_ARTICLE_FILE, 'r', encoding='utf-8') as file:
+        return file.read().strip()
 
 
 def write_last_article(title):
-    with open(LAST_ARTICLE_FILE, 'w', encoding='utf-8') as f:
-        f.write(title)
+    """Записывает заголовок текущей избранной статьи в файл."""
+    with open(LAST_ARTICLE_FILE, 'w', encoding='utf-8') as file:
+        file.write(title)
 
 
 def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url):
-    """Отправляет сообщение со всеми лицензиями изображения"""
+    """Отправка сообщения в канал"""
     trimmed_text = trim_paragraphs(paragraphs)
     caption = (
         f"<b>{title}</b>\n\n{trimmed_text}\n\n"
         f"<a href='{link}'>Читать статью</a>\n\n"
-        f"<a href='{RULES_URL}'>Лицензия на текст: CC BY-SA</a>"
+        f"<a href='{RULES_URL}'>Лицензия на текст: CC BY-SA</a>\n"
     )
 
     # Добавляем все лицензии изображения
     if image_licenses:
-        caption += "\n\n<b>Лицензии изображения:</b>"
-        for i, (text, url) in enumerate(image_licenses, 1):
-            if url:
-                caption += f"\n{i}. <a href='{url}'>{text}</a>"
-            else:
-                caption += f"\n{i}. {text}"
-
-    # Всегда добавляем ссылку на страницу изображения
-    if image_page_url:
-        caption += f"\n\n<a href='{image_page_url}'>Страница изображения со всеми лицензиями</a>"
+        if "Public domain" in image_licenses or "PDM" in image_licenses:
+            caption += f"<a href='{image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
+        elif len(image_licenses) == 1:
+            caption += f"<a href='{image_page_url}'>Лицензия на изображение: {image_licenses[0]}</a>"
+        else:
+            caption += f"<a href='{image_page_url}'>Лицензии на изображение: " + ", ".join(image_licenses) + "</a>"
 
     for channel in TELEGRAM_CHANNELS:
         if image_url:
-            try:
-                bot.send_photo(
-                    channel,
-                    image_url,
-                    caption=caption,
-                    parse_mode='HTML'
-                )
-            except Exception as e:
-                print(f"Ошибка отправки фото: {e}")
-                bot.send_message(channel, caption, parse_mode='HTML')
+            bot.send_photo(
+                channel,
+                image_url,
+                caption=caption,
+                parse_mode='HTML'
+            )
         else:
-            bot.send_message(channel, caption, parse_mode='HTML')
+            bot.send_message(
+                channel,
+                caption,
+                parse_mode='HTML'
+            )
 
 
 def main():
-    try:
-        title, paragraphs, image_url, link, image_licenses, image_page_url = get_featured_article()
-        last_title = read_last_article()
+    title, paragraphs, image_url, link, image_licenses, image_page_url = get_featured_article()
+    last_title = read_last_article()
 
-        if title != last_title:
-            print(f'Новая статья: {title}')
-            send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url)
-            write_last_article(title)
-        else:
-            print('Статья не изменилась')
-    except Exception as e:
-        print(f"Ошибка: {e}")
+    if title != last_title:
+        print(f'Избрана новая статья: {title}')
+        send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url)
+        write_last_article(title)
+    else:
+        print('Избранная статья не изменилась')
 
 
 if __name__ == '__main__':
