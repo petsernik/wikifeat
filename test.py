@@ -27,10 +27,10 @@ def get_featured_article():
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    featured_block = soup.find('div', id='mw-content-text' if 1 else 'main-tfa')
-    title = featured_block.find('b').text.strip()
+    featured_block = soup.find('div', id='mw-content-text' if 0 else 'main-tfa')
     paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
     link_tag = featured_block.find('a', href=True)
+    title = link_tag['title']
     article_link = f"https://ru.wikipedia.org{link_tag['href']}"
     img_tag = featured_block.find('img')
 
