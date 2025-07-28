@@ -34,7 +34,7 @@ def get_featured_article():
     article_link = f"https://ru.wikipedia.org{link_tag['href']}"
     img_tag = featured_block.find('img')
 
-    full_image_url = None
+    image_url = None
     image_licenses = []  # Список всех лицензий
     image_page_url = None
 
@@ -43,10 +43,24 @@ def get_featured_article():
         image_response = requests.get(image_page_url)
         image_soup = BeautifulSoup(image_response.text, 'html.parser')
 
-        # URL полного изображения
-        file_link_tag = image_soup.find('a', class_='internal')
-        if file_link_tag and file_link_tag.has_attr('href'):
-            full_image_url = 'https:' + file_link_tag['href']
+        # Ищем изображения в других разрешениях
+        # Причина: через telebot нельзя прикрепить изображение > 10 Mb
+        width_max, height_max = 2500, 2500
+        resolutions_span = image_soup.find('span', class_='mw-filepage-other-resolutions')
+        if resolutions_span:
+            links = resolutions_span.find_all('a', href=True)
+            for link in links[::-1]:
+                match = re.search(r'(\d+)\s*[×x]\s*(\d+)', link.text)
+                if match:
+                    width, height = int(match.group(1)), int(match.group(2))
+                    if width <= width_max and height <= height_max:
+                        image_url = 'https:' + link['href']
+                        break
+        else:
+            # Старый способ: URL полного изображения
+            file_link_tag = image_soup.find('a', class_='internal')
+            if file_link_tag and file_link_tag.has_attr('href'):
+                image_url = 'https:' + file_link_tag['href']
 
         # Собираем ВСЕ лицензии изображения со страницы
         license_tags = image_soup.find_all(class_=re.compile('licensetpl_short'))
@@ -62,11 +76,12 @@ def get_featured_article():
     # унифицируем названия лицензий на случай повторов
     image_licenses = list(set(image_licenses))
 
-    return title, paragraphs, full_image_url, article_link, image_licenses, image_page_url
+    return title, paragraphs, image_url, article_link, image_licenses, image_page_url
 
 
 def trim_paragraphs(paragraphs, max_length=900):
     """Выделяет абзацы с суммарной длиной <= max_length."""
+    # Причина: подпись к изображению не может превышать 1024 символов (при использовании ботов)
     trimmed_paragraphs = []
     total_length = 0
 
@@ -137,9 +152,9 @@ def main():
     last_title = read_last_article()
 
     if title != last_title:
-        print(f'Избрана новая статья: {title}')
         send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url)
         write_last_article(title)
+        print(f'Избрана новая статья: {title}')
     else:
         print('Избранная статья не изменилась')
 
