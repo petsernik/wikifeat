@@ -81,14 +81,17 @@ def get_featured_article():
 
 def trim_paragraphs(paragraphs, max_length=900):
     """Выделяет абзацы с суммарной длиной <= max_length."""
-    # Причина использования: длина подписи к изображению не может превышать 1024 символов (при использовании ботов)
+    # Причина использования: длина подписи к изображению не может превышать 1024 символов (когда отправляет бот-аккаунт)
     total_length = 0
     text = ''
     for paragraph in paragraphs:
         paragraph_length = len(paragraph) + 2  # +2 для двух переносов строк
         text += paragraph
         if total_length + paragraph_length > max_length:
-            return text[:max_length].rsplit('.', 1)[0] + '.'
+            t = str(text[:max_length].rsplit('.', 1)[0])
+            while len(t) > 1 and t[-2].isspace() and t[-1].upper() == t[-1]:
+                t = str(t.rsplit('.', 1)[0])  # убираем однобуквенные сокращения -- заглавные буквы
+            return t + '.'
 
         text += '\n\n'
         total_length += paragraph_length
