@@ -66,10 +66,27 @@ def get_featured_article(wiki_url):
     return title, paragraphs, image_url, article_link, image_licenses, image_page_url
 
 
-def trim_paragraphs(paragraphs, max_length=900):
+def remove_brackets(text: str) -> str:
+    """Убирает из текста примечания, написанные в квадратных скобках"""
+    res = []
+    depth = 0
+    for ch in text:
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            if depth > 0:
+                depth -= 1
+        else:
+            if depth == 0:
+                res.append(ch)
+    return re.sub(r"\s+", " ", "".join(res)).strip()
+
+def get_trimmed_text(paragraphs, max_length=900):
+    """Возвращает текст с длиной не более max_length"""
     # Обрезаем текст по предложениям, чтобы не превысить лимит
     total_length, text = 0, ''
     for paragraph in paragraphs:
+        paragraph = remove_brackets(paragraph)
         paragraph_length = len(paragraph) + 2
         text += paragraph
         if total_length + paragraph_length > max_length:
@@ -99,7 +116,7 @@ def write_last_article(title, last_article_file):
 
 def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url,
                      telegram_channels, rules_url):
-    trimmed_text = trim_paragraphs(paragraphs)
+    trimmed_text = get_trimmed_text(paragraphs)
     caption = (
         f"<b>{title}</b>\n\n{trimmed_text}\n\n"
         f"<a href='{link}'>Читать статью</a>\n\n"
@@ -124,7 +141,7 @@ def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_p
 
 
 def main(config: Config):
-    # Основной цикл: получаем статью и публикуем, если новая
+    # Получаем статью и публикуем, если новая
     title, paragraphs, image_url, link, image_licenses, image_page_url = get_featured_article(config.WIKI_URL)
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
 
