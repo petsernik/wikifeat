@@ -15,10 +15,15 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
+def get_request(url: str):
+    # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
+    headers = {'User-Agent': 'wikifeat/0.0 (https://github.com/petsernik/wikifeat)'}
+    return requests.get(url, headers=headers)
+
 
 def get_featured_article(wiki_url):
     # Загружаем HTML
-    response = requests.get(wiki_url)
+    response = get_request(wiki_url)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -35,7 +40,7 @@ def get_featured_article(wiki_url):
     # Если нашли картинку → идём на её страницу
     if img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href'):
         image_page_url = 'https://ru.wikipedia.org' + img_tag.parent['href']
-        image_response = requests.get(image_page_url)
+        image_response = get_request(image_page_url)
         image_soup = BeautifulSoup(image_response.text, 'html.parser')
 
         # Подбираем разрешение не больше 2500×2500
