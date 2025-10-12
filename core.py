@@ -77,6 +77,11 @@ def get_image_parameters(url, img_tag):
     return image_url, image_licenses, image_page_url
 
 
+def clean_soup(soup):
+    for el in soup.select('[style*="display:none"], .noprint, [aria-hidden="true"], [hidden]'):
+        el.decompose()
+    return soup
+
 def get_featured_article(wiki_url):
     # Загружаем HTML
     response = get_request(wiki_url)
@@ -84,7 +89,7 @@ def get_featured_article(wiki_url):
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
                         f'Response body: {response.content}')
     response.encoding = 'utf-8'
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
     # Определяем блок с избранной статьёй
     featured_block = soup.find('div', id='main-tfa' if '/Заглавная_страница' in wiki_url else 'mw-content-text')
