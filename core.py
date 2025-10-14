@@ -16,19 +16,22 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
+
 def get_request(url: str):
     # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
     headers = {'User-Agent': 'wikifeat/0.0 (https://github.com/petsernik/wikifeat)'}
     return requests.get(url, headers=headers)
+
 
 def get_url_by_tag(url, tag):
     netloc = urlparse(url).netloc
     if netloc == 'web.archive.org':
         # Ищем последнюю архивную версию вместо определённой даты, например:
         # https://web.archive.org/web/20240619223918/... ---> https://web.archive.org/web/2/...
-        return netloc, 'https://' + netloc + '/web/2/' + tag['href'].split('/',3)[3]
+        return netloc, 'https://' + netloc + '/web/2/' + tag['href'].split('/', 3)[3]
     else:
         return netloc, 'https://' + netloc + tag['href']
+
 
 def get_image_parameters(url, img_tag):
     init = None, [], None
@@ -72,7 +75,7 @@ def get_image_parameters(url, img_tag):
     image_licenses = list(set(image_licenses))
     if netloc == 'web.archive.org' and image_url:
         lst = image_url.split('https://')
-        lst[1] = lst[1][:-1]+'if_/'
+        lst[1] = lst[1][:-1] + 'if_/'
         image_url = 'https://'.join(lst)
     return image_url, image_licenses, image_page_url
 
@@ -81,6 +84,7 @@ def clean_soup(soup):
     for el in soup.select('[style*="display:none"], .noprint, [aria-hidden="true"], [hidden]'):
         el.decompose()
     return soup
+
 
 def get_featured_article(wiki_url):
     # Загружаем HTML
@@ -117,6 +121,7 @@ def remove_brackets(text: str) -> str:
             if depth == 0:
                 res.append(ch)
     return re.sub(r"\s+", " ", "".join(res)).strip()
+
 
 def get_trimmed_text(paragraphs, max_length=900):
     """Возвращает текст с длиной не более max_length"""
@@ -169,11 +174,20 @@ def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_p
         else:
             caption += f"<a href='{image_page_url}'>Лицензии на изображение: " + ", ".join(image_licenses) + "</a>"
 
-    # Отправляем в каждый канал
-    for channel in telegram_channels:
-        if image_url:
-            bot.send_photo(channel, image_url, caption=caption, parse_mode='HTML')
+    # Переходим по всем редиректам (если есть)
+    if image_url:
+        image_r = requests.get(image_url, allow_redirects=True)
+        if image_r.status_code == 200:
+            image_url = image_r.url
         else:
+            image_url = None
+
+    # Отправляем в каждый канал
+    if image_url:
+        for channel in telegram_channels:
+            bot.send_photo(channel, image_url, caption=caption, parse_mode='HTML')
+    else:
+        for channel in telegram_channels:
             bot.send_message(channel, caption, parse_mode='HTML')
 
 
