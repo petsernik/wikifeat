@@ -20,7 +20,7 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 def get_request(url: str):
     # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
     headers = {'User-Agent': 'wikifeat/0.0 (https://github.com/petsernik/wikifeat)'}
-    return requests.get(url, headers=headers)
+    return requests.get(url, headers=headers, allow_redirects=True)
 
 
 def get_url_by_tag(url, tag):
@@ -176,7 +176,7 @@ def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_p
 
     # Переходим по всем редиректам (если есть)
     if image_url:
-        image_r = requests.get(image_url, allow_redirects=True)
+        image_r = get_request(image_url)
         if image_r.status_code == 200:
             image_url = image_r.url
         else:
