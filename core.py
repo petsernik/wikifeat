@@ -120,7 +120,7 @@ def remove_brackets(text: str) -> str:
         else:
             if depth == 0:
                 res.append(ch)
-    return re.sub(r"\s+", " ", "".join(res)).strip()
+    return " ".join("".join(res).split())
 
 
 def get_trimmed_text(paragraphs, max_length=900):
