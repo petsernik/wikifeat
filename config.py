@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
+User_Agent = 'wikifeat/0.1 (https://github.com/petsernik/wikifeat)'
+
 
 @dataclass
 class Config:
