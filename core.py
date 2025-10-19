@@ -164,7 +164,7 @@ def remove_brackets(text: str) -> str:
     return " ".join("".join(res).split())
 
 
-def get_trimmed_text(paragraphs, max_length=750):
+def get_trimmed_text(paragraphs, max_length):
     total_length, text = 0, ''
     for paragraph in paragraphs:
         paragraph = remove_brackets(paragraph)
@@ -175,10 +175,10 @@ def get_trimmed_text(paragraphs, max_length=750):
             # режем дальше, если обрезали на аббревиатуре/инициале
             while len(t) > 1 and t[-2].isspace() and t[-1].upper() == t[-1]:
                 t = str(t.rsplit('.', 1)[0])
-            return t + '.'
+            return t + '.\n\n'
         text += '\n\n'
         total_length += paragraph_length
-    return text[:-2]
+    return text
 
 
 def read_last_article(last_article_file):
@@ -195,31 +195,42 @@ def write_last_article(title, last_article_file):
         file.write(title)
 
 
+def visible_length(html_text):
+    """Возвращает длину видимого текста (без HTML-тегов)."""
+    return len(BeautifulSoup(html_text, "html.parser").get_text())
+
+
 def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url,
                      author_html, telegram_channels, rules_url):
-    trimmed_text = get_trimmed_text(paragraphs)
-    caption = (
-        f"<b>{title}</b>\n\n{trimmed_text}\n\n"
+    caption_beginning = f"<b>{title}</b>\n\n"
+    caption_end = (
         f"<a href='{link}'>Читать статью</a>\n\n"
         f"<a href='{rules_url}'>Лицензия на текст: CC BY-SA</a>\n"
     )
 
-    # Лицензия на изображение
-    if image_url and image_licenses:
+    # Дополняем caption_end, вычисляем максимальную длину под остальной текст
+    if image_url:
+        # Добавляем лицензии
         if "Public domain" in image_licenses or "PDM" in image_licenses:
-            caption += f"<a href='{image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
+            caption_end += f"<a href='{image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
         elif "CC0" in image_licenses:
-            caption += f"<a href='{image_page_url}'>Лицензия на изображение: CC0</a>"
-        elif len(image_licenses) == 1:
-            caption += f"<a href='{image_page_url}'>Лицензия на изображение: {image_licenses[0]}</a>"
+            caption_end += f"<a href='{image_page_url}'>Лицензия на изображение: CC0</a>"
         else:
-            caption += f"<a href='{image_page_url}'>Лицензии на изображение: " + ", ".join(image_licenses) + "</a>"
+            if len(image_licenses) == 1:
+                caption_end += f"<a href='{image_page_url}'>Лицензия на изображение: {image_licenses[0]}</a>"
+            else:
+                caption_end += (f"<a href='{image_page_url}'>Лицензии на изображение: "
+                                + ", ".join(image_licenses) + "</a>")
+            # Добавляем автора
+            if author_html:
+                caption_end += f" (автор: {author_html})"
 
-        # Добавляем автора (готовый HTML)
-        if author_html:
-            caption += f" (автор: {author_html})"
+        max_text_len = 1024 - visible_length(caption_beginning) - visible_length(caption_end)
+    else:
+        max_text_len = 4096 - visible_length(caption_beginning) - visible_length(caption_end)
 
-    # Отправляем в каждый канал
+    # Формируем подпись и отправляем сообщение в каждый канал
+    caption = caption_beginning + get_trimmed_text(paragraphs, max_text_len) + caption_end
     if image_url:
         for channel in telegram_channels:
             bot.send_photo(channel, image_url, caption=caption, parse_mode='HTML')
