@@ -136,11 +136,21 @@ def get_featured_article(wiki_url):
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
     # Определяем блок с избранной статьёй
-    featured_block = soup.find('div', id='main-tfa' if '/Заглавная_страница' in wiki_url else 'mw-content-text')
-    paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
-    link_tag = featured_block.find('a', href=True)
-    title = link_tag['title'] if '/Заглавная_страница' in wiki_url else wiki_url.split('/')[-1]
-    _, article_link = get_url_by_tag(wiki_url, link_tag)
+    if '/Заглавная_страница' in wiki_url or '/Main_Page' in wiki_url:
+        if '/Заглавная_страница' in wiki_url:
+            featured_block = soup.find('div', id='main-tfa')
+        else:
+            featured_block = soup.find('div', id='mp-tfa')
+        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+        link_tag = featured_block.find('a', href=True)
+        title = link_tag['title']
+        _, article_link = get_url_by_tag(wiki_url, link_tag)
+    else:
+        # Или воспринимаем произвольную статью как избранную
+        featured_block = soup.find('div', id='mw-content-text')
+        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+        title = soup.find('h1', id='firstHeading').get_text().strip()
+        article_link = wiki_url
     img_tag = featured_block.find('img')
 
     image_url, image_licenses, image_page_url, author_html = get_image_parameters(wiki_url, img_tag)
