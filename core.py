@@ -19,7 +19,7 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 def get_request(url: str):
     # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
-    headers = {'User-Agent': 'wikifeat/0.0 (https://github.com/petsernik/wikifeat)'}
+    headers = {'User-Agent': 'wikifeat/0.1 (https://github.com/petsernik/wikifeat)'}
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
@@ -34,13 +34,14 @@ def get_url_by_tag(url, tag):
 
 
 def get_image_parameters(url, img_tag):
-    init = None, [], None
+    init = None, [], None, None
     if not (img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href')):
         return init
-    image_url, image_licenses, image_page_url = init
+
+    image_url, image_licenses, image_page_url, author_html = init
     netloc, image_page_url = get_url_by_tag(url, img_tag.parent)
     response = get_request(image_page_url)
-    if response.status_code == 404 or response.status_code == 429:
+    if response.status_code in (404, 429):
         return init
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get image page: {response.status_code}\n'
@@ -61,7 +62,6 @@ def get_image_parameters(url, img_tag):
                     image_url = 'https:' + link['href']
                     break
     else:
-        # fallback: берём оригинал
         file_link_tag = image_soup.find('a', class_='internal')
         if file_link_tag and file_link_tag.has_attr('href'):
             image_url = 'https:' + file_link_tag['href']
@@ -73,11 +73,51 @@ def get_image_parameters(url, img_tag):
         image_licenses.append(clean_text)
 
     image_licenses = list(set(image_licenses))
+
     if netloc == 'web.archive.org' and image_url:
         lst = image_url.split('https://')
         lst[1] = lst[1][:-1] + 'if_/'
         image_url = 'https://'.join(lst)
-    return image_url, image_licenses, image_page_url
+
+    # Получаем автора (в виде HTML, совместимого с Telegram Bot API)
+    author_html = None
+    author_cell = image_soup.find(attrs={'id': 'fileinfotpl_aut'})
+    if author_cell:
+        value_cell = author_cell.find_next(['td', 'th'])
+        if value_cell:
+            parts = []
+            for elem in value_cell.children:
+                if isinstance(elem, str):
+                    text = elem.strip()
+                    if text:
+                        parts.append(text)
+                elif elem.name == 'a' and elem.has_attr('href'):
+                    href = elem['href']
+                    if href.startswith('//'):
+                        href = 'https:' + href
+                    parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
+            author_html = ' '.join(parts).strip()
+
+    # Получаем источник, если автор неизвестен
+    if not author_html or 'неизвест' in author_html.lower():
+        source_cell = image_soup.find(attrs={'id': 'fileinfotpl_src'})
+        if source_cell:
+            value_cell = source_cell.find_next(['td', 'th'])
+            if value_cell:
+                parts = []
+                for elem in value_cell.children:
+                    if isinstance(elem, str):
+                        text = elem.strip()
+                        if text:
+                            parts.append(text)
+                    elif elem.name == 'a' and elem.has_attr('href'):
+                        href = elem['href']
+                        if href.startswith('//'):
+                            href = 'https:' + href
+                        parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
+                author_html = ' '.join(parts).strip() or 'неизвестен'
+
+    return image_url, image_licenses, image_page_url, author_html
 
 
 def clean_soup(soup):
@@ -102,9 +142,10 @@ def get_featured_article(wiki_url):
     title = link_tag['title'] if '/Заглавная_страница' in wiki_url else wiki_url.split('/')[-1]
     _, article_link = get_url_by_tag(wiki_url, link_tag)
     img_tag = featured_block.find('img')
-    image_url, image_licenses, image_page_url = get_image_parameters(wiki_url, img_tag)
 
-    return title, paragraphs, image_url, article_link, image_licenses, image_page_url
+    image_url, image_licenses, image_page_url, author_html = get_image_parameters(wiki_url, img_tag)
+
+    return title, paragraphs, image_url, article_link, image_licenses, image_page_url, author_html
 
 
 def remove_brackets(text: str) -> str:
@@ -123,9 +164,7 @@ def remove_brackets(text: str) -> str:
     return " ".join("".join(res).split())
 
 
-def get_trimmed_text(paragraphs, max_length=900):
-    """Возвращает текст с длиной не более max_length"""
-    # Обрезаем текст по предложениям, чтобы не превысить лимит
+def get_trimmed_text(paragraphs, max_length=750):
     total_length, text = 0, ''
     for paragraph in paragraphs:
         paragraph = remove_brackets(paragraph)
@@ -157,7 +196,7 @@ def write_last_article(title, last_article_file):
 
 
 def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url,
-                     telegram_channels, rules_url):
+                     author_html, telegram_channels, rules_url):
     trimmed_text = get_trimmed_text(paragraphs)
     caption = (
         f"<b>{title}</b>\n\n{trimmed_text}\n\n"
@@ -165,22 +204,20 @@ def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_p
         f"<a href='{rules_url}'>Лицензия на текст: CC BY-SA</a>\n"
     )
 
-    # Добавляем лицензию на картинку
-    if image_licenses:
+    # Лицензия на изображение
+    if image_url and image_licenses:
         if "Public domain" in image_licenses or "PDM" in image_licenses:
             caption += f"<a href='{image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
+        elif "CC0" in image_licenses:
+            caption += f"<a href='{image_page_url}'>Лицензия на изображение: CC0</a>"
         elif len(image_licenses) == 1:
             caption += f"<a href='{image_page_url}'>Лицензия на изображение: {image_licenses[0]}</a>"
         else:
             caption += f"<a href='{image_page_url}'>Лицензии на изображение: " + ", ".join(image_licenses) + "</a>"
 
-    # Переходим по всем редиректам (если есть)
-    if image_url:
-        image_r = get_request(image_url)
-        if image_r.status_code == 200:
-            image_url = image_r.url
-        else:
-            image_url = None
+        # Добавляем автора (готовый HTML)
+        if author_html:
+            caption += f" (автор: {author_html})"
 
     # Отправляем в каждый канал
     if image_url:
@@ -192,13 +229,13 @@ def send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_p
 
 
 def main(config: Config):
-    # Получаем статью и публикуем, если новая
-    title, paragraphs, image_url, link, image_licenses, image_page_url = get_featured_article(config.WIKI_URL)
+    title, paragraphs, image_url, link, image_licenses, image_page_url, author_html = get_featured_article(
+        config.WIKI_URL)
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
 
     if title != last_title:
         send_to_telegram(title, paragraphs, image_url, link, image_licenses, image_page_url,
-                         config.TELEGRAM_CHANNELS, config.RULES_URL)
+                         author_html, config.TELEGRAM_CHANNELS, config.RULES_URL)
         write_last_article(title, config.LAST_ARTICLE_FILE)
         print(f'Избрана новая статья: {title}')
     else:
