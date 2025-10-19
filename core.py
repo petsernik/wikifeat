@@ -72,7 +72,7 @@ def get_image_parameters(url, img_tag):
         clean_text = re.sub(r'\s+', ' ', tag.get_text(strip=True)).strip()
         image_licenses.append(clean_text)
 
-    image_licenses = list(set(image_licenses))
+    image_licenses = sorted(set(image_licenses))
 
     if netloc == 'web.archive.org' and image_url:
         lst = image_url.split('https://')
@@ -171,7 +171,7 @@ def get_trimmed_text(paragraphs, max_length):
         paragraph_length = len(paragraph) + 2
         text += paragraph
         if total_length + paragraph_length > max_length:
-            t = str(text[:max_length].rsplit('.', 1)[0])
+            t = str(text[:max_length-2].rsplit('.', 1)[0])
             # режем дальше, если обрезали на аббревиатуре/инициале
             while len(t) > 1 and t[-2].isspace() and t[-1].upper() == t[-1]:
                 t = str(t.rsplit('.', 1)[0])
