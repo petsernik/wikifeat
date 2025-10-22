@@ -2,6 +2,8 @@ import io
 import os
 import re
 import sys
+from typing import Optional
+
 import telebot
 from bs4 import BeautifulSoup
 from config import Config
@@ -112,7 +114,7 @@ def get_image_parameters(url, img_tag):
     return image_url, image_licenses, image_page_url, author_html
 
 
-def get_featured_article(wiki_url: str) -> FeaturedArticle:
+def get_featured_article(last_title: str, wiki_url: str) -> Optional[FeaturedArticle]:
     response = get_request(wiki_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
@@ -123,16 +125,20 @@ def get_featured_article(wiki_url: str) -> FeaturedArticle:
     # Определяем блок с избранной статьёй
     if '/Заглавная_страница' in wiki_url or '/Main_Page' in wiki_url:
         featured_block = soup.find('div', id='main-tfa' if '/Заглавная_страница' in wiki_url else 'mp-tfa')
-        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
         link_tag = featured_block.find('a', href=True)
         title = link_tag['title']
+        if title == last_title:
+            return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
+        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
     else:
         # Или воспринимаем произвольную статью как избранную
         featured_block = soup.find('div', id='mw-content-text')
-        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
         title = soup.find('h1', id='firstHeading').get_text().strip()
+        if title == last_title:
+            return None
         article_link = wiki_url
+        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
 
     img_tag = featured_block.find('img')
     image_url, image_licenses, image_page_url, author_html = get_image_parameters(wiki_url, img_tag)
@@ -205,10 +211,10 @@ def send_to_telegram(article: FeaturedArticle, telegram_channels, rules_url):
 
 
 def main(config: Config):
-    article = get_featured_article(config.WIKI_URL)
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
+    article = get_featured_article(last_title, config.WIKI_URL)
 
-    if article.title != last_title:
+    if article:
         send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL)
         write_last_article(article.title, config.LAST_ARTICLE_FILE)
         print(f'Избрана новая статья: {article.title}')
