@@ -3,11 +3,16 @@ from typing import List, Optional
 
 
 @dataclass
-class FeaturedArticle:
+class Image:
+    url: str
+    licenses: List[str]
+    page_url: str
+    author_html: str
+
+
+@dataclass
+class Article:
     title: str
     paragraphs: List[str]
-    image_url: Optional[str]
     link: str
-    image_licenses: List[str]
-    image_page_url: Optional[str]
-    author_html: Optional[str]
+    image: Optional[Image]

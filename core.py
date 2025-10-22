@@ -7,7 +7,7 @@ from typing import Optional
 import telebot
 from bs4 import BeautifulSoup
 from config import Config
-from models import FeaturedArticle
+from models import Article, Image
 from utils import (
     get_request,
     get_url_by_tag,
@@ -27,16 +27,14 @@ TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
-def get_image_parameters(url, img_tag):
-    init = None, [], None, None
+def get_image_by_src(url, img_tag) -> Optional[Image]:
     if not (img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href')):
-        return init
+        return None
 
-    image_url, image_licenses, image_page_url, author_html = init
     netloc, image_page_url = get_url_by_tag(url, img_tag.parent)
     response = get_request(image_page_url)
     if response.status_code in (404, 429):
-        return init
+        return None
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get image page: {response.status_code}\n'
                         f'Response body: {response.content}')
@@ -44,6 +42,7 @@ def get_image_parameters(url, img_tag):
     image_soup = BeautifulSoup(response.text, 'html.parser')
 
     # Подбираем разрешение не больше 2500×2500
+    image_url = None
     width_max, height_max = 2500, 2500
     resolutions_span = image_soup.find('span', class_='mw-filepage-other-resolutions')
     if resolutions_span:
@@ -59,12 +58,17 @@ def get_image_parameters(url, img_tag):
         file_link_tag = image_soup.find('a', class_='internal')
         if file_link_tag and file_link_tag.has_attr('href'):
             image_url = 'https:' + file_link_tag['href']
+    if not image_url:
+        return None
 
     # Собираем лицензии
+    image_licenses = []
     license_tags = image_soup.find_all(class_=re.compile('licensetpl_short'))
     for tag in license_tags:
         clean_text = re.sub(r'\s+', ' ', tag.get_text(strip=True)).strip()
         image_licenses.append(clean_text)
+    if not image_licenses:
+        return None
 
     image_licenses = sorted(set(image_licenses))
 
@@ -74,7 +78,7 @@ def get_image_parameters(url, img_tag):
         image_url = 'https://'.join(lst)
 
     # Получаем автора (в виде HTML, совместимого с Telegram Bot API)
-    author_html = None
+    image_author_html = None
     author_cell = image_soup.find(attrs={'id': 'fileinfotpl_aut'})
     if author_cell:
         value_cell = author_cell.find_next(['td', 'th'])
@@ -90,10 +94,10 @@ def get_image_parameters(url, img_tag):
                     if href.startswith('//'):
                         href = 'https:' + href
                     parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
-            author_html = ' '.join(parts).strip()
+            image_author_html = ' '.join(parts).strip()
 
     # Получаем источник, если автор неизвестен
-    if not author_html or 'неизвест' in author_html.lower():
+    if not image_author_html or 'неизвест' in image_author_html.lower():
         source_cell = image_soup.find(attrs={'id': 'fileinfotpl_src'})
         if source_cell:
             value_cell = source_cell.find_next(['td', 'th'])
@@ -109,12 +113,19 @@ def get_image_parameters(url, img_tag):
                         if href.startswith('//'):
                             href = 'https:' + href
                         parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
-                author_html = ' '.join(parts).strip() or 'неизвестен'
+                image_author_html = ' '.join(parts).strip() or 'неизвестен'
+    if not image_author_html:
+        return None
 
-    return image_url, image_licenses, image_page_url, author_html
+    return Image(
+        url=image_url,
+        licenses=image_licenses,
+        page_url=image_page_url,
+        author_html=image_author_html,
+    )
 
 
-def get_featured_article(last_title: str, wiki_url: str) -> Optional[FeaturedArticle]:
+def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
     response = get_request(wiki_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
@@ -141,16 +152,13 @@ def get_featured_article(last_title: str, wiki_url: str) -> Optional[FeaturedArt
         paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
 
     img_tag = featured_block.find('img')
-    image_url, image_licenses, image_page_url, author_html = get_image_parameters(wiki_url, img_tag)
+    image = get_image_by_src(wiki_url, img_tag)
 
-    return FeaturedArticle(
+    return Article(
         title=title,
         paragraphs=paragraphs,
-        image_url=image_url,
         link=article_link,
-        image_licenses=image_licenses,
-        image_page_url=image_page_url,
-        author_html=author_html
+        image=image,
     )
 
 
@@ -171,7 +179,7 @@ def get_trimmed_text(paragraphs, max_length):
     return text
 
 
-def send_to_telegram(article: FeaturedArticle, telegram_channels, rules_url):
+def send_to_telegram(article: Article, telegram_channels, rules_url):
     caption_beginning = f"<b>{article.title}</b>\n\n"
     caption_end = (
         f"<a href='{article.link}'>Читать статью</a>\n\n"
@@ -179,22 +187,22 @@ def send_to_telegram(article: FeaturedArticle, telegram_channels, rules_url):
     )
 
     # Дополняем caption_end, вычисляем максимальную длину под остальной текст
-    if article.image_url:
+    if article.image:
         # Добавляем лицензии
-        if "Public domain" in article.image_licenses or "PDM" in article.image_licenses:
-            caption_end += f"<a href='{article.image_page_url}'>Лицензия на изображение: Общественное достояние</a>"
-        elif "CC0" in article.image_licenses:
-            caption_end += f"<a href='{article.image_page_url}'>Лицензия на изображение: CC0</a>"
+        if "Public domain" in article.image.licenses or "PDM" in article.image.licenses:
+            caption_end += f"<a href='{article.image.page_url}'>Лицензия на изображение: Общественное достояние</a>"
+        elif "CC0" in article.image.licenses:
+            caption_end += f"<a href='{article.image.page_url}'>Лицензия на изображение: CC0</a>"
         else:
-            if len(article.image_licenses) == 1:
-                caption_end += f"<a href='{article.image_page_url}'>Лицензия на изображение: {article.image_licenses[0]}</a>"
+            if len(article.image.licenses) == 1:
+                caption_end += (f"<a href='{article.image.page_url}'>Лицензия на изображение: "
+                                f"{article.image.licenses[0]}</a>")
             else:
-                caption_end += (f"<a href='{article.image_page_url}'>Лицензии на изображение: "
-                                + ", ".join(article.image_licenses) + "</a>")
+                caption_end += (f"<a href='{article.image.page_url}'>Лицензии на изображение: "
+                                + ", ".join(article.image.licenses) + "</a>")
 
             # Добавляем автора
-            if article.author_html:
-                caption_end += f" (автор: {article.author_html})"
+            caption_end += f" (автор: {article.image.author_html})"
 
         max_text_len = 1024 - visible_length(caption_beginning) - visible_length(caption_end)
     else:
@@ -202,9 +210,9 @@ def send_to_telegram(article: FeaturedArticle, telegram_channels, rules_url):
 
     # Формируем подпись и отправляем сообщение в каждый канал
     caption = caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
-    if article.image_url:
+    if article.image:
         for channel in telegram_channels:
-            bot.send_photo(channel, article.image_url, caption=caption, parse_mode='HTML')
+            bot.send_photo(channel, article.image.url, caption=caption, parse_mode='HTML')
     else:
         for channel in telegram_channels:
             bot.send_message(channel, caption, parse_mode='HTML')
