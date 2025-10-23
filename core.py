@@ -15,7 +15,8 @@ from utils import (
     remove_brackets,
     read_last_article,
     write_last_article,
-    visible_length
+    visible_length,
+    extract_from_next,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -72,48 +73,22 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
 
     image_licenses = sorted(set(image_licenses))
 
-    if netloc == 'web.archive.org' and image_url:
+    if netloc == 'web.archive.org':
         lst = image_url.split('https://')
         lst[1] = lst[1][:-1] + 'if_/'
-        image_url = 'https://'.join(lst)
+        req = get_request('https://'.join(lst))
+        if req.status_code != 200:
+            return None
+        image_url = req.url
 
     # Получаем автора (в виде HTML, совместимого с Telegram Bot API)
-    image_author_html = None
-    author_cell = image_soup.find(attrs={'id': 'fileinfotpl_aut'})
-    if author_cell:
-        value_cell = author_cell.find_next(['td', 'th'])
-        if value_cell:
-            parts = []
-            for elem in value_cell.children:
-                if isinstance(elem, str):
-                    text = elem.strip()
-                    if text:
-                        parts.append(text)
-                elif elem.name == 'a' and elem.has_attr('href'):
-                    href = elem['href']
-                    if href.startswith('//'):
-                        href = 'https:' + href
-                    parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
-            image_author_html = ' '.join(parts).strip()
+    image_author_html = extract_from_next(image_soup, 'fileinfotpl_aut')
 
     # Получаем источник, если автор неизвестен
-    if not image_author_html or 'неизвест' in image_author_html.lower():
-        source_cell = image_soup.find(attrs={'id': 'fileinfotpl_src'})
-        if source_cell:
-            value_cell = source_cell.find_next(['td', 'th'])
-            if value_cell:
-                parts = []
-                for elem in value_cell.children:
-                    if isinstance(elem, str):
-                        text = elem.strip()
-                        if text:
-                            parts.append(text)
-                    elif elem.name == 'a' and elem.has_attr('href'):
-                        href = elem['href']
-                        if href.startswith('//'):
-                            href = 'https:' + href
-                        parts.append(f"<a href='{href}'>{elem.get_text(strip=True)}</a>")
-                image_author_html = ' '.join(parts).strip() or 'неизвестен'
+    if not image_author_html or any(word in image_author_html.lower() for word in ('неизвест', 'аноним', 'unknown')):
+        source_html = extract_from_next(image_soup, 'fileinfotpl_src')
+        if source_html:
+            image_author_html = 'неизвестен, источник: ' + source_html
     if not image_author_html:
         return None
 
@@ -188,21 +163,30 @@ def send_to_telegram(article: Article, telegram_channels, rules_url):
 
     # Дополняем caption_end, вычисляем максимальную длину под остальной текст
     if article.image:
-        # Добавляем лицензии
-        if "Public domain" in article.image.licenses or "PDM" in article.image.licenses:
-            caption_end += f"<a href='{article.image.page_url}'>Лицензия на изображение: Общественное достояние</a>"
-        elif "CC0" in article.image.licenses:
-            caption_end += f"<a href='{article.image.page_url}'>Лицензия на изображение: CC0</a>"
-        else:
-            if len(article.image.licenses) == 1:
-                caption_end += (f"<a href='{article.image.page_url}'>Лицензия на изображение: "
-                                f"{article.image.licenses[0]}</a>")
-            else:
-                caption_end += (f"<a href='{article.image.page_url}'>Лицензии на изображение: "
-                                + ", ".join(article.image.licenses) + "</a>")
+        # Специальные лицензии
+        special_licenses = {
+            "Public domain": "Общественное достояние",
+            "PDM": "Общественное достояние",
+            "CC0": "CC0"
+        }
 
-            # Добавляем автора
-            caption_end += f" (автор: {article.image.author_html})"
+        # Проверяем, есть ли специальные лицензии
+        special_license = None
+        for key, text in special_licenses.items():
+            if key in article.image.licenses:
+                special_license = text
+                break
+
+        # Добавляем лицензии
+        caption_end += f"<a href='{article.image.page_url}'>"
+        if special_license or len(article.image.licenses) == 1:
+            caption_end += f"Лицензия на изображение: {special_license or article.image.licenses[0]}"
+        else:
+            caption_end += f"Лицензии на изображение: {", ".join(article.image.licenses)}"
+        caption_end += "</a>"
+
+        # Добавляем автора
+        caption_end += f" (автор: {article.image.author_html})"
 
         max_text_len = 1024 - visible_length(caption_beginning) - visible_length(caption_end)
     else:

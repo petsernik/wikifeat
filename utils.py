@@ -1,6 +1,6 @@
 import os
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from urllib.parse import urlparse
 
 from config import User_Agent
@@ -22,10 +22,81 @@ def get_url_by_tag(url, tag):
         return netloc, 'https://' + netloc + tag['href']
 
 
+def is_hidden(tag):
+    """
+    Проверяет, скрыт ли тег.
+    - через style display:none
+    - через aria-hidden
+    - через class noprint или hidden
+    """
+    if not isinstance(tag, Tag):
+        return False
+    if tag.has_attr('style') and 'display:none' in tag['style'].replace(" ", "").lower():
+        return True
+    if tag.has_attr('aria-hidden') and tag['aria-hidden'].lower() == 'true':
+        return True
+    if tag.has_attr('hidden'):
+        return True
+    classes = tag.get('class', '')
+    return any(c.lower() in ['noprint', 'hidden'] for c in classes)
+
+
 def clean_soup(soup):
-    for el in soup.select('[style*="display:none"], .noprint, [aria-hidden="true"], [hidden]'):
-        el.decompose()
+    for el in soup:
+        if is_hidden(el):
+            el.decompose()
     return soup
+
+
+def extract_info(node, parts):
+    for elem in node.children:
+        if isinstance(elem, str):
+            text = elem.strip()
+            if text:
+                parts.append(text)
+        elif is_hidden(elem):
+            continue
+        elif elem.name == 'a' and elem.has_attr('href'):
+            href = elem['href']
+            if href.startswith('//'):
+                href = 'https:' + href
+            text = elem.get_text(strip=True)
+            if text:
+                parts.append(f"<a href='{href}'>{text}</a>")
+        elif 'vcard' in (elem.get('class') or []):
+            # Особая обработка для vcard — достаём <span class="fn" id="creator">
+            creator = elem.find('span', class_='fn', id='creator')
+            if creator:
+                link = creator.find('a', href=True)
+                if link:
+                    href = link['href']
+                    if href.startswith('//'):
+                        href = 'https:' + href
+                    text = link.get_text(strip=True)
+                    if text:
+                        parts.append(f"<a href='{href}'>{text}</a>")
+                else:
+                    text = creator.get_text(strip=True)
+                    if text:
+                        parts.append(text)
+        else:
+            # Рекурсивно обходим другие теги
+            extract_info(elem, parts)
+
+
+def extract_from_next(soup, attrs_id):
+    cell = soup.find(attrs={'id': attrs_id})
+    if not cell:
+        return None
+
+    # Находим ближайшую ячейку с содержимым и очищаем её
+    next_cell = cell.find_next(['td', 'th'])
+    if not next_cell:
+        return None
+
+    parts = []
+    extract_info(next_cell, parts)
+    return ' '.join(parts).strip() or None
 
 
 def remove_brackets(text: str) -> str:
