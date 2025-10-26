@@ -84,19 +84,21 @@ def extract_info(node, parts):
             extract_info(elem, parts)
 
 
-def extract_from_next(soup, attrs_id):
-    cell = soup.find(attrs={'id': attrs_id})
-    if not cell:
-        return None
+def extract_attrs_id_info(soup, attrs_id):
+    results = []
 
-    # Находим ближайшую ячейку с содержимым и очищаем её
-    next_cell = cell.find_next(['td', 'th'])
-    if not next_cell:
-        return None
+    # Получаем все элементы с нужным id
+    cells = soup.find_all(attrs={'id': attrs_id})
+    for cell in cells:
+        next_cell = cell.find_next(['td', 'th'])
+        if next_cell:
+            parts = []
+            extract_info(next_cell, parts)
+            value = ' '.join(parts).strip()
+            if value:
+                results.append(value)
 
-    parts = []
-    extract_info(next_cell, parts)
-    return ' '.join(parts).strip() or None
+    return '; '.join(results) if results else None
 
 
 def remove_brackets(text: str) -> str:

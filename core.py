@@ -16,7 +16,7 @@ from utils import (
     read_last_article,
     write_last_article,
     visible_length,
-    extract_from_next,
+    extract_attrs_id_info,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -80,13 +80,22 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
         image_url = req.url
 
     # Получаем автора (в виде HTML, совместимого с Telegram Bot API)
-    image_author_html = extract_from_next(image_soup, 'fileinfotpl_aut')
+    image_author_html = extract_attrs_id_info(image_soup, 'fileinfotpl_aut')
+    if image_author_html:
+        if ';' in image_author_html:
+            image_author_html = 'авторы: ' + image_author_html
+        else:
+            image_author_html = 'автор: ' + image_author_html
 
     # Получаем источник, если автор неизвестен
     if not image_author_html or any(word in image_author_html.lower() for word in ('неизвест', 'аноним', 'unknown')):
-        source_html = extract_from_next(image_soup, 'fileinfotpl_src')
+        source_html = extract_attrs_id_info(image_soup, 'fileinfotpl_src')
         if source_html:
-            image_author_html = 'неизвестен, источник: ' + source_html
+            if ';' in source_html:
+                source_html = 'источники: ' + source_html
+            else:
+                source_html = 'источник: ' + source_html
+            image_author_html = 'автор неизвестен, ' + source_html
     if not image_author_html:
         return None
 
@@ -184,7 +193,7 @@ def send_to_telegram(article: Article, telegram_channels, rules_url):
         caption_end += "</a>"
 
         # Добавляем автора
-        caption_end += f" (автор: {article.image.author_html})"
+        caption_end += f" ({article.image.author_html})"
 
         max_text_len = 1024 - visible_length(caption_beginning) - visible_length(caption_end)
     else:
