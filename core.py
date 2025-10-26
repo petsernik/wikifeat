@@ -1,12 +1,12 @@
 import io
-import os
 import re
 import sys
 from typing import Optional
 
 import telebot
 from bs4 import BeautifulSoup
-from config import Config
+
+from config import Config, TELEGRAM_BOT_TOKEN
 from models import Article, Image
 from utils import (
     get_request,
@@ -23,8 +23,6 @@ from utils import (
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-# получаем токен из переменной окружения
-TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
