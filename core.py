@@ -47,9 +47,10 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     if resolutions_span:
         links = resolutions_span.find_all('a', href=True)
         for link in links[::-1]:
-            match = re.search(r'(\d+)\s*[×x]\s*(\d+)', link.text)
+            match = re.search(r'([\d,]+)\s*[×xX]\s*([\d,]+)', link.text)
             if match:
-                width, height = int(match.group(1)), int(match.group(2))
+                width = int(match.group(1).replace(',', '').replace(' ', ''))
+                height = int(match.group(2).replace(',', '').replace(' ', ''))
                 if width <= width_max and height <= height_max:
                     image_url = 'https:' + link['href']
                     break
