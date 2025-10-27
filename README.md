@@ -31,7 +31,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 ## Первый запуск
 Сперва создайте аккаунт телеграм-бота с помощью https://t.me/BotFather.
 
-Пусть Ваш никнейм на GitHub это ```NickName``` и Вы сделали форк, тогда
+Пусть Ваш никнейм на GitHub это ```NickName``` и Вы сделали форк моего проекта, тогда:
 1. Скачайте проект из своего форка или выполните клонирование:
     ```bash
     git clone https://github.com/NickName/wikifeat.git
@@ -40,8 +40,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
     ```bash
     pip install -r requirements.txt
     ```
-3. Замените значение переменной ```User-Agent``` в файле ```config.py``` указав собственное название проекта и ссылку.  
-Например, если Ваш никнейм на GitHub это ```NickName``` и Вы сделали форк, то как вариант Вы можете указать:
+3. Замените значение переменной ```User-Agent``` в файле ```config.py``` как указано выше:
     ```python
    User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
@@ -65,9 +64,9 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
     ```bash
     python script.py
     ```
-После этого в Вашем канале должен появиться пост в соответствии с выбранной ссылкой. Название заголовка этой статьи 
-сохраняется в файл, чтобы не публиковать одно и то же подряд при повторном запуске. Конечно можно было бы использовать 
-базу данных вместо файла, но для моих нужд в этом пока нет необходимости.
+После этого в Вашем канале должен появиться пост в соответствии с выбранной ссылкой. Название заголовка опубликованной 
+статьи сохраняется в файл, чтобы не публиковать одно и то же подряд при повторном запуске. Конечно можно было бы 
+использовать базу данных вместо файла, но для моих нужд в этом пока нет необходимости.
 
 ## Автоматизация запусков
 
@@ -181,7 +180,7 @@ Assuming your GitHub username is `NickName` and you forked the project:
     ```bash
     python script.py
     ```
-After this, a post corresponding to the selected link should appear in your channel. 
+After this, a post with article corresponding to the selected link should appear in your channel. 
 The title of this article is saved in a file .txt to prevent the same post from being published repeatedly when the 
 script is run again. Of course, it would be possible to use database instead of a file, but for my needs this is not 
 yet necessary.
