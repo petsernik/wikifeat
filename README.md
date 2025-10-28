@@ -124,11 +124,11 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 
 My telegram channel with featured articles (at Russian) is https://t.me/wikifeat and I use a telegram bot for it.
 
-Below is how to use it for your channel and what other features are available. 
+Below is how to use my code for your channel and what other features are available. 
 
 ## Usage Terms
-In addition to the MIT License, please replace the `User-Agent` value in `config.py` when first porting, copying, 
-cloning, or forking this project. Specify your project name and link.  
+In addition to the MIT License Terms, please replace the `User-Agent` value in `config.py` when first porting, 
+copying, cloning, or forking this project. Specify your project name and link.  
 
 E.g. if your GitHub username is `NickName` and you forked the project:
 ```python
