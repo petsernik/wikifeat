@@ -2,6 +2,7 @@ import io
 import re
 import sys
 from typing import Optional
+from urllib.parse import urlparse
 
 import telebot
 from bs4 import BeautifulSoup
@@ -117,16 +118,30 @@ def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
     # Определяем блок с избранной статьёй
-    if '/Заглавная_страница' in wiki_url or '/Main_Page' in wiki_url:
-        featured_block = soup.find('div', id='main-tfa' if '/Заглавная_страница' in wiki_url else 'mp-tfa')
+    path = urlparse(wiki_url).path
+    if path.endswith('/wiki/Заглавная_страница'):
+        featured_block = soup.find('div', id='main-tfa')
         link_tag = featured_block.find('a', href=True)
         title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        _, article_link = get_url_by_tag(wiki_url, link_tag)
+        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+    elif path.endswith('/wiki/Main_Page'):
+        featured_block = soup.find('div', id='mp-tfa')
+        # На английской главной ищем ссылку на полную статью по фразе "Full article..." или "more..."
+        link_tag = featured_block.find(
+            'a', string=lambda s: s and s.strip().replace('\xa0', ' ') in ('Full article...', 'more...')
+        )
+        if not link_tag:
+            raise Exception("Unexpected parse case")
+        title = link_tag.get('title')
         if title == last_title:
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
         paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
     else:
-        # Или воспринимаем произвольную статью как избранную
+        # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
         featured_block = soup.find('div', id='mw-content-text')
         title = soup.find('h1', id='firstHeading').get_text().strip()
         if title == last_title:
