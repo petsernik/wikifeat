@@ -1,4 +1,4 @@
-# Бот для публикации избранных статей Википедии в телеграм-канале
+# Бот для автоматической публикации избранных статей Википедии в телеграм-канале
 [Go to english description](#English-description)  
 
 Ссылка на канал с публикациями: https://t.me/wikifeat.
@@ -122,7 +122,8 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    
 # English description
 
-My telegram channel with featured articles (at Russian) is https://t.me/wikifeat and I use a telegram bot for it.
+My telegram channel with featured articles (at Russian) is https://t.me/wikifeat and I use a Telegram bot to 
+automate publications.
 
 Below is how to use my code for your channel and what other features are available. 
 
