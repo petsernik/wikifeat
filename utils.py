@@ -1,7 +1,10 @@
+import html
 import os
-import requests
-from bs4 import BeautifulSoup, Tag
+import re
 from urllib.parse import urlparse
+
+import requests
+from bs4 import Tag
 
 from config import User_Agent
 
@@ -131,6 +134,7 @@ def write_last_article(title, last_article_file):
         file.write(title)
 
 
-def visible_length(html_text):
-    """Возвращает длину видимого текста (без HTML-тегов)."""
-    return len(BeautifulSoup(html_text, "html.parser").get_text())
+def visible_length(html_text: str) -> int:
+    text = re.sub(r'<[^>]+>', '', html_text)
+    text = html.unescape(text)
+    return len(text)

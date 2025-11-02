@@ -5,7 +5,7 @@ if __name__ == '__main__':
     cfg = Config(
         TELEGRAM_CHANNELS=['@wikifeattest'],
         RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://en.wikipedia.org/wiki/Main_Page',
+        WIKI_URL='https://web.archive.org/web/20251102160222/https://ru.wikipedia.org/wiki/Заглавная_страница',
         LAST_ARTICLE_FILE='last_article_test.txt',
     )
     main(cfg)
