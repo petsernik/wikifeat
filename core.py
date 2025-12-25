@@ -120,17 +120,18 @@ def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
     # Определяем блок с избранной статьёй
     path = urlparse(wiki_url).path
     if path.endswith('/wiki/Заглавная_страница'):
-        featured_block = soup.find('div', id='main-tfa')
-        link_tag = featured_block.find('a', href=True)
+        main_block = soup.find('div', id='main-tfa')
+        link_tag = main_block.find('a', href=True)
         title = link_tag['title']
-        if not title or title == last_title:
+        block_type = main_block.find('div', class_='main-box-subtitle').get_text().strip()
+        if not title or title == last_title or block_type != 'Избранная статья':
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
-        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
     elif path.endswith('/wiki/Main_Page'):
-        featured_block = soup.find('div', id='mp-tfa')
+        main_block = soup.find('div', id='mp-tfa')
         # На английской главной ищем ссылку на полную статью по фразе "Full article..." или "more..."
-        link_tag = featured_block.find(
+        link_tag = main_block.find(
             'a', string=lambda s: s and s.strip().replace('\xa0', ' ') in ('Full article...', 'more...')
         )
         if not link_tag:
@@ -139,17 +140,17 @@ def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
         if title == last_title:
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
-        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
     else:
         # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
-        featured_block = soup.find('div', id='mw-content-text')
+        main_block = soup.find('div', id='mw-content-text')
         title = soup.find('h1', id='firstHeading').get_text().strip()
         if title == last_title:
             return None
         article_link = wiki_url
-        paragraphs = [p.get_text().strip() for p in featured_block.find_all('p')]
+        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
 
-    img_tag = featured_block.find('img')
+    img_tag = main_block.find('img')
     image = get_image_by_src(wiki_url, img_tag)
 
     return Article(

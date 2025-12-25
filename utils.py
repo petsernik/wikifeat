@@ -4,7 +4,7 @@ import re
 from urllib.parse import urlparse
 
 import requests
-from bs4 import Tag
+from bs4 import Tag, BeautifulSoup
 
 from config import User_Agent
 
@@ -44,7 +44,7 @@ def is_hidden(tag):
     return any(c.lower() in ['noprint', 'hidden'] for c in classes)
 
 
-def clean_soup(soup):
+def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     for el in soup:
         if is_hidden(el):
             el.decompose()
