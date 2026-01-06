@@ -109,7 +109,7 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     )
 
 
-def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
+def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Optional[Article]:
     response = get_request(wiki_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
@@ -150,8 +150,10 @@ def get_featured_article(last_title: str, wiki_url: str) -> Optional[Article]:
         article_link = wiki_url
         paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
 
-    img_tag = main_block.find('img')
-    image = get_image_by_src(wiki_url, img_tag)
+    image = None
+    if with_image:
+        img_tag = main_block.find('img')
+        image = get_image_by_src(wiki_url, img_tag)
 
     return Article(
         title=title,
@@ -226,9 +228,9 @@ def send_to_telegram(article: Article, telegram_channels, rules_url):
             bot.send_message(channel, caption, parse_mode='HTML')
 
 
-def main(config: Config):
+def main(config: Config, with_image=True):
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
-    article = get_featured_article(last_title, config.WIKI_URL)
+    article = get_featured_article(last_title, config.WIKI_URL, with_image=with_image)
 
     if article:
         send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL)
