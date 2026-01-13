@@ -73,6 +73,10 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
 
     image_licenses = sorted(set(image_licenses))
 
+    # Игнорируем несвободные материалы
+    if any(fair_use in image_licenses for fair_use in ["Добросовестное использование", "Fair use"]):
+        return None
+
     if netloc == 'web.archive.org':
         lst = image_url.split('https://')
         lst[1] = lst[1][:-1] + 'if_/'
