@@ -94,7 +94,8 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
             image_author_html = 'автор: ' + image_author_html
 
     # Получаем источник, если автор неизвестен
-    if not image_author_html or any(word in image_author_html.lower() for word in ('неизвест', 'аноним', 'unknown')):
+    if not image_author_html or any(word in image_author_html.lower() for word in ('не указан', 'неизвест',
+                                                                                   'аноним', 'unknown')):
         source_html = extract_attrs_id_info(image_soup, 'fileinfotpl_src')
         if source_html:
             if ';' in source_html:
