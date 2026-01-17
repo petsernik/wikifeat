@@ -18,6 +18,7 @@ from utils import (
     write_last_article,
     visible_length,
     extract_attrs_id_info,
+    replace_links_with_numbers,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -98,6 +99,7 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
                                                                                    'аноним', 'unknown')):
         source_html = extract_attrs_id_info(image_soup, 'fileinfotpl_src')
         if source_html:
+            source_html = replace_links_with_numbers(source_html)
             if ';' in source_html:
                 source_html = 'источники: ' + source_html
             else:

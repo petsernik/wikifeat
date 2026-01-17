@@ -1,6 +1,7 @@
 import html
 import os
 import re
+import string
 from urllib.parse import urlparse
 
 import requests
@@ -118,6 +119,39 @@ def remove_brackets(text: str) -> str:
             if depth == 0:
                 res.append(ch)
     return " ".join("".join(res).split())
+
+
+def replace_links_with_numbers(html: str) -> str:
+    """Заменяет ссылки в тексте (но не в тегах) на числа"""
+    counter = 0
+    links_map = {}
+    depth = 0
+    prefix = 'https://'
+    len_prefix = len(prefix)
+    parts = []
+    stop_chars = string.whitespace + '\"()[]{}<>,.!?'
+
+    prev, i = 0, 0
+    while i < len(html):
+        if html[i] == "<":
+            depth += 1
+        elif html[i] == ">":
+            depth -= 1
+        if depth == 0 and html[i:i + len_prefix] == prefix:
+            parts.append(html[prev:i])
+            end = i + len_prefix
+            while end < len(html) and html[end] not in stop_chars:
+                end += 1
+            link = html[i:end]
+            if link not in links_map:
+                counter += 1
+                links_map[link] = f'[{counter}]'
+            parts.append(links_map[link])
+            prev, i = end, end
+        else:
+            i += 1
+    parts.append(html[prev:len(html)])
+    return ''.join(parts)
 
 
 def read_last_article(last_article_file):
