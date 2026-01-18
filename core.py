@@ -17,7 +17,7 @@ from utils import (
     read_last_article,
     write_last_article,
     visible_length,
-    extract_attrs_id_info,
+    extract_attrs_info,
     replace_links_with_numbers,
 )
 
@@ -78,6 +78,11 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     if any(fair_use in image_licenses for fair_use in ["Добросовестное использование", "Fair use"]):
         return None
 
+    # Я верю, что 4.0 - последняя версия, а если и нет, то есть же и ссылка, перейдя по ней будет понятно какая здесь
+    if "CC BY-SA 4.0" in image_licenses:
+        image_licenses.remove("CC BY-SA 4.0")
+        image_licenses.append("CC BY-SA")
+
     if netloc == 'web.archive.org':
         lst = image_url.split('https://')
         lst[1] = lst[1][:-1] + 'if_/'
@@ -86,25 +91,51 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
             return None
         image_url = req.url
 
-    # Получаем автора (в виде HTML, совместимого с Telegram Bot API)
-    image_author_html = extract_attrs_id_info(image_soup, 'fileinfotpl_aut')
+    # Сначала пробуем найти licensetpl_attr (требуемую атрибуцию)
+    image_author_html = extract_attrs_info(
+        image_soup,
+        find_kwargs={'class': 'licensetpl_attr'},
+        next_tags=None
+    )
+
+    # Очень специальный случай... (считаю что лучше бы так сразу и было указано в разделе licensetpl_attr)
+    if "Diego Delso" in image_author_html:
+        image_author_html = image_author_html.replace(
+            "Diego Delso",
+            "Diego Delso, <a href=\"https://delso.photo\">delso.photo</a>",
+        )
+
+    # Если не нашли, то получаем автора из соответствующего поля
+    if not image_author_html:
+        image_author_html = extract_attrs_info(
+            image_soup,
+            find_kwargs={'id': 'fileinfotpl_aut'},
+            next_tags=('td', 'th')
+        )
+
     if image_author_html:
-        if ';' in image_author_html:
-            image_author_html = 'авторы: ' + image_author_html
+        if ',' in image_author_html or ';' in image_author_html:
+            image_author_html = 'автор(ы): ' + image_author_html
         else:
             image_author_html = 'автор: ' + image_author_html
 
     # Получаем источник, если автор неизвестен
     if not image_author_html or any(word in image_author_html.lower() for word in ('не указан', 'неизвест',
                                                                                    'аноним', 'unknown')):
-        source_html = extract_attrs_id_info(image_soup, 'fileinfotpl_src')
-        if source_html:
-            source_html = replace_links_with_numbers(source_html)
-            if ';' in source_html:
-                source_html = 'источники: ' + source_html
-            else:
-                source_html = 'источник: ' + source_html
-            image_author_html = 'автор неизвестен, ' + source_html
+        source_html = extract_attrs_info(
+            image_soup,
+            find_kwargs={'id': 'fileinfotpl_src'},
+            next_tags=('td', 'th')
+        )
+        if not source_html:
+            return None
+
+        source_html = replace_links_with_numbers(source_html)
+        if ',' in source_html or ';' in source_html:
+            source_html = 'источники: ' + source_html
+        else:
+            source_html = 'источник: ' + source_html
+        image_author_html = 'автор неизвестен, ' + source_html
     if not image_author_html:
         return None
 

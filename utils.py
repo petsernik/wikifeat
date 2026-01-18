@@ -88,19 +88,61 @@ def extract_info(node, parts):
             extract_info(elem, parts)
 
 
-def extract_attrs_id_info(soup, attrs_id):
+def extract_attrs_info(soup, *, find_kwargs, next_tags):
+    """
+    Универсальное извлечение текстовой/HTML-информации из таблиц MediaWiki по произвольным HTML-атрибутам.
+
+    Функция:
+    1. Ищет все элементы, подходящие под ``find_kwargs``.
+    2. Выбирает ячейки следующие непосредственно после каждого из next_tags в элементах (если None, то выбираются все ячейки).
+    3. Извлекает содержимое выбранных ячеек через ``extract_info``.
+    4. Объединяет результаты через ``; ``.
+
+    :param soup:
+        Объект BeautifulSoup с разобранным HTML-документом.
+    :type soup: bs4.BeautifulSoup
+
+    :param find_kwargs:
+        Критерии поиска для ``BeautifulSoup.find_all``.
+        Передаются как словарь атрибутов HTML.
+
+        Примеры:
+            {'id': 'fileinfotpl_aut'}
+            {'class': 'licensetpl_attr'}
+            {'data-source': 'author'}
+
+    :type find_kwargs: dict[str, str]
+
+    :param next_tags:
+        Имена HTML-тегов, которые считаются ячейкой со значением в следующей за ними ячейке,
+        используются в ``find_next``.
+
+    :type next_tags: tuple[str, ...] | None
+
+    :return:
+        Объединённая строка с найденными значениями или ``None``,
+        если данные не найдены.
+    :rtype: str | None
+    """
     results = []
 
-    # Получаем все элементы с нужным id
-    cells = soup.find_all(attrs={'id': attrs_id})
+    cells = soup.find_all(attrs=find_kwargs)
     for cell in cells:
-        next_cell = cell.find_next(['td', 'th'])
-        if next_cell:
-            parts = []
-            extract_info(next_cell, parts)
-            value = ' '.join(parts).strip()
-            if value:
-                results.append(value)
+        if next_tags is None:
+            # INLINE-режим
+            target_cell = cell
+        else:
+            # TABLE-режим
+            target_cell = cell.find_next(next_tags)
+            if not target_cell:
+                continue
+
+        parts = []
+        extract_info(target_cell, parts)
+        value = ' '.join(parts).strip()
+
+        if value:
+            results.append(value)
 
     return '; '.join(results) if results else None
 
