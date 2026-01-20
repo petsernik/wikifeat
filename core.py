@@ -99,7 +99,7 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     )
 
     # Очень специальный случай... (считаю что лучше бы так сразу и было указано в разделе licensetpl_attr)
-    if "Diego Delso" in image_author_html:
+    if image_author_html and "Diego Delso" in image_author_html:
         image_author_html = image_author_html.replace(
             "Diego Delso",
             "Diego Delso, <a href=\"https://delso.photo\">delso.photo</a>",
