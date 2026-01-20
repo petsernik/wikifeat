@@ -18,6 +18,7 @@ from utils import (
     write_last_article,
     visible_length,
     extract_attrs_info,
+    html_to_text,
     replace_links_with_numbers,
 )
 
@@ -113,14 +114,16 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
             next_tags=('td', 'th')
         )
 
+    image_author_text = ''
     if image_author_html:
-        if ',' in image_author_html or ';' in image_author_html:
+        image_author_text = html_to_text(image_author_html)
+        if ',' in image_author_text or ';' in image_author_text:
             image_author_html = 'автор(ы): ' + image_author_html
         else:
             image_author_html = 'автор: ' + image_author_html
 
     # Получаем источник, если автор неизвестен
-    if not image_author_html or any(word in image_author_html.lower() for word in ('не указан', 'неизвест',
+    if not image_author_html or any(word in image_author_text.lower() for word in ('не указан', 'неизвест',
                                                                                    'аноним', 'unknown')):
         source_html = extract_attrs_info(
             image_soup,

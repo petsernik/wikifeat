@@ -163,6 +163,22 @@ def remove_brackets(text: str) -> str:
     return " ".join("".join(res).split())
 
 
+def html_to_text(html: str) -> str:
+    depth = 0
+    parts = []
+    prev = 0
+    for i in range(len(html)):
+        if html[i] == "<":
+            depth += 1
+            if depth == 1:
+                parts.append(html[prev:i])
+        elif html[i] == ">":
+            depth -= 1
+            if depth == 0:
+                prev = i+1
+    parts.append(html[prev:])
+    return ''.join(parts)
+
 def replace_links_with_numbers(html: str) -> str:
     """Заменяет ссылки в тексте (но не в тегах) на числа"""
     counter = 0
@@ -192,7 +208,7 @@ def replace_links_with_numbers(html: str) -> str:
             prev, i = end, end
         else:
             i += 1
-    parts.append(html[prev:len(html)])
+    parts.append(html[prev:])
     return ''.join(parts)
 
 
