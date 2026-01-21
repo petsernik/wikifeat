@@ -79,14 +79,14 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     if any(fair_use in image_licenses for fair_use in ["Добросовестное использование", "Fair use"]):
         return None
 
-    # Я верю, что 4.0 - последняя версия, а если и нет, то есть же и ссылка, перейдя по ней будет понятно какая здесь
-    if "CC BY 4.0" in image_licenses:
-        image_licenses.remove("CC BY 4.0")
-        image_licenses.append("CC BY")
-
-    if "CC BY-SA 4.0" in image_licenses:
-        image_licenses.remove("CC BY-SA 4.0")
-        image_licenses.append("CC BY-SA")
+    # Я верю, что 4.0 - последняя версия, так что 4.0 не буду писать,
+    # а если и появятся когда-нибудь версии поновее, то я ведь и
+    # ссылку указываю, перейдя по которой можно узнать что подразумевалась 4.0
+    for i in range(len(image_licenses)):
+        if image_licenses[i] == "CC BY-SA 4.0":
+            image_licenses[i] = "CC BY-SA"
+        elif image_licenses[i] == "CC BY 4.0":
+            image_licenses[i] = "CC BY"
 
     if netloc == 'web.archive.org':
         lst = image_url.split('https://')
