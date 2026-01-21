@@ -80,6 +80,10 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
         return None
 
     # Я верю, что 4.0 - последняя версия, а если и нет, то есть же и ссылка, перейдя по ней будет понятно какая здесь
+    if "CC BY 4.0" in image_licenses:
+        image_licenses.remove("CC BY 4.0")
+        image_licenses.append("CC BY")
+
     if "CC BY-SA 4.0" in image_licenses:
         image_licenses.remove("CC BY-SA 4.0")
         image_licenses.append("CC BY-SA")
