@@ -138,7 +138,8 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
             return None
 
         source_html = replace_links_with_numbers(source_html)
-        if ',' in source_html or ';' in source_html:
+        source_text = html_to_text(source_html)
+        if ',' in source_text or ';' in source_text:
             source_html = 'источники: ' + source_html
         else:
             source_html = 'источник: ' + source_html
