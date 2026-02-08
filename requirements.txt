@@ -1,3 +1,4 @@
 requests
 pyTelegramBotAPI
 beautifulsoup4
+pillow

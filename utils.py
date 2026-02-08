@@ -2,10 +2,12 @@ import html
 import os
 import re
 import string
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
 from bs4 import Tag, BeautifulSoup
+from PIL import Image, ImageDraw, ImageFont
 
 from config import User_Agent
 
@@ -175,9 +177,10 @@ def html_to_text(html: str) -> str:
         elif html[i] == ">":
             depth -= 1
             if depth == 0:
-                prev = i+1
+                prev = i + 1
     parts.append(html[prev:])
     return ''.join(parts)
+
 
 def replace_links_with_numbers(html: str) -> str:
     """Заменяет ссылки в тексте (но не в тегах) на числа"""
@@ -230,3 +233,83 @@ def visible_length(html_text: str) -> int:
     text = re.sub(r'<[^>]+>', '', html_text)
     text = html.unescape(text)
     return len(text)
+
+
+def draw_centered_text(
+        text: str,
+        font_path: str = "Renju.otf",
+        image_size: int = 2000,
+        margin: int = 100,
+        max_lines: int = 5,
+        start_font_size: int = 120,
+        min_font_size: int = 20,
+        line_spacing: int = 10,
+) -> Optional[Image.Image]:
+    """
+    Рисует текст по центру картинки image_size x image_size.
+    Автоматически переносит текст на N строк (<= max_lines).
+    Если не влезает — уменьшает размер шрифта.
+    """
+
+    img = Image.new("RGB", (image_size, image_size), "white")
+    draw = ImageDraw.Draw(img)
+
+    max_width = image_size - 2 * margin
+    max_height = image_size - 2 * margin
+
+    words = text.split()
+
+    def text_width(txt: str, _font):
+        bbox = draw.textbbox((0, 0), txt, font=_font)
+        return bbox[2] - bbox[0]
+
+    def layout_lines(_font):
+        _lines = []
+        current = ""
+
+        for word in words:
+            test = word if not current else current + " " + word
+            if text_width(test, _font) <= max_width:
+                current = test
+            else:
+                _lines.append(current)
+                current = word
+
+        if current:
+            _lines.append(current)
+
+        return _lines
+
+    font_size = start_font_size
+
+    while font_size >= min_font_size:
+        font = ImageFont.truetype(font_path, font_size)
+        lines = layout_lines(font)
+
+        line_height = font.getbbox("Hg")[3]
+        total_height = len(lines) * line_height + (len(lines) - 1) * line_spacing
+
+        if len(lines) <= max_lines and total_height <= max_height:
+            break
+
+        font_size -= 2
+    else:
+        print("Текст не помещается даже с минимальным размером шрифта")
+        return None
+
+    block_width = max(text_width(line, font) for line in lines)
+    x = (image_size - block_width) // 2
+    y = (image_size - total_height) // 2
+
+    cy = y
+    for line in lines:
+        lw = text_width(line, font)
+        draw.text(
+            (x + (block_width - lw) // 2, cy),
+            line,
+            fill="black",
+            font=font,
+        )
+        cy += line_height + line_spacing
+
+    return img

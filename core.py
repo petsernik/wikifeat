@@ -20,6 +20,7 @@ from utils import (
     extract_attrs_info,
     html_to_text,
     replace_links_with_numbers,
+    draw_centered_text,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -148,7 +149,7 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
         return None
 
     return Image(
-        url=image_url,
+        desc=image_url,
         licenses=image_licenses,
         page_url=image_page_url,
         author_html=image_author_html,
@@ -196,17 +197,33 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         article_link = wiki_url
         paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
 
-    image = None
-    if with_image:
-        img_tag = main_block.find('img')
-        image = get_image_by_src(wiki_url, img_tag)
-
-    return Article(
+    article = Article(
         title=title,
         paragraphs=paragraphs,
         link=article_link,
-        image=image,
+        image=None,
     )
+    if not with_image:
+        return article
+
+    img_tag = main_block.find('img')
+    image = get_image_by_src(wiki_url, img_tag)
+    if image:
+        article.image = image
+        return article
+
+    img = draw_centered_text(title)
+    if not img:
+        return article
+
+    img.save('image.jpg')
+    article.image = Image(
+        desc='image.jpg',
+        licenses=['CC0'],
+        page_url='https://typodermicfonts.com/public-domain/',
+        author_html='автор шрифта: Ray Larabie'
+    )
+    return article
 
 
 def get_trimmed_text(paragraphs, max_length):
@@ -266,12 +283,17 @@ def send_to_telegram(article: Article, telegram_channels, rules_url):
 
     # Формируем подпись и отправляем сообщение в каждый канал
     caption = caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
-    if article.image:
-        for channel in telegram_channels:
-            bot.send_photo(channel, article.image.url, caption=caption, parse_mode='HTML')
-    else:
+    if not article.image:
         for channel in telegram_channels:
             bot.send_message(channel, caption, parse_mode='HTML')
+        return
+    if article.image.desc.startswith('https://'):
+        for channel in telegram_channels:
+            bot.send_photo(channel, article.image.desc, caption=caption, parse_mode='HTML')
+        return
+    with open(article.image.desc, 'rb') as img:
+        for channel in telegram_channels:
+            bot.send_photo(channel, img, caption=caption, parse_mode='HTML')
 
 
 def main(config: Config, with_image=True):
