@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import telebot
 from bs4 import BeautifulSoup
 
-from config import Config, TELEGRAM_BOT_TOKEN
+from config import Config, TELEGRAM_BOT_TOKEN, TEXT_IMAGE_PATH
 from models import Article, Image
 from utils import (
     get_request,
@@ -216,9 +216,9 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
     if not img:
         return article
 
-    img.save('image.jpg')
+    img.save(TEXT_IMAGE_PATH)
     article.image = Image(
-        desc='image.jpg',
+        desc=TEXT_IMAGE_PATH,
         licenses=['CC0'],
         page_url='https://typodermicfonts.com/public-domain/',
         author_html='автор шрифта: Ray Larabie'

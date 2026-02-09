@@ -4,6 +4,8 @@ from typing import List
 
 # получаем токен из переменной окружения
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
+TMP_FOLDER_PATH = 'tmp'
+TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
 User_Agent = 'wikifeat/0.1 (https://github.com/petsernik/wikifeat)'
 
 

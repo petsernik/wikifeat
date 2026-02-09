@@ -117,7 +117,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 
 6. Чтобы убедиться, что всё работает, можно проверить логи:
    ```bash
-   tail -n 20 /home/username/wikifeat/log.txt
+   tail -n 20 /home/username/wikifeat/tmp/log.txt
    ```
    
 # English description
@@ -235,5 +235,5 @@ which updates the project and runs the bot in the background.
 
 6. To check that it works, inspect the logs:
     ```bash
-    tail -n 20 /home/username/wikifeat/log.txt
+    tail -n 20 /home/username/wikifeat/tmp/log.txt
     ```
