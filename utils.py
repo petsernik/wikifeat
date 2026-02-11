@@ -188,9 +188,8 @@ def replace_links_with_numbers(html: str) -> str:
     links_map = {}
     depth = 0
     prefix = 'https://'
-    len_prefix = len(prefix)
     parts = []
-    stop_chars = string.whitespace + '\"()[]{}<>,.!?'
+    stop_chars = string.whitespace + '"()[]{}<>,!?'
 
     prev, i = 0, 0
     while i < len(html):
@@ -198,9 +197,9 @@ def replace_links_with_numbers(html: str) -> str:
             depth += 1
         elif html[i] == ">":
             depth -= 1
-        if depth == 0 and html[i:i + len_prefix] == prefix:
+        if depth == 0 and html.startswith(prefix, i):
             parts.append(html[prev:i])
-            end = i + len_prefix
+            end = i + len(prefix)
             while end < len(html) and html[end] not in stop_chars:
                 end += 1
             link = html[i:end]
