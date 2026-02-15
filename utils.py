@@ -189,7 +189,7 @@ def replace_links_with_numbers(html: str) -> str:
     depth = 0
     prefix = 'https://'
     parts = []
-    stop_chars = string.whitespace + '"()[]{}<>,!?'
+    stop_chars = string.whitespace + '"()[]{}<>,!'
 
     prev, i = 0, 0
     while i < len(html):
