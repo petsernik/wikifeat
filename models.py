@@ -12,7 +12,7 @@ class Image:
     со страницы Википедии или другого источника.
     """
     desc: str
-    """Описание изображения: file_id фотографии из telegram или http url или multipart/form-data."""
+    """Описание изображения: file_id фотографии из telegram или http url или путь к изображению."""
 
     licenses: List[str]
     """Список лицензий изображения (например: ['CC-BY-SA', 'GFDL'])."""
