@@ -166,7 +166,15 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
 
     # Определяем блок с избранной статьёй
     path = urlparse(wiki_url).path
-    if path.endswith('/wiki/Заглавная_страница'):
+    if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
+        main_block = soup.find('div', id='mw-content-text')
+        link_tag = main_block.find('a', href=True)
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        _, article_link = get_url_by_tag(wiki_url, link_tag)
+        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
+    elif path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
         link_tag = main_block.find('a', href=True)
         title = link_tag['title']

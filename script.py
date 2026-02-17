@@ -10,7 +10,7 @@ if __name__ == '__main__':
     cfg = Config(
         TELEGRAM_CHANNELS=['@wikifeat'],
         RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://ru.wikipedia.org/wiki/Заглавная_страница',
+        WIKI_URL='https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article.txt'),
     )
     main(cfg)
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     cfg_text = Config(
         TELEGRAM_CHANNELS=['@wikifeattexts'],
         RULES_URL='https://t.me/wikifeattexts/3',
-        WIKI_URL='https://ru.wikipedia.org/wiki/Заглавная_страница',
+        WIKI_URL='https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_only_text.txt'),
     )
     main(cfg_text, with_image=False)
