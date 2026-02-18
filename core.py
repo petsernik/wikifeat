@@ -12,6 +12,7 @@ from models import Article, Image
 from utils import (
     get_request,
     get_url_by_tag,
+    get_paragraphs,
     clean_soup,
     remove_brackets,
     read_last_article,
@@ -173,7 +174,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         if not title or title == last_title:
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
-        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
+        paragraphs = get_paragraphs(main_block)
     elif path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
         link_tag = main_block.find('a', href=True)
@@ -182,7 +183,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         if not title or title == last_title or block_type != 'Избранная статья':
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
-        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
+        paragraphs = get_paragraphs(main_block)
     elif path.endswith('/wiki/Main_Page'):
         main_block = soup.find('div', id='mp-tfa')
         # На английской главной ищем ссылку на полную статью по фразе "Full article..." или "more..."
@@ -195,7 +196,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         if title == last_title:
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
-        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
+        paragraphs = get_paragraphs(main_block)
     else:
         # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
         main_block = soup.find('div', id='mw-content-text')
@@ -203,7 +204,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         if title == last_title:
             return None
         article_link = wiki_url
-        paragraphs = [p.get_text().strip() for p in main_block.find_all('p')]
+        paragraphs = get_paragraphs(main_block)
 
     article = Article(
         title=title,

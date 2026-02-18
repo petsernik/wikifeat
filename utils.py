@@ -47,6 +47,10 @@ def is_hidden(tag):
     return any(c.lower() in ['noprint', 'hidden'] for c in classes)
 
 
+def get_paragraphs(soup: BeautifulSoup) -> list[str]:
+    return [p.get_text().strip() for p in soup.select(':scope > * > p')]
+
+
 def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     for el in soup:
         if is_hidden(el):
