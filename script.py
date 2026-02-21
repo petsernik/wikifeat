@@ -2,9 +2,10 @@ import os
 from time import sleep
 
 from config import Config, TMP_FOLDER_PATH
-from core import main
+from core import run
 
-if __name__ == '__main__':
+
+def main():
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
     cfg = Config(
@@ -12,8 +13,10 @@ if __name__ == '__main__':
         RULES_URL='https://t.me/wikifeat/4',
         WIKI_URL='https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article.txt'),
+        WITH_IMAGE=True,
     )
-    main(cfg)
+    if not run(cfg):
+        return
 
     sleep(1)
 
@@ -22,5 +25,10 @@ if __name__ == '__main__':
         RULES_URL='https://t.me/wikifeattexts/3',
         WIKI_URL='https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_only_text.txt'),
+        WITH_IMAGE=False,
     )
-    main(cfg_text, with_image=False)
+    run(cfg_text)
+
+
+if __name__ == '__main__':
+    main()

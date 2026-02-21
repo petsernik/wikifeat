@@ -157,7 +157,7 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     )
 
 
-def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Optional[Article]:
+def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Optional[Article]:
     response = get_request(wiki_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
@@ -209,6 +209,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
             return None
         article_link = wiki_url
         paragraphs = get_paragraphs(main_block)
+        paragraphs = [p.replace('➤', '') for p in paragraphs]  # убираем навигационные кнопки
 
     article = Article(
         title=title,
@@ -309,13 +310,15 @@ def send_to_telegram(article: Article, telegram_channels, rules_url):
             bot.send_photo(channel, img, caption=caption, parse_mode='HTML')
 
 
-def main(config: Config, with_image=True):
+def run(config: Config) -> bool:
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
-    article = get_featured_article(last_title, config.WIKI_URL, with_image=with_image)
+    article = get_featured_article(last_title, config.WIKI_URL, config.WITH_IMAGE)
 
-    if article:
-        send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL)
-        write_last_article(article.title, config.LAST_ARTICLE_FILE)
-        print(f'Избрана новая статья: {article.title}')
-    else:
+    if not article:
         print('Избранная статья не изменилась')
+        return False
+
+    send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL)
+    write_last_article(article.title, config.LAST_ARTICLE_FILE)
+    print(f'Избрана новая статья: {article.title}')
+    return True

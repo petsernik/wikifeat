@@ -15,3 +15,4 @@ class Config:
     RULES_URL: str
     WIKI_URL: str
     LAST_ARTICLE_FILE: str
+    WITH_IMAGE: bool

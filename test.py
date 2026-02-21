@@ -1,8 +1,7 @@
 import os
-from time import sleep
 
 from config import Config, TMP_FOLDER_PATH
-from core import main
+from core import run
 
 if __name__ == '__main__':
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
@@ -12,25 +11,6 @@ if __name__ == '__main__':
         RULES_URL='https://t.me/wikifeat/4',
         WIKI_URL='https://web.archive.org/web/20240321043628/https://ru.wikipedia.org/wiki/Заглавная_страница',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
+        WITH_IMAGE=True,
     )
-    main(cfg)
-
-    sleep(1)
-
-    cfg = Config(
-        TELEGRAM_CHANNELS=['@wikifeattest'],
-        RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://web.archive.org/web/20240321053252/https://en.wikipedia.org/wiki/Main_Page',
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
-    )
-    main(cfg)
-
-    sleep(1)
-
-    cfg = Config(
-        TELEGRAM_CHANNELS=['@wikifeattest'],
-        RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://web.archive.org/web/20260221060043/https://en.wikipedia.org/wiki/Main_Page',
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
-    )
-    main(cfg)
+    run(cfg)
