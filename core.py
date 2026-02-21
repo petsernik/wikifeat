@@ -177,7 +177,11 @@ def get_featured_article(last_title: str, wiki_url: str, with_image=True) -> Opt
         paragraphs = get_paragraphs(main_block)
     elif path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
-        link_tag = main_block.find('a', href=True)
+        link_tag = main_block.find(
+            'a',
+            href=True,
+            title=lambda t: not t.startswith('Шаблон:')  # эхо прошлого(20240321043628), исключаем Шаблон:Fake heading
+        )
         title = link_tag['title']
         block_type = main_block.find('div', class_='main-box-subtitle').get_text().strip()
         if not title or title == last_title or block_type != 'Избранная статья':

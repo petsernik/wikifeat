@@ -48,7 +48,13 @@ def is_hidden(tag):
 
 
 def get_paragraphs(soup: BeautifulSoup) -> list[str]:
-    return [p.get_text().strip() for p in soup.select(':scope > * > p')]
+    paragraphs = [p.get_text().strip() for p in soup.select(':scope > * > p')]
+    if len(paragraphs) > 0:
+        return paragraphs
+    paragraphs = [p.get_text().strip() for p in soup.select(':scope > p')]  # 20240321 case (hosted on web.archive.org)
+    if len(paragraphs) > 0:
+        return paragraphs
+    return [soup.get_text().strip()]  # 20260221 case (en.wikipedia.org main page hosted on web.archive.org)
 
 
 def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
