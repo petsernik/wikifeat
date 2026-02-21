@@ -202,9 +202,11 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
         paragraphs = get_paragraphs(main_block)
-    elif path.endswith('/wiki/Main_Page'):
-        main_block = soup.find('div', id='mp-tfa')
-        # На английской главной ищем ссылку на полную статью по фразе "Full article..." или "more..."
+    elif path.endswith('/wiki/Wikipedia:Today%27s_featured_article') or path.endswith('/wiki/Main_Page'):
+        main_block = soup.find('div', class_='mp-tfa')
+        if not main_block:
+            main_block = soup.find('div', id='mp-tfa')
+        # в английской версии ищем ссылку на полную статью по фразе "Full article..." или "more..."
         link_tag = main_block.find(
             'a', string=lambda s: s and s.strip().replace('\xa0', ' ') in ('Full article...', 'more...')
         )

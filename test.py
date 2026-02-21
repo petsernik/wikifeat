@@ -9,7 +9,7 @@ if __name__ == '__main__':
     cfg = Config(
         TELEGRAM_CHANNELS=['@wikifeattest'],
         RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://web.archive.org/web/20240321043628/https://ru.wikipedia.org/wiki/Заглавная_страница',
+        WIKI_URL='https://en.wikipedia.org/wiki/Wikipedia:Today%27s_featured_article',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
         WITH_IMAGE=True,
     )

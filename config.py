@@ -6,7 +6,7 @@ from typing import List
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TMP_FOLDER_PATH = 'tmp'
 TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
-User_Agent = 'wikifeat/0.1 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.2 (https://github.com/petsernik/wikifeat)'
 
 
 @dataclass

@@ -3,7 +3,9 @@
 
 Ссылка на канал с публикациями: https://t.me/wikifeat.
 
-Далее Вы можете прочитать, как воспользоваться данным кодом для публикаций в своём канале и какие ещё возможности доступны.
+Далее Вы можете прочитать как запустить данный проект для публикаций в Вашем собственном канале, 
+а также узнать какой дополнительный (опциональный) функционал предоставляется проектом (мультиязычность, 
+возможность работы с конкретной статьёй, поддержка ссылок из web.archive.org).
 
 ## Условия использования кода
 Помимо условий лицензии MIT, настоятельно прошу при первом портировании, копировании, клонировании или форке 
@@ -52,10 +54,15 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    * RULES_URL: ссылка на правила данного телеграм-канала, у меня 
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/) на любой опубликованный ботом текст, потому что такова 
    лицензия текста на Википедии;
-   * WIKI_URL: в версии 0.1 моего проекта можно указать https://ru.wikipedia.org/wiki/Заглавная_страница 
-    или https://en.wikipedia.org/wiki/Main_Page, в целом несложно добавить поддержку заглавной страницы Википедии на 
-    произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального;
-     * Дополнительно: можно указать произвольную страницу для единичного теста, например, 
+   * WIKI_URL: в версии 0.2 моего проекта можно указать https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья 
+    или `https://en.wikipedia.org/wiki/Wikipedia:Today%27s_featured_article`, в целом несложно добавить поддержку шаблона на 
+    произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
+     * заглавную страницу в явном виде (https://ru.wikipedia.org/wiki/Заглавная_страница или 
+     https://en.wikipedia.org/wiki/Main_Page), но не рекомендуется, так как они могут отображать
+     более старые данные, чем указанные ранее шаблоны (при отсутствии авторизованного входа в аккаунт на Википедии,
+     например, через режим инкогнито), примечательно, что 
+     https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article тоже обладает таким свойством "отставания".
+     * произвольную страницу для единичного теста, например, 
      https://ru.wikipedia.org/wiki/У_омута (или статью на любом другом языке); также поддерживаются и правильно 
      обрабатываются ссылки с веб-архива, можно указать 
      https://web.archive.org/web/20211122/https://ru.wikipedia.org/wiki/Заглавная_страница и Вы получите статью избранную
@@ -125,7 +132,9 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 My telegram channel with featured articles (at Russian) is https://t.me/wikifeat and I use a Telegram bot to 
 automate publications.
 
-Below is how to use my code for your channel and what other features are available. 
+Below you can read how to run this project for publishing in your own channel, 
+as well as learn about the additional (optional) features provided by the project 
+(multilingual support, the ability to work with a specific article, and support for links from web.archive.org).
 
 ## Usage Terms
 In addition to the MIT License Terms, please replace the `User-Agent` value in `config.py` when first porting, 
@@ -170,10 +179,14 @@ Assuming your GitHub username is `NickName` and you forked the project:
    Telegram bot is added as an administrator;
    * `RULES_URL`: link to your channel’s rules. Don't forget about 
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
-   * `WIKI_URL`: for version 0.1 you can use https://ru.wikipedia.org/wiki/Заглавная_страница or 
-   https://en.wikipedia.org/wiki/Main_Page. Main pages in any other language can be added — just separate the 
-   featured article block correctly.
-     * Optionally, you can test with a single page, e.g., https://en.wikipedia.org/wiki/Anthony_Roll 
+   * `WIKI_URL`: for version 0.2 you can use https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья or 
+   `https://en.wikipedia.org/wiki/Wikipedia:Today%27s_featured_article`. Templates in any other language can be added — just separate the 
+   featured article block correctly. You can also specify:
+     * the main page explicitly (https://ru.wikipedia.org/wiki/Заглавная_страница or 
+     https://en.wikipedia.org/wiki/Main_Page), but this is not recommended, as they may display older data than the 
+     templates mentioned above (when not logged into a Wikipedia account, for example in incognito mode). Notably,
+     https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article also has this “lagging” behavior.
+     * an arbitrary page for a test, e.g., https://en.wikipedia.org/wiki/Anthony_Roll 
      (or article at any other language), or use web archive links like 
      http://web.archive.org/web/20110317042632/http://en.wikipedia.org/wiki/Main_Page to get the article as 
      featured on (roughly) that date.
