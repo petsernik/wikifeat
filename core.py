@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import telebot
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 from config import Config, TELEGRAM_BOT_TOKEN, TEXT_IMAGE_PATH
 from models import Article, Image
@@ -31,7 +32,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
-def get_image_by_src(url, img_tag) -> Optional[Image]:
+def get_image_by_src(url: str, img_tag: Tag) -> Optional[Image]:
     if not (img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href')):
         return None
 
@@ -157,6 +158,19 @@ def get_image_by_src(url, img_tag) -> Optional[Image]:
     )
 
 
+def get_image_by_text(text: str) -> Optional[Image]:
+    img = draw_centered_text(text)
+    if not img:
+        return None
+    img.save(TEXT_IMAGE_PATH)
+    return Image(
+        desc=TEXT_IMAGE_PATH,
+        licenses=['CC0'],
+        page_url='https://typodermicfonts.com/public-domain/',
+        author_html='автор шрифта: Ray Larabie'
+    )
+
+
 def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Optional[Article]:
     response = get_request(wiki_url)
     if response.status_code != 200:
@@ -217,30 +231,14 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         link=article_link,
         image=None,
     )
-    if not with_image:
-        return article
-
-    img_tag = main_block.find('img')
-    image = get_image_by_src(wiki_url, img_tag)
-    if image:
+    if with_image:
+        img_tag = main_block.find('img')
+        image = get_image_by_src(wiki_url, img_tag) or get_image_by_text(title)
         article.image = image
-        return article
-
-    img = draw_centered_text(title)
-    if not img:
-        return article
-
-    img.save(TEXT_IMAGE_PATH)
-    article.image = Image(
-        desc=TEXT_IMAGE_PATH,
-        licenses=['CC0'],
-        page_url='https://typodermicfonts.com/public-domain/',
-        author_html='автор шрифта: Ray Larabie'
-    )
     return article
 
 
-def get_trimmed_text(paragraphs, max_length):
+def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
     total_length, text = 0, ''
     for paragraph in paragraphs:
         paragraph = remove_brackets(paragraph)
@@ -257,7 +255,7 @@ def get_trimmed_text(paragraphs, max_length):
     return text
 
 
-def send_to_telegram(article: Article, telegram_channels, rules_url):
+def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str):
     caption_beginning = f"<b>{article.title}</b>\n\n"
     caption_end = (
         f"<a href='{article.link}'>Читать статью</a>\n\n"

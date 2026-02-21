@@ -8,17 +8,18 @@ from urllib.parse import urlparse
 import requests
 from bs4 import Tag, BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
+from requests import Response
 
 from config import User_Agent
 
 
-def get_request(url: str):
+def get_request(url: str) -> Response:
     # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
     headers = {'User-Agent': User_Agent}
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
-def get_url_by_tag(url, tag):
+def get_url_by_tag(url: str, tag: Tag) -> (str, str):
     netloc = urlparse(url).netloc
     if netloc == 'web.archive.org':
         # Ищем последнюю архивную версию вместо определённой даты, например:
@@ -224,7 +225,7 @@ def replace_links_with_numbers(html: str) -> str:
     return ''.join(parts)
 
 
-def read_last_article(last_article_file):
+def read_last_article(last_article_file: str) -> str:
     # Читаем название последней статьи из файла
     if not os.path.exists(last_article_file):
         return ''
@@ -232,7 +233,7 @@ def read_last_article(last_article_file):
         return file.read().strip()
 
 
-def write_last_article(title, last_article_file):
+def write_last_article(title: str, last_article_file: str):
     # Записываем последнюю статью в файл
     with open(last_article_file, 'w', encoding='utf-8') as file:
         file.write(title)
