@@ -32,8 +32,9 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
-def get_image_by_src(url: str, img_tag: Tag) -> Optional[Image]:
-    if not (img_tag and img_tag.has_attr('src') and img_tag.parent.has_attr('href')):
+def get_image_by_src(url: str, main_block: Tag) -> Optional[Image]:
+    img_tag = main_block.select_one('a[href] img')
+    if not img_tag:
         return None
 
     netloc, image_page_url = get_url_by_tag(url, img_tag.parent)
@@ -46,17 +47,18 @@ def get_image_by_src(url: str, img_tag: Tag) -> Optional[Image]:
 
     image_soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Подбираем разрешение не больше 2500×2500
+    # Подбираем разрешение не больше 2000×2000
     image_url = None
-    width_max, height_max = 2500, 2500
+    width_max, height_max = 2000, 2000
     resolutions_span = image_soup.find('span', class_='mw-filepage-other-resolutions')
     if resolutions_span:
         links = resolutions_span.find_all('a', href=True)
         for link in links[::-1]:
-            match = re.search(r'([\d,]+)\s*[×xX]\s*([\d,]+)', link.text)
+            clean_text = re.sub(r'[\s,]+', '', link.text)
+            match = re.search(r'(\d+)[×xX](\d+)', clean_text)
             if match:
-                width = int(match.group(1).replace(',', '').replace(' ', ''))
-                height = int(match.group(2).replace(',', '').replace(' ', ''))
+                width = int(match.group(1))
+                height = int(match.group(2))
                 if width <= width_max and height <= height_max:
                     image_url = 'https:' + link['href']
                     break
@@ -131,7 +133,7 @@ def get_image_by_src(url: str, img_tag: Tag) -> Optional[Image]:
 
     # Получаем источник, если автор неизвестен
     if not image_author_html or any(word in image_author_text.lower() for word in ('не указан', 'неизвест',
-                                                                                   'аноним', 'unknown')):
+                                                                                   'аноним', 'unknown', 'unbekannt')):
         source_html = extract_attrs_info(
             image_soup,
             find_kwargs={'id': 'fileinfotpl_src'},
@@ -234,9 +236,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         image=None,
     )
     if with_image:
-        img_tag = main_block.find('img')
-        image = get_image_by_src(wiki_url, img_tag) or get_image_by_text(title)
-        article.image = image
+        article.image = get_image_by_src(wiki_url, main_block) or get_image_by_text(title)
     return article
 
 

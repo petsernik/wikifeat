@@ -29,25 +29,6 @@ def get_url_by_tag(url: str, tag: Tag) -> (str, str):
         return netloc, 'https://' + netloc + tag['href']
 
 
-def is_hidden(tag):
-    """
-    Проверяет, скрыт ли тег.
-    - через style display:none
-    - через aria-hidden
-    - через class noprint или hidden
-    """
-    if not isinstance(tag, Tag):
-        return False
-    if tag.has_attr('style') and 'display:none' in tag['style'].replace(" ", "").lower():
-        return True
-    if tag.has_attr('aria-hidden') and tag['aria-hidden'].lower() == 'true':
-        return True
-    if tag.has_attr('hidden'):
-        return True
-    classes = tag.get('class', '')
-    return any(c.lower() in ['noprint', 'hidden'] for c in classes)
-
-
 def get_paragraphs(soup: BeautifulSoup) -> list[str]:
     paragraphs = [p.get_text().strip() for p in soup.select(':scope > * > p')]
     if len(paragraphs) > 0:
@@ -58,10 +39,32 @@ def get_paragraphs(soup: BeautifulSoup) -> list[str]:
     return [soup.get_text().strip()]  # 20260221 case (en.wikipedia.org main page hosted on web.archive.org)
 
 
+def is_hidden(tag: Tag) -> bool:
+    # style="display:none"
+    style = tag.get("style", "").replace(" ", "").lower()
+    if "display:none" in style:
+        return True
+
+    # aria-hidden="true"
+    if tag.get("aria-hidden", "").lower() == "true":
+        return True
+
+    # hidden attribute
+    if tag.has_attr("hidden"):
+        return True
+
+    # классы
+    classes = tag.get("class") or []
+    if any(c.lower() in {"noprint", "hidden", "metadata"} for c in classes):
+        return True
+
+    return False
+
+
 def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
-    for el in soup:
-        if is_hidden(el):
-            el.decompose()
+    for tag in soup.find_all(True):
+        if not tag.decomposed and is_hidden(tag):
+            tag.decompose()
     return soup
 
 
