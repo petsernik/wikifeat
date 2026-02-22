@@ -248,7 +248,7 @@ def visible_length(html_text: str) -> int:
 def draw_centered_text(
         text: str,
         font_path: str = "Renju.otf",
-        image_size: int = 2000,
+        image_size: int = 1500,
         margin: int = 100,
         max_lines: int = 5,
         start_font_size: int = 120,
