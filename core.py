@@ -258,7 +258,7 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
 
 
 def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str):
-    caption_beginning = f"<b>{article.title}</b>\n\n"
+    caption_beginning = f"<b><a href='{article.link}'>{article.title}</a></b>\n\n"
     caption_end = (
         f"<a href='{article.link}'>Читать статью</a>\n\n"
         f"<a href='{rules_url}'>Лицензия на текст: CC BY-SA</a>\n"
