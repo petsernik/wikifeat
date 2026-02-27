@@ -10,18 +10,7 @@ if __name__ == '__main__':
     cfg = Config(
         TELEGRAM_CHANNELS=['@wikifeattest'],
         RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://hu.wikipedia.org/wiki/Super_Mario_Bros.:_A_film',
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
-        WITH_IMAGE=True,
-    )
-    run(cfg)
-
-    sleep(1)
-
-    cfg = Config(
-        TELEGRAM_CHANNELS=['@wikifeattest'],
-        RULES_URL='https://t.me/wikifeat/4',
-        WIKI_URL='https://de.wikipedia.org/wiki/Florida',
+        WIKI_URL='https://web.archive.org/web/20260226234921/https://ru.wikipedia.org/wiki/Заглавная_страница',
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, 'last_article_test.txt'),
         WITH_IMAGE=True,
     )

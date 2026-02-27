@@ -19,7 +19,7 @@ def get_request(url: str) -> Response:
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
-def get_url_by_tag(url: str, tag: Tag) -> (str, str):
+def get_url_by_tag(url: str, tag: Tag) -> tuple[str, str]:
     netloc = urlparse(url).netloc
     if netloc == 'web.archive.org':
         # Ищем последнюю архивную версию вместо определённой даты, например:
@@ -326,3 +326,35 @@ def draw_centered_text(
         cy += line_height + line_spacing
 
     return img
+
+
+def ends_with_one_char_abbr(t: str) -> bool:
+    if len(t) == 0:
+        return False
+    if len(t) == 1:
+        return t.isupper() and t.isalpha()
+    if not t[-2].isspace() and t[-2].isalpha():
+        return False
+    return t[-1].isupper() and t[-1].isalpha()
+
+
+def is_balanced(s: str) -> tuple[bool, int]:
+    closing = {")": "(", "»": "«", "“": "„"}  # "}": "{", "]": "[", "\"": "\""
+    opening = set(closing.values())
+
+    stack = []
+
+    for i, char in enumerate(s):
+        if char in opening:
+            stack.append((i, char))
+        elif char in closing:
+            if not stack:
+                return False, i
+            if stack[-1][1] != closing[char]:
+                return False, stack[0][0]
+            stack.pop()
+
+    if stack:
+        return False, stack[0][0]
+
+    return True, -1

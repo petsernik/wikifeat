@@ -22,7 +22,7 @@ from utils import (
     extract_attrs_info,
     html_to_text,
     replace_links_with_numbers,
-    draw_centered_text,
+    draw_centered_text, is_balanced, ends_with_one_char_abbr,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -247,10 +247,18 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
         paragraph_length = len(paragraph) + 2
         text += paragraph
         if total_length + paragraph_length > max_length:
-            t = str(text[:max_length - 2].rsplit('.', 1)[0])
-            # режем дальше, если обрезали на аббревиатуре/инициале
-            while len(t) > 1 and t[-2].isspace() and t[-1].upper() == t[-1]:
-                t = str(t.rsplit('.', 1)[0])
+            ok, i = False, max_length - 2
+            t = text[:i]
+
+            while not ok:
+                t = str(t[:i].rsplit('.', 1)[0])
+                while ends_with_one_char_abbr(t):
+                    split = t.rsplit('.', 1)
+                    if len(split) == 1:
+                        return t + '.\n\n'  # Я верю, что это невозможный случай в данном контексте
+                    t = split[0]
+                ok, i = is_balanced(t)
+
             return t + '.\n\n'
         text += '\n\n'
         total_length += paragraph_length
