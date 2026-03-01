@@ -204,7 +204,9 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
         paragraphs = get_paragraphs(main_block)
-    elif path.endswith('/wiki/Wikipedia:Today%27s_featured_article') or path.endswith('/wiki/Main_Page'):
+    elif (path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
+          or path.endswith('/wiki/Wikipedia:Today%27s_featured_article')):
+        # %27 and ' are not the same by request, I don't know what the reason for it
         main_block = soup.find('div', class_='mp-tfa')
         if not main_block:
             main_block = soup.find('div', id='mp-tfa')
@@ -219,6 +221,10 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
             return None
         _, article_link = get_url_by_tag(wiki_url, link_tag)
         paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            paragraphs[-1] = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = paragraphs[-1].replace(' (Full article...)', '')
+            paragraphs[-1] = paragraphs[-1].replace(' (more...)', '')
     else:
         # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
         main_block = soup.find('div', id='mw-content-text')

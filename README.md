@@ -55,13 +55,12 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/) на любой опубликованный ботом текст, потому что такова 
    лицензия текста на Википедии;
    * WIKI_URL: в версии 0.2 моего проекта можно указать https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья 
-    или `https://en.wikipedia.org/wiki/Wikipedia:Today%27s_featured_article`, в целом несложно добавить поддержку шаблона на 
+    или https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article, в целом несложно добавить поддержку шаблона на 
     произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
      * заглавную страницу в явном виде (https://ru.wikipedia.org/wiki/Заглавная_страница или 
      https://en.wikipedia.org/wiki/Main_Page), но не рекомендуется, так как они могут отображать
      более старые данные, чем указанные ранее шаблоны (при отсутствии авторизованного входа в аккаунт на Википедии,
-     например, через режим инкогнито), примечательно, что 
-     https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article тоже обладает таким свойством "отставания".
+     например, через режим инкогнито).
      * произвольную страницу для единичного теста, например, 
      https://ru.wikipedia.org/wiki/У_омута (или статью на любом другом языке); также поддерживаются и правильно 
      обрабатываются ссылки с веб-архива, можно указать 
@@ -180,12 +179,11 @@ Assuming your GitHub username is `NickName` and you forked the project:
    * `RULES_URL`: link to your channel’s rules. Don't forget about 
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
    * `WIKI_URL`: for version 0.2 you can use https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья or 
-   `https://en.wikipedia.org/wiki/Wikipedia:Today%27s_featured_article`. Templates in any other language can be added — just separate the 
-   featured article block correctly. You can also specify:
+   https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article. Templates in any other language can be added — 
+   just separate the featured article block correctly. You can also specify:
      * the main page explicitly (https://ru.wikipedia.org/wiki/Заглавная_страница or 
      https://en.wikipedia.org/wiki/Main_Page), but this is not recommended, as they may display older data than the 
-     templates mentioned above (when not logged into a Wikipedia account, for example in incognito mode). Notably,
-     https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article also has this “lagging” behavior.
+     templates mentioned above (when not logged into a Wikipedia account, for example in incognito mode).
      * an arbitrary page for a test, e.g., https://en.wikipedia.org/wiki/Anthony_Roll 
      (or article at any other language), or use web archive links like 
      http://web.archive.org/web/20110317042632/http://en.wikipedia.org/wiki/Main_Page to get the article as 
