@@ -67,6 +67,12 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
             tag.decompose()
     return soup
 
+def filter_soup(soup: BeautifulSoup) -> BeautifulSoup:
+    for tag in soup.find_all(attrs={"role": "presentation"}):
+        if not tag.decomposed:
+            tag.decompose()
+    return soup
+
 
 def extract_info(node, parts):
     for elem in node.children:

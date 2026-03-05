@@ -22,7 +22,7 @@ from utils import (
     extract_attrs_info,
     html_to_text,
     replace_links_with_numbers,
-    draw_centered_text, is_balanced, ends_with_one_char_abbr,
+    draw_centered_text, is_balanced, ends_with_one_char_abbr, filter_soup,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -185,6 +185,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
     path = urlparse(wiki_url).path
     if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
+        main_block = filter_soup(main_block)
         link_tag = main_block.find('a', href=True)
         title = link_tag['title']
         if not title or title == last_title:
