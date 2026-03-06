@@ -3,11 +3,10 @@ import os
 import re
 import string
 from typing import Optional
-from urllib.parse import urlparse
 
 import requests
-from bs4 import Tag, BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
+from bs4 import Tag, BeautifulSoup
 from requests import Response
 
 from config import User_Agent
@@ -19,14 +18,18 @@ def get_request(url: str) -> Response:
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
-def get_url_by_tag(url: str, tag: Tag) -> tuple[str, str]:
-    netloc = urlparse(url).netloc
+def get_url_by_tag(netloc: str, tag: Tag) -> str:
+    href = tag['href']
+    if href.startswith('//'):
+        return f'https:{href}'
+    if href.startswith('https://'):
+        return href
     if netloc == 'web.archive.org':
         # Ищем последнюю архивную версию вместо определённой даты, например:
         # https://web.archive.org/web/20240619223918/... ---> https://web.archive.org/web/2/...
-        return netloc, 'https://' + netloc + '/web/2/' + tag['href'].split('/', 3)[3]
+        return 'https://' + netloc + '/web/2/' + href.split('/', 3)[3]
     else:
-        return netloc, 'https://' + netloc + tag['href']
+        return 'https://' + netloc + href
 
 
 def get_paragraphs(soup: BeautifulSoup) -> list[str]:
@@ -66,6 +69,7 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
         if not tag.decomposed and is_hidden(tag):
             tag.decompose()
     return soup
+
 
 def filter_soup(soup: BeautifulSoup) -> BeautifulSoup:
     for tag in soup.find_all(attrs={"role": "presentation"}):

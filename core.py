@@ -15,6 +15,7 @@ from utils import (
     get_url_by_tag,
     get_paragraphs,
     clean_soup,
+    filter_soup,
     remove_brackets,
     read_last_article,
     write_last_article,
@@ -22,7 +23,9 @@ from utils import (
     extract_attrs_info,
     html_to_text,
     replace_links_with_numbers,
-    draw_centered_text, is_balanced, ends_with_one_char_abbr, filter_soup,
+    draw_centered_text,
+    is_balanced,
+    ends_with_one_char_abbr,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -32,12 +35,16 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
-def get_image_by_src(url: str, main_block: Tag) -> Optional[Image]:
+def get_image_by_tag(netloc: str, main_block: Tag) -> Optional[Image]:
     img_tag = main_block.select_one('a[href] img')
     if not img_tag:
         return None
+    image_page_url = get_url_by_tag(netloc, img_tag.parent)
+    return get_image_by_link(image_page_url)
 
-    netloc, image_page_url = get_url_by_tag(url, img_tag.parent)
+
+def get_image_by_link(image_page_url: str) -> Optional[Image]:
+    netloc = urlparse(image_page_url).netloc
     response = get_request(image_page_url)
     if response.status_code in (404, 429):
         return None
@@ -60,12 +67,12 @@ def get_image_by_src(url: str, main_block: Tag) -> Optional[Image]:
                 width = int(match.group(1))
                 height = int(match.group(2))
                 if width <= width_max and height <= height_max:
-                    image_url = 'https:' + link['href']
+                    image_url = get_url_by_tag(netloc, link)
                     break
     else:
         file_link_tag = image_soup.find('a', class_='internal')
         if file_link_tag and file_link_tag.has_attr('href'):
-            image_url = 'https:' + file_link_tag['href']
+            image_url = get_url_by_tag(netloc, file_link_tag)
     if not image_url:
         return None
 
@@ -182,7 +189,8 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
     # Определяем блок с избранной статьёй
-    path = urlparse(wiki_url).path
+    parsed = urlparse(wiki_url)
+    netloc, path = parsed.netloc, parsed.path
     if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
         main_block = filter_soup(main_block)
@@ -190,7 +198,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         title = link_tag['title']
         if not title or title == last_title:
             return None
-        _, article_link = get_url_by_tag(wiki_url, link_tag)
+        article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
     elif path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
@@ -203,7 +211,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         block_type = main_block.find('div', class_='main-box-subtitle').get_text().strip()
         if not title or title == last_title or block_type != 'Избранная статья':
             return None
-        _, article_link = get_url_by_tag(wiki_url, link_tag)
+        article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
     elif (path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
           or path.endswith('/wiki/Wikipedia:Today%27s_featured_article')):
@@ -220,7 +228,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         title = link_tag.get('title')
         if title == last_title:
             return None
-        _, article_link = get_url_by_tag(wiki_url, link_tag)
+        article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
         if paragraphs:
             paragraphs[-1] = paragraphs[-1].replace('\xa0', ' ')
@@ -243,7 +251,7 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         image=None,
     )
     if with_image:
-        article.image = get_image_by_src(wiki_url, main_block) or get_image_by_text(title)
+        article.image = get_image_by_tag(netloc, main_block) or get_image_by_text(title)
     return article
 
 
@@ -272,7 +280,7 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
     return text
 
 
-def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str):
+def get_caption(article: Article, rules_url: str) -> str:
     caption_beginning = f"<b><a href='{article.link}'>{article.title}</a></b>\n\n"
     caption_end = (
         f"<a href='{article.link}'>Читать статью</a>\n\n"
@@ -310,8 +318,12 @@ def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: 
     else:
         max_text_len = 4096 - visible_length(caption_beginning) - visible_length(caption_end)
 
+    return caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
+
+
+def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str):
     # Формируем подпись и отправляем сообщение в каждый канал
-    caption = caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
+    caption = get_caption(article, rules_url)
     if not article.image:
         for channel in telegram_channels:
             bot.send_message(channel, caption, parse_mode='HTML')
