@@ -23,6 +23,7 @@ from utils import (
     extract_attrs_info,
     html_to_text,
     replace_links_with_numbers,
+    update_links,
     draw_centered_text,
     is_balanced,
     ends_with_one_char_abbr,
@@ -150,8 +151,7 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
             return None
 
         source_html = replace_links_with_numbers(source_html)
-        source_text = html_to_text(source_html)
-        if ',' in source_text or ';' in source_text:
+        if any(char in html_to_text(source_html) for char in [',', ';']):
             source_html = 'источники: ' + source_html
         else:
             source_html = 'источник: ' + source_html
@@ -159,6 +159,7 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     if not image_author_html:
         return None
 
+    image_author_html = update_links(netloc, image_author_html)
     return Image(
         desc=image_url,
         licenses=image_licenses,

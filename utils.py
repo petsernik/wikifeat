@@ -19,7 +19,10 @@ def get_request(url: str) -> Response:
 
 
 def get_url_by_tag(netloc: str, tag: Tag) -> str:
-    href = tag['href']
+    return update_href(netloc, tag['href'])
+
+
+def update_href(netloc: str, href: str) -> str:
     if href.startswith('//'):
         return f'https:{href}'
     if href.startswith('https://'):
@@ -204,6 +207,15 @@ def html_to_text(html: str) -> str:
                 prev = i + 1
     parts.append(html[prev:])
     return ''.join(parts)
+
+
+def update_links(netloc: str, html: str) -> str:
+    soup = BeautifulSoup(html, 'html.parser')
+
+    for a in soup.find_all('a', href=True):
+        a['href'] = update_href(netloc, a['href'])
+
+    return str(soup)
 
 
 def replace_links_with_numbers(html: str) -> str:

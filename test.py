@@ -17,7 +17,7 @@ if __name__ == "__main__":
     run(cfg)
 
     image = get_image_by_link(
-        "https://commons.wikimedia.org/wiki/File:Devushka_by_Konenkov_(1914,_Tretyakov_gallery)_01_by_shakko.JPG"
+        "https://ru.wikimedia.org/wiki/File:Devushka_by_Konenkov_(1914,_Tretyakov_gallery)_01_by_shakko.JPG"
     )
     article = Article(
         'Лезвие бритвы (роман)',
