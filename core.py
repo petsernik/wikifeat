@@ -236,9 +236,8 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
         if paragraphs:
-            paragraphs[-1] = paragraphs[-1].replace('\xa0', ' ')
-            paragraphs[-1] = paragraphs[-1].replace(' (Full article...)', '')
-            paragraphs[-1] = paragraphs[-1].replace(' (more...)', '')
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix(' (Full article...)').removesuffix(' (more...)')
     else:
         # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
         main_block = soup.find('div', id='mw-content-text')
