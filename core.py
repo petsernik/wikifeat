@@ -77,29 +77,33 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     if not image_url:
         return None
 
-    # Собираем лицензии
-    image_licenses = []
-    license_tags = image_soup.find_all(class_=re.compile('licensetpl_short'))
-    for tag in license_tags:
-        clean_text = re.sub(r'\s+', ' ', tag.get_text(strip=True)).strip()
-        image_licenses.append(clean_text)
-    if not image_licenses:
+    raw_licenses = {re.sub(r'\s+', ' ', tag.get_text(strip=True)) for tag in
+                    image_soup.find_all(class_=re.compile('licensetpl_short'))}
+    if not raw_licenses:
         return None
 
-    image_licenses = sorted(set(image_licenses))
-
-    # Игнорируем несвободные материалы
-    if any(fair_use in image_licenses for fair_use in ["Добросовестное использование", "Fair use"]):
+    fair_use_keywords = {"Добросовестное использование", "Fair use"}
+    if not raw_licenses.isdisjoint(fair_use_keywords):
         return None
 
-    # Я верю, что 4.0 - последняя версия, так что 4.0 не буду писать,
-    # а если и появятся когда-нибудь версии поновее, то я ведь и
-    # ссылку указываю, перейдя по которой можно узнать что подразумевалась 4.0
-    for i in range(len(image_licenses)):
-        if image_licenses[i] == "CC BY-SA 4.0":
-            image_licenses[i] = "CC BY-SA"
-        elif image_licenses[i] == "CC BY 4.0":
-            image_licenses[i] = "CC BY"
+    replacements = {
+        "CC BY-SA 4.0": "CC BY-SA",
+        "CC BY 4.0": "CC BY"
+    }
+    image_licenses = {replacements.get(lic, lic) for lic in raw_licenses}
+
+    pd_licenses_map = {
+        "Public domain": "Общественное достояние",
+        "PDM": "Общественное достояние",
+        "CC0": "CC0"
+    }
+    pd_keys = set(pd_licenses_map.keys())
+    if not image_licenses.issubset(pd_keys):
+        image_licenses -= pd_keys
+    elif "CC0" in image_licenses:
+        image_licenses = {"CC0"}
+    else:
+        image_licenses = {"Общественное достояние"}
 
     if netloc == 'web.archive.org':
         lst = image_url.split('https://')
@@ -162,7 +166,7 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     image_author_html = update_links(netloc, image_author_html)
     return Image(
         desc=image_url,
-        licenses=image_licenses,
+        licenses=sorted(image_licenses),
         page_url=image_page_url,
         author_html=image_author_html,
     )
@@ -290,24 +294,10 @@ def get_caption(article: Article, rules_url: str) -> str:
 
     # Дополняем caption_end, вычисляем максимальную длину под остальной текст
     if article.image:
-        # Специальные лицензии
-        special_licenses = {
-            "Public domain": "Общественное достояние",
-            "PDM": "Общественное достояние",
-            "CC0": "CC0"
-        }
-
-        # Проверяем, есть ли специальные лицензии
-        special_license = None
-        for key, text in special_licenses.items():
-            if key in article.image.licenses:
-                special_license = text
-                break
-
         # Добавляем лицензии
         caption_end += f"<a href='{article.image.page_url}'>"
-        if special_license or len(article.image.licenses) == 1:
-            caption_end += f"Лицензия на изображение: {special_license or article.image.licenses[0]}"
+        if len(article.image.licenses) == 1:
+            caption_end += f"Лицензия на изображение: {article.image.licenses[0]}"
         else:
             caption_end += f"Лицензии на изображение: {", ".join(article.image.licenses)}"
         caption_end += "</a>"
