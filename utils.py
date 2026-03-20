@@ -158,18 +158,41 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
     cells = soup.find_all(attrs=find_kwargs)
     for cell in cells:
         if next_tags is None:
-            # INLINE-режим
             target_cell = cell
         else:
-            # TABLE-режим
             target_cell = cell.find_next(next_tags)
             if not target_cell:
                 continue
 
-        parts = []
-        extract_info(target_cell, parts)
-        value = ' '.join(parts).strip()
+        descriptions = target_cell.find_all('div', class_='description', recursive=False)
+        if descriptions:
+            selected = None
 
+            for d in descriptions:
+                if 'ru' in (d.get('class') or []):
+                    selected = d
+                    break
+
+            if not selected:
+                for d in descriptions:
+                    if 'en' in (d.get('class') or []):
+                        selected = d
+                        break
+
+            if not selected:
+                selected = descriptions[0]
+
+            lang_label = selected.find('span', class_='language')
+            if lang_label:
+                lang_label.decompose()
+
+            parts = []
+            extract_info(selected, parts)
+        else:
+            parts = []
+            extract_info(target_cell, parts)
+
+        value = ' '.join(parts).strip()
         if value:
             results.append(value)
 
