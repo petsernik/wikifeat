@@ -47,7 +47,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
 4. Создайте переменную окружения с названием ```WIKIFEATTOKEN``` и токеном доступа к своему телеграм-боту в качестве 
-значения (важно хранить данный токен в тайне от всех других).
+значения (важно хранить данный токен в тайне от всех других). После этого может понадобиться перезагрузка устройства.
 5. В файле ```script.py``` заполните поля:
    * TELEGRAM_CHANNELS: буквенные(для публичных) или цифровые(для приватных) ID каналов или чатов, в которые Ваш 
    телеграм-бот добавлен в качестве администратора;
@@ -172,7 +172,8 @@ Assuming your GitHub username is `NickName` and you forked the project:
     ```python
    User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
-4. Create an environment variable `WIKIFEATTOKEN` with your Telegram bot token (keep it secret!).
+4. Create an environment variable `WIKIFEATTOKEN` with your Telegram bot token (keep it secret!). After that you
+may need to reboot the OS.
 5. Fill in the fields in `script.py`:
    * `TELEGRAM_CHANNELS`: letters (for public) or numbers (for private) IDs of channels or chats in which your 
    Telegram bot is added as an administrator;
