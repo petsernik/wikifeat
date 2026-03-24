@@ -82,8 +82,10 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 ### Windows
 
 Откройте планировщик задач (Win + R > taskschd.msc), нажмите "Создать задачу...", напишите название задачи, добавьте 
-триггер (у меня: "однократно", повторять "каждый час", в течение "бесконечно") и действие (запуск файла ```script.vbs```;
-он запускается максимально незаметно для пользователя, так что ничем не мешает), проверьте условия и параметры. 
+триггер (у меня: "однократно", повторять "каждый час", в течение "бесконечно") и действие (запуск файла ```script.vbs```,
+обязательно укажите рабочую директорию(репозиторий на вашем локальном диске, например, C:\...\wikifeat), 
+иначе задача не сможет выполниться корректно; ```script.vbs``` запускается максимально незаметно для пользователя, 
+так что ничем не мешает), проверьте условия и параметры.
 
 ### Linux / macOS
 
@@ -205,11 +207,14 @@ Below are instructions for each system.
 
 ### Windows
 
-Open Task Scheduler (Win + R → `taskschd.msc`), click "Create Task…", give it a name, add a trigger (for example: 
-"One time", repeat "Every hour", for "Indefinitely") and an action (run `script.vbs`).  
+Open Task Scheduler (Win + R → `taskschd.msc`), click **"Create Task…"**, give it a name, add a trigger (for example:  
+"One time", repeat "Every hour", for **"Indefinitely"**) and an action (run `script.vbs`).  
 
-`script.vbs` launches `script.bat` completely silently, so it does not interfere with the user. Check all conditions 
-and settings.
+Make sure to **set the "Start in" (working directory)** to the local repository folder (for example, `C:\...\wikifeat`), 
+otherwise the task may not run correctly.  
+
+`script.vbs` launches `script.bat` completely silently, so it does not interfere with the user. 
+Review all **conditions** and **settings** to ensure the task runs reliably.
 
 ### Linux / macOS
 
