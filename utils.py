@@ -10,6 +10,7 @@ from bs4 import Tag, BeautifulSoup
 from requests import Response
 
 from config import User_Agent
+from models import ArticleContext
 
 
 def get_request(url: str) -> Response:
@@ -17,6 +18,11 @@ def get_request(url: str) -> Response:
     headers = {'User-Agent': User_Agent}
     return requests.get(url, headers=headers, allow_redirects=True)
 
+def get_url_by_context(ctx: ArticleContext) -> str:
+    if ctx.url_or_name.startswith('https://'):
+        return ctx.url_or_name
+    name = ctx.url_or_name.replace(' ', '_')
+    return f'https://{ctx.lang}.wikipedia.org/wiki/{name}'
 
 def get_url_by_tag(netloc: str, tag: Tag) -> str:
     return update_href(netloc, tag['href'])

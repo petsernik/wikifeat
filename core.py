@@ -9,9 +9,11 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from config import Config, TELEGRAM_BOT_TOKEN, TEXT_IMAGE_PATH
-from models import Article, Image
+from i18n import TKey
+from models import Article, Image, ArticleContext
 from utils import (
     get_request,
+    get_url_by_context,
     get_url_by_tag,
     get_paragraphs,
     clean_soup,
@@ -36,15 +38,15 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 
-def get_image_by_tag(netloc: str, main_block: Tag) -> Optional[Image]:
+def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optional[Image]:
     img_tag = main_block.select_one('a[href] img')
     if not img_tag:
         return None
     image_page_url = get_url_by_tag(netloc, img_tag.parent)
-    return get_image_by_link(image_page_url)
+    return get_image_by_link(image_page_url, ctx)
 
 
-def get_image_by_link(image_page_url: str) -> Optional[Image]:
+def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Image]:
     netloc = urlparse(image_page_url).netloc
     response = get_request(image_page_url)
     if response.status_code in (404, 429):
@@ -82,7 +84,7 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     if not raw_licenses:
         return None
 
-    fair_use_keywords = {"Добросовестное использование", "Fair use"}
+    fair_use_keywords = {ctx.t(TKey.FAIR_USE), "Fair use"}
     if not raw_licenses.isdisjoint(fair_use_keywords):
         return None
 
@@ -92,18 +94,21 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     }
     image_licenses = {replacements.get(lic, lic) for lic in raw_licenses}
 
+    cc0 = "CC0"
+    pdm = ctx.t(TKey.PUBLIC_DOMAIN)
     pd_licenses_map = {
-        "Public domain": "Общественное достояние",
-        "PDM": "Общественное достояние",
-        "CC0": "CC0"
+        "Public domain": pdm,
+        "PDM": pdm,
+        "CC0": cc0
     }
+
     pd_keys = set(pd_licenses_map.keys())
     if not image_licenses.issubset(pd_keys):
         image_licenses -= pd_keys
     elif "CC0" in image_licenses:
-        image_licenses = {"CC0"}
+        image_licenses = {cc0}
     else:
-        image_licenses = {"Общественное достояние"}
+        image_licenses = {pdm}
 
     if netloc == 'web.archive.org':
         lst = image_url.split('https://')
@@ -139,13 +144,15 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     if image_author_html:
         image_author_text = html_to_text(image_author_html)
         if ',' in image_author_text or ';' in image_author_text:
-            image_author_html = 'автор(ы): ' + image_author_html
+            image_author_html = ctx.t(TKey.AUTHOR_MULTIPLE, author=image_author_html)
         else:
-            image_author_html = 'автор: ' + image_author_html
+            image_author_html = ctx.t(TKey.AUTHOR_SINGLE, author=image_author_html)
 
     # Получаем источник, если автор неизвестен
-    if not image_author_html or any(word in image_author_text.lower() for word in ('не указан', 'неизвест',
-                                                                                   'аноним', 'unknown', 'unbekannt')):
+    if not image_author_html or any(
+            word in image_author_text.lower()
+            for word in ('не указан', 'неизвест', 'аноним', 'unknown', 'unbekannt')
+    ):
         source_html = extract_attrs_info(
             image_soup,
             find_kwargs={'id': 'fileinfotpl_src'},
@@ -155,11 +162,15 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
             return None
 
         source_html = replace_links_with_numbers(source_html)
-        if any(char in html_to_text(source_html) for char in [',', ';']):
-            source_html = 'источники: ' + source_html
+
+        source_text = html_to_text(source_html)
+        if ',' in source_text or ';' in source_text:
+            source_html = ctx.t(TKey.SOURCE_MULTIPLE, source=source_html)
         else:
-            source_html = 'источник: ' + source_html
-        image_author_html = 'автор неизвестен, ' + source_html
+            source_html = ctx.t(TKey.SOURCE_SINGLE, source=source_html)
+
+        image_author_html = f"{ctx.t(TKey.AUTHOR_UNKNOWN)}, {source_html}"
+
     if not image_author_html:
         return None
 
@@ -172,7 +183,7 @@ def get_image_by_link(image_page_url: str) -> Optional[Image]:
     )
 
 
-def get_image_by_text(text: str) -> Optional[Image]:
+def get_image_by_text(text: str, ctx: ArticleContext) -> Optional[Image]:
     img = draw_centered_text(text)
     if not img:
         return None
@@ -181,11 +192,12 @@ def get_image_by_text(text: str) -> Optional[Image]:
         desc=TEXT_IMAGE_PATH,
         licenses=['CC0'],
         page_url='https://typodermicfonts.com/public-domain/',
-        author_html='автор шрифта: Ray Larabie'
+        author_html=ctx.t(TKey.FONTS_AUTHOR, author='Ray Larabie')
     )
 
 
-def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Optional[Article]:
+def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Article]:
+    wiki_url = get_url_by_context(ctx)
     response = get_request(wiki_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
@@ -254,8 +266,8 @@ def get_featured_article(last_title: str, wiki_url: str, with_image: bool) -> Op
         link=article_link,
         image=None,
     )
-    if with_image:
-        article.image = get_image_by_tag(netloc, main_block) or get_image_by_text(title)
+    if ctx.with_image:
+        article.image = get_image_by_tag(netloc, main_block, ctx) or get_image_by_text(title, ctx)
     return article
 
 
@@ -284,21 +296,30 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
     return text
 
 
-def get_caption(article: Article, rules_url: str) -> str:
+def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
     caption_beginning = f"<b><a href='{article.link}'>{article.title}</a></b>\n\n"
+
     caption_end = (
-        f"<a href='{article.link}'>Читать статью</a>\n\n"
-        f"<a href='{rules_url}'>Лицензия на текст: CC BY-SA</a>\n"
+        f"<a href='{article.link}'>{ctx.t(TKey.READ_ARTICLE)}</a>\n\n"
+        f"<a href='{rules_url}'>{ctx.t(TKey.TEXT_LICENSE)}</a>\n"
     )
 
     # Дополняем caption_end, вычисляем максимальную длину под остальной текст
     if article.image:
         # Добавляем лицензии
         caption_end += f"<a href='{article.image.page_url}'>"
+
         if len(article.image.licenses) == 1:
-            caption_end += f"Лицензия на изображение: {article.image.licenses[0]}"
+            caption_end += ctx.t(
+                TKey.IMAGE_LICENSE_SINGLE,
+                license=article.image.licenses[0]
+            )
         else:
-            caption_end += f"Лицензии на изображение: {", ".join(article.image.licenses)}"
+            caption_end += ctx.t(
+                TKey.IMAGE_LICENSE_MULTIPLE,
+                licenses=", ".join(article.image.licenses)
+            )
+
         caption_end += "</a>"
 
         # Добавляем автора
@@ -311,9 +332,9 @@ def get_caption(article: Article, rules_url: str) -> str:
     return caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
 
 
-def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str):
+def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str, ctx: ArticleContext):
     # Формируем подпись и отправляем сообщение в каждый канал
-    caption = get_caption(article, rules_url)
+    caption = get_caption(article, rules_url, ctx)
     if not article.image:
         for channel in telegram_channels:
             bot.send_message(channel, caption, parse_mode='HTML')
@@ -329,13 +350,14 @@ def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: 
 
 def run(config: Config) -> bool:
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
-    article = get_featured_article(last_title, config.WIKI_URL, config.WITH_IMAGE)
+    ctx = ArticleContext(lang=config.LANG_CODE, url_or_name=config.WIKI_URL_OR_NAME, with_image=config.WITH_IMAGE)
+    article = get_featured_article(last_title, ctx)
 
     if not article:
-        print('Избранная статья не изменилась')
+        print(ctx.t(TKey.ARTICLE_NOT_CHANGED))
         return False
 
-    send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL)
+    send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL, ctx)
     write_last_article(article.title, config.LAST_ARTICLE_FILE)
-    print(f'Избрана новая статья: {article.title}')
+    print(ctx.t(TKey.NEW_ARTICLE_SELECTED, title=article.title))
     return True

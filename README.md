@@ -54,18 +54,22 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    * RULES_URL: ссылка на правила данного телеграм-канала, у меня 
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/) на любой опубликованный ботом текст, потому что такова 
    лицензия текста на Википедии;
-   * WIKI_URL: в версии 0.2 моего проекта можно указать https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья 
-    или https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article, в целом несложно добавить поддержку шаблона на 
+   * LANG_CODE: код языка по стандарту [ISO 639-1](https://ru.wikipedia.org/wiki/Список_кодов_ISO_639-1)
+     (ru, en, и т.д.)
+   * WIKI_URL: в версии 0.3 моего проекта можно указать "Шаблон:Текущая избранная статья" 
+    или "Wikipedia:Today's featured article", в целом несложно добавить поддержку шаблона на 
     произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
-     * заглавную страницу в явном виде (https://ru.wikipedia.org/wiki/Заглавная_страница или 
-     https://en.wikipedia.org/wiki/Main_Page), но не рекомендуется, так как они могут отображать
+     * заглавную страницу в явном виде ("Заглавная страница" или 
+     "Main Page"), но не рекомендуется, так как они могут отображать
      более старые данные, чем указанные ранее шаблоны (при отсутствии авторизованного входа в аккаунт на Википедии,
-     например, через режим инкогнито).
-     * произвольную страницу для единичного теста, например, 
-     https://ru.wikipedia.org/wiki/У_омута (или статью на любом другом языке); также поддерживаются и правильно 
+     например, через режим инкогнито);
+     * произвольную страницу для единичного теста, например, "У омута";
+     * ссылку можно ввести полноценно, например, https://ru.wikipedia.org/wiki/Заглавная_страница
+     или https://ru.wikipedia.org/wiki/У_омута; также поддерживаются и правильно 
      обрабатываются ссылки с веб-архива, можно указать 
-     https://web.archive.org/web/20211122/https://ru.wikipedia.org/wiki/Заглавная_страница и Вы получите статью избранную
-     (примерно) 22 ноября 2021.
+     https://web.archive.org/web/20211122/https://ru.wikipedia.org/wiki/Заглавная_страница и Вы получите статью
+     избранную (примерно) 22 ноября 2021.
+   * остальные параметры можно не менять.
 6. Запустите:
     ```bash
     python script.py
@@ -181,16 +185,24 @@ may need to reboot the OS.
    Telegram bot is added as an administrator;
    * `RULES_URL`: link to your channel’s rules. Don't forget about 
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
-   * `WIKI_URL`: for version 0.2 you can use https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья or 
-   https://en.wikipedia.org/wiki/Wikipedia:Today's_featured_article. Templates in any other language can be added — 
-   just separate the featured article block correctly. You can also specify:
-     * the main page explicitly (https://ru.wikipedia.org/wiki/Заглавная_страница or 
-     https://en.wikipedia.org/wiki/Main_Page), but this is not recommended, as they may display older data than the 
-     templates mentioned above (when not logged into a Wikipedia account, for example in incognito mode).
-     * an arbitrary page for a test, e.g., https://en.wikipedia.org/wiki/Anthony_Roll 
-     (or article at any other language), or use web archive links like 
-     http://web.archive.org/web/20110317042632/http://en.wikipedia.org/wiki/Main_Page to get the article as 
-     featured on (roughly) that date.
+   * `LANG_CODE`: language code according to the [ISO 639-1 standard](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) 
+      (ru, en, etc.);
+   * `WIKI_URL`: in version 0.3 of the project you can specify
+     "Шаблон:Текущая избранная статья" or "Wikipedia:Today's featured article".
+     In general, it is not difficult to add support for templates in any language —
+     the main task is to correctly extract the featured article block from the rest
+     of the page. You can also specify:
+     * the main page explicitly ("Заглавная страница" or "Main Page"), but this is not
+       recommended, as it may display older data than the templates mentioned above
+       (for example, when not logged into a Wikipedia account, such as in incognito
+       mode);
+     * an arbitrary page for a one-time test, for example "Anthony Roll";
+     * a full URL, for example https://en.wikipedia.org/wiki/Main_Page or
+       https://en.wikipedia.org/wiki/Anthony_Roll; web archive links are also
+       supported and processed correctly. For example,
+       http://web.archive.org/web/20110317042632/http://en.wikipedia.org/wiki/Main_Page
+       will return the article featured (approximately) on that date;
+   * other parameters can be left unchanged.
 6. Run it:
     ```bash
     python script.py

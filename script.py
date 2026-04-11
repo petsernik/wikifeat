@@ -11,7 +11,8 @@ def main():
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeat"],
         RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL="https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья",
+        WIKI_URL_OR_NAME="Шаблон:Текущая избранная статья",
+        LANG_CODE="ru",
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article.txt"),
         WITH_IMAGE=True,
     )
@@ -23,7 +24,8 @@ def main():
     cfg_text = Config(
         TELEGRAM_CHANNELS=["@wikifeattexts"],
         RULES_URL="https://t.me/wikifeattexts/3",
-        WIKI_URL="https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья",
+        WIKI_URL_OR_NAME="Шаблон:Текущая избранная статья",
+        LANG_CODE="ru",
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_only_text.txt"),
         WITH_IMAGE=False,
     )

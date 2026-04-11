@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+from i18n import TKey, translate
+
 
 @dataclass
 class Image:
@@ -42,3 +44,13 @@ class Article:
     paragraphs: List[str]
     link: str
     image: Optional[Image]
+
+
+@dataclass
+class ArticleContext:
+    lang: str
+    url_or_name: str
+    with_image: bool
+
+    def t(self, key: TKey, **kwargs) -> str:
+        return translate(self.lang, key, **kwargs)
