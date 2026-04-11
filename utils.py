@@ -196,6 +196,7 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
         if value:
             results.append(value)
 
+    results = list(sorted(set(results))) # unique
     return '; '.join(results) if results else None
 
 

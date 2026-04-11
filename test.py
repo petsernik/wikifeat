@@ -10,7 +10,7 @@ if __name__ == "__main__":
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeattest"],
         RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL="https://web.archive.org/web/20260320211005/https://ru.wikipedia.org/wiki/Червонец_(Сеятель)",
+        WIKI_URL="https://web.archive.org/web/20260407205125/https://ru.wikipedia.org/wiki/Заглавная_страница",
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
         WITH_IMAGE=True,
     )
