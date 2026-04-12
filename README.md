@@ -56,14 +56,16 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    лицензия текста на Википедии;
    * LANG_CODE: код языка по стандарту [ISO 639-1](https://ru.wikipedia.org/wiki/Список_кодов_ISO_639-1)
      (ru, en, и т.д.)
-   * WIKI_URL: в версии 0.3 моего проекта можно указать "Шаблон:Текущая избранная статья" 
+   * WIKI_URL: в версии 0.31 моего проекта можно указать "Шаблон:Текущая избранная статья" 
     или "Wikipedia:Today's featured article", в целом несложно добавить поддержку шаблона на 
     произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
-     * заглавную страницу в явном виде ("Заглавная страница" или 
-     "Main Page"), но не рекомендуется, так как они могут отображать
+     * заглавную страницу в явном виде ("Заглавная страница", 
+     "Main Page", "Wikipédia:Accueil principal", ...), но не рекомендуется, так как они могут отображать
      более старые данные, чем указанные ранее шаблоны (при отсутствии авторизованного входа в аккаунт на Википедии,
      например, через режим инкогнито);
-     * произвольную страницу для единичного теста, например, "У омута";
+     * на данный момент поддерживаются такие значения заглавной страницы: "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
+     Можно сразу использовать TRANSLATIONS[LANG_CODE][TKey.MAIN_PAGE] из файла i18n.py, а не писать вручную.
+     * произвольную страницу для единичного теста, например, "У омута" (статью можно указывать на любом языке);
      * ссылку можно ввести полноценно, например, https://ru.wikipedia.org/wiki/Заглавная_страница
      или https://ru.wikipedia.org/wiki/У_омута; также поддерживаются и правильно 
      обрабатываются ссылки с веб-архива, можно указать 
@@ -187,7 +189,7 @@ may need to reboot the OS.
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
    * `LANG_CODE`: language code according to the [ISO 639-1 standard](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) 
       (ru, en, etc.);
-   * `WIKI_URL`: in version 0.3 of the project you can specify
+   * `WIKI_URL`: in version 0.31 of the project you can specify
      "Шаблон:Текущая избранная статья" or "Wikipedia:Today's featured article".
      In general, it is not difficult to add support for templates in any language —
      the main task is to correctly extract the featured article block from the rest
@@ -196,7 +198,9 @@ may need to reboot the OS.
        recommended, as it may display older data than the templates mentioned above
        (for example, when not logged into a Wikipedia account, such as in incognito
        mode);
-     * an arbitrary page for a one-time test, for example "Anthony Roll";
+     * currently supported values for the main page are: "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
+       You can use TRANSLATIONS[LANG_CODE][TKey.MAIN_PAGE] from the i18n.py file instead of specifying it manually.
+     * an arbitrary page for a single test, for example "Anthony Roll" (the article can be specified in any language);
      * a full URL, for example https://en.wikipedia.org/wiki/Main_Page or
        https://en.wikipedia.org/wiki/Anthony_Roll; web archive links are also
        supported and processed correctly. For example,

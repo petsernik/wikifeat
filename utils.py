@@ -7,6 +7,7 @@ from typing import Optional
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from bs4 import Tag, BeautifulSoup
+from bs4.element import PageElement, NavigableString
 from requests import Response
 
 from config import User_Agent
@@ -18,17 +19,22 @@ def get_request(url: str) -> Response:
     headers = {'User-Agent': User_Agent}
     return requests.get(url, headers=headers, allow_redirects=True)
 
+
 def get_url_by_context(ctx: ArticleContext) -> str:
     if ctx.url_or_name.startswith('https://'):
         return ctx.url_or_name
     name = ctx.url_or_name.replace(' ', '_')
     return f'https://{ctx.lang}.wikipedia.org/wiki/{name}'
 
+
 def get_url_by_tag(netloc: str, tag: Tag) -> str:
-    return update_href(netloc, tag['href'])
+    url = tag.get("href") or tag.get("resource")
+    if not url:
+        url = tag.parent.get("href") if tag.parent else ""
+    return update_link(netloc, url) if url else ""
 
 
-def update_href(netloc: str, href: str) -> str:
+def update_link(netloc: str, href: str) -> str:
     if href.startswith('//'):
         return f'https:{href}'
     if href.startswith('https://'):
@@ -41,11 +47,15 @@ def update_href(netloc: str, href: str) -> str:
         return 'https://' + netloc + href
 
 
-def get_paragraphs(soup: BeautifulSoup) -> list[str]:
-    paragraphs = [p.get_text().strip() for p in soup.select(':scope > * > p')]
+def clean_select_list(soup: PageElement | Tag | NavigableString | None | int, selector: str) -> list[str]:
+    return [q for p in soup.select(selector) if (q := p.get_text().strip())]
+
+
+def get_paragraphs(soup: PageElement | Tag | NavigableString | None | int) -> list[str]:
+    paragraphs = clean_select_list(soup, ':scope > * > p')
     if len(paragraphs) > 0:
         return paragraphs
-    paragraphs = [p.get_text().strip() for p in soup.select(':scope > p')]  # 20240321 case (hosted on web.archive.org)
+    paragraphs = clean_select_list(soup, ':scope > p')  # 20240321 case (hosted on web.archive.org)
     if len(paragraphs) > 0:
         return paragraphs
     return [soup.get_text().strip()]  # 20260221 case (en.wikipedia.org main page hosted on web.archive.org)
@@ -55,10 +65,6 @@ def is_hidden(tag: Tag) -> bool:
     # style="display:none"
     style = tag.get("style", "").replace(" ", "").lower()
     if "display:none" in style:
-        return True
-
-    # aria-hidden="true"
-    if tag.get("aria-hidden", "").lower() == "true":
         return True
 
     # hidden attribute
@@ -80,8 +86,8 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     return soup
 
 
-def filter_soup(soup: BeautifulSoup) -> BeautifulSoup:
-    for tag in soup.find_all(attrs={"role": "presentation"}):
+def filter_soup(soup: BeautifulSoup, *, remove_kwargs) -> BeautifulSoup:
+    for tag in soup.find_all(attrs=remove_kwargs):
         if not tag.decomposed:
             tag.decompose()
     return soup
@@ -202,7 +208,7 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
         if value:
             results.append(value)
 
-    results = list(sorted(set(results))) # unique
+    results = list(sorted(set(results)))  # unique
     return '; '.join(results) if results else None
 
 
@@ -243,7 +249,7 @@ def update_links(netloc: str, html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
 
     for a in soup.find_all('a', href=True):
-        a['href'] = update_href(netloc, a['href'])
+        a['href'] = update_link(netloc, a['href'])
 
     return str(soup)
 

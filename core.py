@@ -42,7 +42,7 @@ def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optio
     img_tag = main_block.select_one('a[href] img')
     if not img_tag:
         return None
-    image_page_url = get_url_by_tag(netloc, img_tag.parent)
+    image_page_url = get_url_by_tag(netloc, img_tag)
     return get_image_by_link(image_page_url, ctx)
 
 
@@ -208,16 +208,16 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
     # Определяем блок с избранной статьёй
     parsed = urlparse(wiki_url)
     netloc, path = parsed.netloc, parsed.path
-    if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
+    if ctx.lang == 'ru' and path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
-        main_block = filter_soup(main_block)
+        main_block = filter_soup(main_block, remove_kwargs={"role": "presentation"})
         link_tag = main_block.find('a', href=True)
         title = link_tag['title']
         if not title or title == last_title:
             return None
         article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
-    elif path.endswith('/wiki/Заглавная_страница'):
+    elif ctx.lang == 'ru' and path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
         link_tag = main_block.find(
             'a',
@@ -230,7 +230,7 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
             return None
         article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
-    elif (path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
+    elif ctx.lang == 'en' and (path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
           or path.endswith('/wiki/Wikipedia:Today%27s_featured_article')):
         # %27 and ' are not the same by request, I don't know what the reason for it
         main_block = soup.find('div', class_='mp-tfa')
@@ -250,6 +250,104 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
         if paragraphs:
             p = paragraphs[-1].replace('\xa0', ' ')
             paragraphs[-1] = p.removesuffix(' (Full article...)').removesuffix(' (more...)')
+    elif ctx.lang == 'fr' and path.endswith("/wiki/Wikipédia:Accueil_principal"):
+        main_block = soup.find('div', class_='accueil_2017_cadre')
+        link_tag = main_block.find(
+            'a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'Lire la suite'
+        )
+        if not link_tag:
+            raise Exception("Unexpected parse case")
+        title = link_tag.get('title')
+        if title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix('Lire la suite')
+    elif ctx.lang == 'de' and path.endswith("/wiki/Wikipedia:Hauptseite"):
+        main_block = soup.find('div', id='artikel').find('div', class_='hauptseite-box-content')
+        link_tag = main_block.find('a', href=True)
+        if not link_tag:
+            raise Exception("Unexpected parse case")
+        title = link_tag.get('title')
+        if title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix('Zum Artikel …')
+    elif ctx.lang == 'es' and path.endswith('/wiki/Wikipedia:Portada'):
+        main_block = soup.find('div', id='mwCA')
+        link_tag = main_block.find('a', href=True)
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+    elif ctx.lang == 'it' and path.endswith('/wiki/Pagina_principale'):
+        main_block = soup.find('div',about='#mwt10').find('div', class_='itwiki-template-finestrahome-contenuto')
+        link_tag = main_block.find('a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'Leggi la voce')
+        if not link_tag:
+            raise Exception("Unexpected parse case")
+        title = link_tag.get('title')
+        if title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix('Leggi la voce · Tutte le voci in vetrina')
+    elif ctx.lang == 'pt' and path.endswith('/wiki/Wikipédia:Página_principal'):
+        main_block = soup.find('div', class_='main-page-block-contents')
+        main_block = filter_soup(main_block, remove_kwargs={'id': 'mwDg'})
+        link_tag = next(
+            (
+                a for a in main_block.find_all('a')
+                if 'Artigo completo...' in a.get_text(separator=" ", strip=True)
+            ),
+            None
+        )
+        # link_tag = main_block.find('a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'Artigo completo...')
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix(' (Artigo completo...)')
+    elif ctx.lang == 'pl' and path.endswith('/wiki/Wikipedia:Strona_główna'):
+        main_block = soup.find('div', id='main-page-featured-article')
+        link_tag = main_block.find('a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'Czytaj więcej…')
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.removesuffix(' Czytaj więcej…')
+    elif ctx.lang == 'be' and path.endswith('/wiki/Галоўная_старонка'):
+        main_block = soup.find('div', id='main-page-featured-article')
+        link_tag = main_block.find('a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'далей…')
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
+        if paragraphs:
+            p = paragraphs[-1].replace('\xa0', ' ')
+            paragraphs[-1] = p.replace(' (далей…).', '.')
+    elif ctx.lang == 'kk' and path.endswith(''):
+        main_block = soup.find('div', id='main-tfa')
+        link_tag = main_block.find('a',href=True,)
+        title = link_tag['title']
+        if not title or title == last_title:
+            return None
+        article_link = get_url_by_tag(netloc, link_tag)
+        paragraphs = get_paragraphs(main_block)
     else:
         # Любая другая статья — воспринимаем как избранную (корректно обработает, даже если не избранная)
         main_block = soup.find('div', id='mw-content-text')
