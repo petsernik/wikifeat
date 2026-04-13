@@ -434,6 +434,7 @@ def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
 
 def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str, ctx: ArticleContext):
     # Формируем подпись и отправляем сообщение в каждый канал
+    print(f'[LOG] Trying to send {article.title} ({article.link}) to telegram channels')
     caption = get_caption(article, rules_url, ctx)
     if not article.image:
         for channel in telegram_channels:
