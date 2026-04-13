@@ -197,16 +197,17 @@ def get_image_by_text(text: str, ctx: ArticleContext) -> Optional[Image]:
 
 
 def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Article]:
-    wiki_url = get_url_by_context(ctx)
-    response = get_request(wiki_url)
+    init_url = get_url_by_context(ctx)
+    response = get_request(init_url)
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
                         f'Response body: {response.content}')
+    wiki_url = response.url
     response.encoding = 'utf-8'
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
     # Определяем блок с избранной статьёй
-    parsed = urlparse(wiki_url)
+    parsed = urlparse(init_url)
     netloc, path = parsed.netloc, parsed.path
     if ctx.lang == 'ru' and path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
@@ -230,8 +231,9 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
             return None
         article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
-    elif ctx.lang == 'en' and (path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
-          or path.endswith('/wiki/Wikipedia:Today%27s_featured_article')):
+    elif ctx.lang == 'en' and (
+            path.endswith("/wiki/Wikipedia:Today's_featured_article") or path.endswith('/wiki/Main_Page')
+            or path.endswith('/wiki/Wikipedia:Today%27s_featured_article')):
         # %27 and ' are not the same by request, I don't know what the reason for it
         main_block = soup.find('div', class_='mp-tfa')
         if not main_block:
@@ -287,7 +289,7 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
         article_link = get_url_by_tag(netloc, link_tag)
         paragraphs = get_paragraphs(main_block)
     elif ctx.lang == 'it' and path.endswith('/wiki/Pagina_principale'):
-        main_block = soup.find('div',about='#mwt10').find('div', class_='itwiki-template-finestrahome-contenuto')
+        main_block = soup.find('div', about='#mwt10').find('div', class_='itwiki-template-finestrahome-contenuto')
         link_tag = main_block.find('a', string=lambda s: s and s.strip().replace('\xa0', ' ') in 'Leggi la voce')
         if not link_tag:
             raise Exception("Unexpected parse case")
@@ -342,7 +344,7 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
             paragraphs[-1] = p.replace(' (далей…).', '.')
     elif ctx.lang == 'kk' and path.endswith(''):
         main_block = soup.find('div', id='main-tfa')
-        link_tag = main_block.find('a',href=True,)
+        link_tag = main_block.find('a', href=True, )
         title = link_tag['title']
         if not title or title == last_title:
             return None
@@ -447,6 +449,9 @@ def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: 
 
 
 def run(config: Config) -> bool:
+    if not config.WIKI_URL_OR_NAME:
+        raise Exception(f'This option is not supported for this language ({config.LANG_CODE}), please use '
+                        f'TRANSLATIONS[lang][TKey.MAIN_PAGE] instead (or update i18n.py file)')
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
     ctx = ArticleContext(lang=config.LANG_CODE, url_or_name=config.WIKI_URL_OR_NAME, with_image=config.WITH_IMAGE)
     article = get_featured_article(last_title, ctx)

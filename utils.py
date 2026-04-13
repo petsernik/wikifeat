@@ -14,8 +14,8 @@ from config import User_Agent
 from models import ArticleContext
 
 
+# Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
 def get_request(url: str) -> Response:
-    # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
     headers = {'User-Agent': User_Agent}
     return requests.get(url, headers=headers, allow_redirects=True)
 

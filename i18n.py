@@ -24,6 +24,8 @@ class TKey(str, Enum):
     NEW_ARTICLE_SELECTED = 'new_article_selected'
 
     MAIN_PAGE = 'main_page'
+    TODAY_TEMPLATE = 'TODAY_TEMPLATE'
+    RANDOM_FEATURED_PAGE = 'random_featured_page'
 
 
 # ISO 639-1
@@ -49,8 +51,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Избранная статья не изменилась',
         TKey.NEW_ARTICLE_SELECTED: 'Избрана новая статья: {title}',
-
-        TKey.MAIN_PAGE: 'Заглавная страница',
     },
 
     'en': {
@@ -74,8 +74,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Featured article has not changed',
         TKey.NEW_ARTICLE_SELECTED: 'New featured article selected: {title}',
-
-        TKey.MAIN_PAGE: 'Main Page',
     },
 
     'fr': {
@@ -99,8 +97,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: "L'article vedette n'a pas changé",
         TKey.NEW_ARTICLE_SELECTED: 'Nouvel article vedette sélectionné : {title}',
-
-        TKey.MAIN_PAGE: 'Wikipédia:Accueil principal',
     },
 
     'de': {
@@ -124,8 +120,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Ausgewählter Artikel hat sich nicht geändert',
         TKey.NEW_ARTICLE_SELECTED: 'Neuer ausgewählter Artikel: {title}',
-
-        TKey.MAIN_PAGE: 'Wikipedia:Hauptseite',
     },
 
     'es': {
@@ -149,8 +143,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'El artículo destacado no ha cambiado',
         TKey.NEW_ARTICLE_SELECTED: 'Nuevo artículo destacado seleccionado: {title}',
-
-        TKey.MAIN_PAGE: 'Wikipedia:Portada',
     },
 
     'it': {
@@ -174,8 +166,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'L’articolo in evidenza non è cambiato',
         TKey.NEW_ARTICLE_SELECTED: 'Nuovo articolo in evidenza selezionato: {title}',
-
-        TKey.MAIN_PAGE: 'Pagina principale',
     },
 
     'pt': {
@@ -199,8 +189,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'O artigo em destaque não mudou',
         TKey.NEW_ARTICLE_SELECTED: 'Novo artigo em destaque selecionado: {title}',
-
-        TKey.MAIN_PAGE: 'Wikipédia:Página_principal',
     },
 
     'pl': {
@@ -224,8 +212,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Wyróżniony artykuł nie zmienił się',
         TKey.NEW_ARTICLE_SELECTED: 'Wybrano nowy wyróżniony artykuł: {title}',
-
-        TKey.MAIN_PAGE: 'Wikipedia:Strona główna',
     },
 
     'be': {
@@ -249,8 +235,6 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Выбраны артыкул не змяніўся',
         TKey.NEW_ARTICLE_SELECTED: 'Абраны новы артыкул: {title}',
-
-        TKey.MAIN_PAGE: 'Галоўная старонка',
     },
 
     'kk': {
@@ -274,10 +258,65 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Таңдалған мақала өзгерген жоқ',
         TKey.NEW_ARTICLE_SELECTED: 'Жаңа таңдалған мақала: {title}',
-
-        TKey.MAIN_PAGE: 'Басты бет',
     },
 }
+
+# Categories from https://www.wikidata.org/wiki/Q4387444, THANKS :)
+ADDITIONAL_TRANSLATIONS = {
+    'ru': {
+        TKey.MAIN_PAGE: 'Заглавная страница',
+        TKey.TODAY_TEMPLATE: 'Шаблон:Текущая избранная статья',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Категория:Википедия:Избранные_статьи_по_алфавиту',
+    },
+    'en': {
+        TKey.MAIN_PAGE: 'Main Page',
+        TKey.TODAY_TEMPLATE: "Wikipedia:Today's featured article",
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Category:Featured articles',
+    },
+    'fr': {
+        TKey.MAIN_PAGE: 'Wikipédia:Accueil principal',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Catégorie:Article de qualité',
+    },
+    'de': {
+        TKey.MAIN_PAGE: 'Wikipedia:Hauptseite',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Kategorie:Wikipedia:Exzellent',
+    },
+    'es': {
+        TKey.MAIN_PAGE: 'Wikipedia:Portada',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Categoría:Wikipedia:Artículos destacados',
+    },
+    'it': {
+        TKey.MAIN_PAGE: 'Pagina principale',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Categoria:Voci_in_vetrina_su_it.wiki',
+    },
+    'pt': {
+        TKey.MAIN_PAGE: 'Wikipédia:Página_principal',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Categoria:!Artigos destacados',
+    },
+    'pl': {
+        TKey.MAIN_PAGE: 'Wikipedia:Strona główna',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Kategoria:Artykuły na Medal',
+    },
+    'be': {
+        TKey.MAIN_PAGE: 'Галоўная старонка',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Катэгорыя:Вікіпедыя:Выдатныя артыкулы',
+    },
+    'kk': {
+        TKey.MAIN_PAGE: 'Басты бет',
+        TKey.TODAY_TEMPLATE: '',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Санат:Уикипедия:Алфавит бойынша таңдаулы мақалалар',
+    },
+}
+
+for lang, data in ADDITIONAL_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)
 
 
 def translate(lang: str, key: TKey, **kwargs) -> str:

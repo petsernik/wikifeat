@@ -4,8 +4,9 @@
 Ссылка на канал с публикациями: https://t.me/wikifeat.
 
 Далее Вы можете прочитать как запустить данный проект для публикаций в Вашем собственном канале, 
-а также узнать какой дополнительный (опциональный) функционал предоставляется проектом (мультиязычность, 
-возможность работы с конкретной статьёй, поддержка ссылок из web.archive.org).
+а также узнать какой дополнительный (опциональный) функционал предоставляется проектом (мультиязычность,
+получение случайной избранной статьи, возможность работы с конкретной статьёй, 
+поддержка ссылок из web.archive.org).
 
 ## Условия использования кода
 Помимо условий лицензии MIT, настоятельно прошу при первом портировании, копировании, клонировании или форке 
@@ -56,15 +57,18 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    лицензия текста на Википедии;
    * LANG_CODE: код языка по стандарту [ISO 639-1](https://ru.wikipedia.org/wiki/Список_кодов_ISO_639-1)
      (ru, en, и т.д.)
-   * WIKI_URL: в версии 0.31 моего проекта можно указать "Шаблон:Текущая избранная статья" 
+   * WIKI_URL: в версии 0.32 моего проекта можно указать "Шаблон:Текущая избранная статья" 
     или "Wikipedia:Today's featured article", в целом несложно добавить поддержку шаблона на 
     произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
      * заглавную страницу в явном виде ("Заглавная страница", 
      "Main Page", "Wikipédia:Accueil principal", ...), но не рекомендуется, так как они могут отображать
      более старые данные, чем указанные ранее шаблоны (при отсутствии авторизованного входа в аккаунт на Википедии,
      например, через режим инкогнито);
-     * на данный момент поддерживаются такие значения заглавной страницы: "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
-     Можно сразу использовать TRANSLATIONS[LANG_CODE][TKey.MAIN_PAGE] из файла i18n.py, а не писать вручную.
+     * на данный момент поддерживаются такие значения заглавной страницы: 
+     "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
+     * вместо записи вручную можно сразу использовать TRANSLATIONS[lang_code][x] из файла i18n.py, где x это 
+     TKey.MAIN_PAGE или TKey.TODAY_TEMPLATE или TKey.RANDOM_FEATURED_PAGE.
+     * случайную избранную страницу, указав TRANSLATIONS[lang_code][TKey.RANDOM_FEATURED_PAGE].
      * произвольную страницу для единичного теста, например, "У омута" (статью можно указывать на любом языке);
      * ссылку можно ввести полноценно, например, https://ru.wikipedia.org/wiki/Заглавная_страница
      или https://ru.wikipedia.org/wiki/У_омута; также поддерживаются и правильно 
@@ -141,7 +145,8 @@ automate publications.
 
 Below you can read how to run this project for publishing in your own channel, 
 as well as learn about the additional (optional) features provided by the project 
-(multilingual support, the ability to work with a specific article, and support for links from web.archive.org).
+(multilingual support, random featrued article support, the ability to work with a specific article, 
+and support for links from web.archive.org).
 
 ## Usage Terms
 In addition to the MIT License Terms, please replace the `User-Agent` value in `config.py` when first porting, 
@@ -189,7 +194,7 @@ may need to reboot the OS.
    [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
    * `LANG_CODE`: language code according to the [ISO 639-1 standard](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) 
       (ru, en, etc.);
-   * `WIKI_URL`: in version 0.31 of the project you can specify
+   * `WIKI_URL`: in version 0.32 of the project you can specify
      "Шаблон:Текущая избранная статья" or "Wikipedia:Today's featured article".
      In general, it is not difficult to add support for templates in any language —
      the main task is to correctly extract the featured article block from the rest
@@ -199,7 +204,9 @@ may need to reboot the OS.
        (for example, when not logged into a Wikipedia account, such as in incognito
        mode);
      * currently supported values for the main page are: "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
-       You can use TRANSLATIONS[LANG_CODE][TKey.MAIN_PAGE] from the i18n.py file instead of specifying it manually.
+     * you can use TRANSLATIONS[lang_code][x], where x is TKey.MAIN_PAGE or TKey.TODAY_TEMPLATE or 
+     TKey.RANDOM_FEATURED_PAGE from the i18n.py file instead of specifying it manually;
+     * a random featured article with using TRANSLATIONS[lang_code][TKey.RANDOM_FEATURED_PAGE];
      * an arbitrary page for a single test, for example "Anthony Roll" (the article can be specified in any language);
      * a full URL, for example https://en.wikipedia.org/wiki/Main_Page or
        https://en.wikipedia.org/wiki/Anthony_Roll; web archive links are also
