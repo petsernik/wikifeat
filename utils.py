@@ -73,7 +73,7 @@ def is_hidden(tag: Tag) -> bool:
 
     # классы
     classes = tag.get("class") or []
-    if any(c.lower() in {"noprint", "hidden", "metadata"} for c in classes):
+    if any(c.lower() in {"noprint", "hidden", "metadata", "infobox-above"} for c in classes):
         return True
 
     return False

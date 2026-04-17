@@ -9,11 +9,11 @@ from models import Article
 if __name__ == "__main__":
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
-    for lang in TRANSLATIONS.keys():
+    for lang in ['be']:
         cfg = Config(
             TELEGRAM_CHANNELS=["@wikifeattest"],
             RULES_URL="https://t.me/wikifeat/4",
-            WIKI_URL_OR_NAME=TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE],
+            WIKI_URL_OR_NAME='https://be.wikipedia.org/wiki/Вожык_у_тумане',
             LANG_CODE=lang,
             LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
             WITH_IMAGE=True,
