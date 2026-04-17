@@ -306,7 +306,7 @@ ADDITIONAL_TRANSLATIONS = {
     'be': {
         TKey.MAIN_PAGE: 'Галоўная старонка',
         TKey.TODAY_TEMPLATE: '',
-        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Катэгорыя:Вікіпедыя:Выдатныя артыкулы',
+        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Катэгорыя:Вікіпедыя:Выдатныя артыкулы паводле алфавіта',
     },
     'kk': {
         TKey.MAIN_PAGE: 'Басты бет',
