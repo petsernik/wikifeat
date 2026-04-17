@@ -228,7 +228,7 @@ TRANSLATIONS = {
         TKey.SOURCE_SINGLE: 'крыніца: {source}',
         TKey.SOURCE_MULTIPLE: 'крыніцы: {source}',
 
-        TKey.FAIR_USE: 'Сумленнае выкарыстанне',
+        TKey.FAIR_USE: 'Добрасумленнае выкарыстанне',
         TKey.PUBLIC_DOMAIN: 'Грамадскі набытак',
 
         TKey.FONTS_AUTHOR: 'аўтар шрыфту: {author}',
