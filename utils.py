@@ -3,6 +3,7 @@ import os
 import re
 import string
 from typing import Optional
+from urllib.parse import urlparse, unquote
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -20,6 +21,10 @@ def get_request(url: str) -> Response:
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
+def normalize_url(url: str) -> str:
+    return unquote(url)
+
+
 def get_url_by_context(ctx: ArticleContext) -> str:
     if ctx.url_or_name.startswith('https://'):
         return ctx.url_or_name
@@ -31,20 +36,25 @@ def get_url_by_tag(netloc: str, tag: Tag) -> str:
     url = tag.get("href") or tag.get("resource")
     if not url:
         url = tag.parent.get("href") if tag.parent else ""
-    return update_link(netloc, url) if url else ""
+    return join_url(netloc, url) if url else ""
 
 
-def update_link(netloc: str, href: str) -> str:
-    if href.startswith('//'):
-        return f'https:{href}'
-    if href.startswith('https://'):
-        return href
+def split_url(url: str) -> tuple[str, str]:
+    parsed = urlparse(url)
+    return parsed.netloc, parsed.path
+
+
+def join_url(netloc: str, path: str) -> str:
+    if path.startswith('//'):
+        return f'https:{path}'
+    if path.startswith('https://'):
+        return path
     if netloc == 'web.archive.org':
         # Ищем последнюю архивную версию вместо определённой даты, например:
         # https://web.archive.org/web/20240619223918/... ---> https://web.archive.org/web/2/...
-        return 'https://' + netloc + '/web/2/' + href.split('/', 3)[3]
+        return f'https://{netloc}/web/2/{path.split('/', 3)[3]}'
     else:
-        return 'https://' + netloc + href
+        return f'https://{netloc}{path}'
 
 
 def clean_select_list(soup: PageElement | Tag | NavigableString | None | int, selector: str) -> list[str]:
@@ -249,7 +259,7 @@ def update_links(netloc: str, html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
 
     for a in soup.find_all('a', href=True):
-        a['href'] = update_link(netloc, a['href'])
+        a['href'] = join_url(netloc, a['href'])
 
     return str(soup)
 
