@@ -3,7 +3,7 @@ import os
 import re
 import string
 from typing import Optional
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, quote
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -21,22 +21,26 @@ def get_request(url: str) -> Response:
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
-def normalize_url(url: str) -> str:
+def unquote_url(url: str) -> str:
     return unquote(url)
 
 
-def get_url_by_context(ctx: ArticleContext) -> str:
+def quote_url(url: str) -> str:
+    return quote(unquote(url), safe=":/?=&")
+
+
+def get_quote_url_by_context(ctx: ArticleContext) -> str:
     if ctx.url_or_name.startswith('https://'):
-        return ctx.url_or_name
+        return quote_url(ctx.url_or_name)
     name = ctx.url_or_name.replace(' ', '_')
-    return f'https://{ctx.lang}.wikipedia.org/wiki/{name}'
+    return quote_url(f'https://{ctx.lang}.wikipedia.org/wiki/{name}')
 
 
-def get_url_by_tag(netloc: str, tag: Tag) -> str:
+def get_quote_url_by_tag(netloc: str, tag: Tag) -> str:
     url = tag.get("href") or tag.get("resource")
     if not url:
         url = tag.parent.get("href") if tag.parent else ""
-    return join_url(netloc, url) if url else ""
+    return quote_url(join_url(netloc, url)) if url else ""
 
 
 def split_url(url: str) -> tuple[str, str]:
@@ -259,7 +263,7 @@ def update_links(netloc: str, html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
 
     for a in soup.find_all('a', href=True):
-        a['href'] = join_url(netloc, a['href'])
+        a['href'] = quote_url(join_url(netloc, a['href']))
 
     return str(soup)
 

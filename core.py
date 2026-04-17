@@ -14,8 +14,8 @@ from models import Article, Image, ArticleContext
 from parsers import LANG_PARSERS
 from utils import (
     get_request,
-    get_url_by_context,
-    get_url_by_tag,
+    get_quote_url_by_context,
+    get_quote_url_by_tag,
     clean_soup,
     remove_brackets,
     read_last_article,
@@ -28,7 +28,7 @@ from utils import (
     draw_centered_text,
     is_balanced,
     ends_with_one_char_abbr,
-    normalize_url,
+    unquote_url
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -42,7 +42,7 @@ def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optio
     img_tag = main_block.select_one('a[href] img')
     if not img_tag:
         return None
-    image_page_url = get_url_by_tag(netloc, img_tag)
+    image_page_url = get_quote_url_by_tag(netloc, img_tag)
     return get_image_by_link(image_page_url, ctx)
 
 
@@ -70,12 +70,12 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
                 width = int(match.group(1))
                 height = int(match.group(2))
                 if width <= width_max and height <= height_max:
-                    image_url = get_url_by_tag(netloc, link)
+                    image_url = get_quote_url_by_tag(netloc, link)
                     break
     else:
         file_link_tag = image_soup.find('a', class_='internal')
         if file_link_tag and file_link_tag.has_attr('href'):
-            image_url = get_url_by_tag(netloc, file_link_tag)
+            image_url = get_quote_url_by_tag(netloc, file_link_tag)
     if not image_url:
         return None
 
@@ -197,15 +197,14 @@ def get_image_by_text(text: str, ctx: ArticleContext) -> Optional[Image]:
 
 
 def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Article]:
-    response = get_request(get_url_by_context(ctx))
+    response = get_request(get_quote_url_by_context(ctx))
     if response.status_code != 200:
         raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
                         f'Response body: {response.content}')
     response.encoding = 'utf-8'
     parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
-    url = normalize_url(response.url)
-    article, netloc, main_block = parser(soup, url, last_title)
+    article, netloc, main_block = parser(soup, unquote_url(response.url), last_title)
     if not article:
         return None
     if ctx.with_image:

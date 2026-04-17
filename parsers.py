@@ -1,8 +1,9 @@
 from typing import Optional, Tuple
+
 from bs4 import BeautifulSoup, Tag
 
 from models import Article
-from utils import get_url_by_tag, get_paragraphs, filter_soup, join_url, split_url, normalize_url
+from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url
 
 ParseResult = Tuple[Optional[Article], Optional[str], Optional[Tag]]
 NONE_RESULT: ParseResult = (None, None, None)
@@ -66,7 +67,7 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=get_paragraphs(main_block),
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -92,7 +93,7 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=get_paragraphs(main_block),
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -130,7 +131,7 @@ def parse_en(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -163,7 +164,7 @@ def parse_fr(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -177,7 +178,7 @@ def parse_de(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
     if path.endswith("/wiki/Wikipedia:Hauptseite"):
         main_block = soup.find('div', id='artikel')
         main_block = main_block.find('div', class_='hauptseite-box-content') if main_block else None
-        link_tag = main_block.find('a', href=True) if main_block else None
+        link_tag = main_block.find('a', rel='mw:WikiLink', href=True) if main_block else None
 
         if not link_tag:
             _unexpected("de")
@@ -193,7 +194,7 @@ def parse_de(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -219,7 +220,7 @@ def parse_es(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=get_paragraphs(main_block),
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -255,7 +256,7 @@ def parse_it(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -292,7 +293,7 @@ def parse_pt(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -325,7 +326,7 @@ def parse_pl(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -360,7 +361,7 @@ def parse_be(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=paragraphs,
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block
@@ -386,7 +387,7 @@ def parse_kk(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         article = Article(
             title=title,
             paragraphs=get_paragraphs(main_block),
-            link=get_url_by_tag(netloc, link_tag),
+            link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
         )
         return article, netloc, main_block

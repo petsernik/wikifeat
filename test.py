@@ -6,17 +6,20 @@ from config import Config, TMP_FOLDER_PATH
 from core import run
 from i18n import TRANSLATIONS, TKey
 
-
-def _test_page_by_key(lang: str, key: str):
+def _test_page(lang: str, url_or_name: str):
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeattest"],
         RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL_OR_NAME=TRANSLATIONS[lang][key],
+        WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
         WITH_IMAGE=True,
     )
     run(cfg)
+    sleep(1)
+
+def _test_page_by_key(lang: str, key: TKey):
+    _test_page(lang, TRANSLATIONS[lang][key])
     sleep(1)
 
 
@@ -51,4 +54,4 @@ if __name__ == "__main__":
 
     # _test_main_pages()
     # _test_random_pages()
-    _test_main_pages_by_iterable(['pt'])
+    _test_page('de', 'Verbotene Kraftfahrzeugrennen')
