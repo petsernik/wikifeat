@@ -342,7 +342,7 @@ def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Artic
         if paragraphs:
             p = paragraphs[-1].replace('\xa0', ' ')
             paragraphs[-1] = p.replace(' (далей…).', '.')
-    elif ctx.lang == 'kk' and path.endswith(''):
+    elif ctx.lang == 'kk' and path.endswith('/wiki/Басты_бет'):
         main_block = soup.find('div', id='main-tfa')
         link_tag = main_block.find('a', href=True, )
         title = link_tag['title']

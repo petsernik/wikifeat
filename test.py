@@ -9,7 +9,7 @@ from models import Article
 if __name__ == "__main__":
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
-    for lang in ['be']:
+    for lang in ['kk']:
         cfg = Config(
             TELEGRAM_CHANNELS=["@wikifeattest"],
             RULES_URL="https://t.me/wikifeat/4",
