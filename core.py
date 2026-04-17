@@ -64,7 +64,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
     if resolutions_span:
         links = resolutions_span.find_all('a', href=True)
         for link in links[::-1]:
-            clean_text = re.sub(r'[\s,]+', '', link.text)
+            clean_text = re.sub(r'[\s,.]+', '', link.text)
             match = re.search(r'(\d+)[×xX](\d+)', clean_text)
             if match:
                 width = int(match.group(1))
