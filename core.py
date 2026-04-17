@@ -28,7 +28,7 @@ from utils import (
     draw_centered_text,
     is_balanced,
     ends_with_one_char_abbr,
-    unquote_url
+    unquote_url, has_link
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -140,27 +140,35 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
             next_tags=('td', 'th')
         )
 
-    image_author_text = ''
+    source_html = extract_attrs_info(
+        image_soup,
+        find_kwargs={'id': 'fileinfotpl_src'},
+        next_tags=('td', 'th')
+    )
+    if not source_html:
+        return None
+
+    unknown = False
     if image_author_html:
         image_author_text = html_to_text(image_author_html)
-        if ',' in image_author_text or ';' in image_author_text:
-            image_author_html = ctx.t(TKey.AUTHOR_MULTIPLE, author=image_author_html)
-        else:
-            image_author_html = ctx.t(TKey.AUTHOR_SINGLE, author=image_author_html)
-
-    # Получаем источник, если автор неизвестен
-    if not image_author_html or any(
+        unknown = any(
             word in image_author_text.lower()
             for word in ('не указан', 'неизвест', 'аноним', 'unknown', 'unbekannt')
-    ):
-        source_html = extract_attrs_info(
-            image_soup,
-            find_kwargs={'id': 'fileinfotpl_src'},
-            next_tags=('td', 'th')
         )
-        if not source_html:
-            return None
+        if not unknown:
+            if not has_link(image_author_html):
+                source_soup = BeautifulSoup(source_html, 'html.parser')
+                links = source_soup.find_all('a', href=True)
+                if len(links) == 1:
+                    href = links[0].get('href')
+                    image_author_html = f'<a href="{href}">{image_author_html}</a>'
 
+            if ',' in image_author_text or ';' in image_author_text:
+                image_author_html = ctx.t(TKey.AUTHOR_MULTIPLE, author=image_author_html)
+            else:
+                image_author_html = ctx.t(TKey.AUTHOR_SINGLE, author=image_author_html)
+
+    if unknown or not image_author_html:
         source_html = replace_links_with_numbers(source_html)
 
         source_text = html_to_text(source_html)

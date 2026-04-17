@@ -61,6 +61,13 @@ def join_url(netloc: str, path: str) -> str:
         return f'https://{netloc}{path}'
 
 
+def has_link(html: str) -> bool:
+    if not html:
+        return False
+    soup = BeautifulSoup(html, 'html.parser')
+    return soup.find('a', href=True) is not None
+
+
 def clean_select_list(soup: PageElement | Tag | NavigableString | None | int, selector: str) -> list[str]:
     return [q for p in soup.select(selector) if (q := p.get_text().strip())]
 

@@ -54,4 +54,4 @@ if __name__ == "__main__":
 
     # _test_main_pages()
     # _test_random_pages()
-    _test_page('de', 'Verbotene Kraftfahrzeugrennen')
+    _test_page('ru', 'История Оклахомы')
