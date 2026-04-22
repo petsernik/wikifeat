@@ -281,21 +281,21 @@ def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
     return caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
 
 
-def send_to_telegram(article: Article, telegram_channels: list[str], rules_url: str, ctx: ArticleContext):
-    # Формируем подпись и отправляем сообщение в каждый канал
-    print(f'[LOG] Trying to send {article.title} ({article.link}) to telegram channels')
+def send_to_targets(article: Article, targets: list[int | str], rules_url: str, ctx: ArticleContext):
+    print(f'[LOG] Trying to send {article.title} ({article.link})')
     caption = get_caption(article, rules_url, ctx)
-    if not article.image:
-        for channel in telegram_channels:
-            bot.send_message(channel, caption, parse_mode='HTML')
-        return
-    if article.image.desc.startswith('https://'):
-        for channel in telegram_channels:
-            bot.send_photo(channel, article.image.desc, caption=caption, parse_mode='HTML')
-        return
-    with open(article.image.desc, 'rb') as img:
-        for channel in telegram_channels:
-            bot.send_photo(channel, img, caption=caption, parse_mode='HTML')
+
+    for target in targets:
+        if not article.image:
+            bot.send_message(target, caption, parse_mode='HTML')
+            continue
+
+        if article.image.desc.startswith('https://'):
+            bot.send_photo(target, article.image.desc, caption=caption, parse_mode='HTML')
+            continue
+
+        with open(article.image.desc, 'rb') as img:
+            bot.send_photo(target, img, caption=caption, parse_mode='HTML')
 
 
 def run(config: Config) -> bool:
@@ -310,7 +310,7 @@ def run(config: Config) -> bool:
         print(ctx.t(TKey.ARTICLE_NOT_CHANGED))
         return False
 
-    send_to_telegram(article, config.TELEGRAM_CHANNELS, config.RULES_URL, ctx)
+    send_to_targets(article, config.TELEGRAM_CHANNELS, config.RULES_URL, ctx)
     write_last_article(article.title, config.LAST_ARTICLE_FILE)
     print(ctx.t(TKey.NEW_ARTICLE_SELECTED, title=article.title))
     return True

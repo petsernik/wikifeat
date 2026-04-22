@@ -53,5 +53,5 @@ if __name__ == "__main__":
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
     # _test_main_pages()
-    # _test_random_pages()
-    _test_page('ru', 'История Оклахомы')
+    _test_random_pages_by_iterable(['fr'])
+    # _test_page('ru', 'История советской цензуры')
