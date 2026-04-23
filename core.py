@@ -298,13 +298,28 @@ def send_to_targets(article: Article, targets: list[int | str], rules_url: str, 
             bot.send_photo(target, img, caption=caption, parse_mode='HTML')
 
 
-def run(config: Config) -> bool:
+def get_article(config: Config) -> tuple[Article | None, ArticleContext]:
     if not config.WIKI_URL_OR_NAME:
-        raise Exception(f'This option is not supported for this language ({config.LANG_CODE}), please use '
-                        f'TRANSLATIONS[lang][TKey.MAIN_PAGE] instead (or update i18n.py file)')
+        raise Exception(
+            f'This option is not supported for this language ({config.LANG_CODE}), please use '
+            f'TRANSLATIONS[lang][TKey.MAIN_PAGE] instead (or update i18n.py file)'
+        )
+
     last_title = read_last_article(config.LAST_ARTICLE_FILE)
-    ctx = ArticleContext(lang=config.LANG_CODE, url_or_name=config.WIKI_URL_OR_NAME, with_image=config.WITH_IMAGE)
+
+    ctx = ArticleContext(
+        lang=config.LANG_CODE,
+        url_or_name=config.WIKI_URL_OR_NAME,
+        with_image=config.WITH_IMAGE
+    )
+
     article = get_featured_article(last_title, ctx)
+
+    return article, ctx
+
+
+def run(config: Config) -> bool:
+    article, ctx = get_article(config)
 
     if not article:
         print(ctx.t(TKey.ARTICLE_NOT_CHANGED))
@@ -312,5 +327,6 @@ def run(config: Config) -> bool:
 
     send_to_targets(article, config.TELEGRAM_CHANNELS, config.RULES_URL, ctx)
     write_last_article(article.title, config.LAST_ARTICLE_FILE)
+
     print(ctx.t(TKey.NEW_ARTICLE_SELECTED, title=article.title))
     return True

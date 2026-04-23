@@ -27,6 +27,16 @@ class TKey(str, Enum):
     TODAY_TEMPLATE = 'TODAY_TEMPLATE'
     RANDOM_FEATURED_PAGE = 'random_featured_page'
 
+    # UX
+    START_COMMANDS = 'start_commands'
+    SPAM_BLOCK = 'spam_block'
+    LIMIT_REMAINING = 'limit_remaining'
+    LIMIT_EXHAUSTED = 'limit_exhausted'
+    NEED_SUBSCRIPTION = 'need_subscription'
+    STATUS_OK = 'status_ok'
+    LANG_CHANGED = 'lang_changed'
+    AVAILABLE_LANGS = 'available_langs'
+
 
 # ISO 639-1
 TRANSLATIONS = {
@@ -318,6 +328,190 @@ ADDITIONAL_TRANSLATIONS = {
 for lang, data in ADDITIONAL_TRANSLATIONS.items():
     TRANSLATIONS.setdefault(lang, {}).update(data)
 
+BOT_TRANSLATIONS = {
+    'ru': {
+        TKey.START_COMMANDS: (
+            "Доступные команды:\n"
+            "/status — проверить статус\n"
+            "/random — получить случайную статью\n"
+            "/limit — посмотреть оставшийся лимит\n"
+            "/lang — выбрать язык (choose language)\n"
+            "/info — информация"
+        ),
+        TKey.SPAM_BLOCK: 'Слишком частые запросы.',
+        TKey.LIMIT_REMAINING: 'Осталось запросов: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Суточный лимит исчерпан.',
+        TKey.NEED_SUBSCRIPTION: 'Для доступа нужно подписаться на @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Язык изменён: {value}',
+        TKey.AVAILABLE_LANGS: 'Доступные языки: {values}',
+    },
+
+    'en': {
+        TKey.START_COMMANDS: (
+            "Available commands:\n"
+            "/status — check status\n"
+            "/random — get random article\n"
+            "/limit — check remaining limit\n"
+            "/lang — choose language\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Too many requests.',
+        TKey.LIMIT_REMAINING: 'Requests remaining: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Daily limit exceeded.',
+        TKey.NEED_SUBSCRIPTION: 'You need to subscribe to @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Language changed: {value}',
+        TKey.AVAILABLE_LANGS: 'Available languages: {values}',
+    },
+
+    'de': {
+        TKey.START_COMMANDS: (
+            "Verfügbare Befehle:\n"
+            "/status — Status prüfen\n"
+            "/random — zufälligen Artikel erhalten\n"
+            "/limit — verbleibendes Limit\n"
+            "/lang — Sprache wählen (choose language)\n"
+            "/info — Info"
+        ),
+        TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
+        TKey.LIMIT_REMAINING: 'Verbleibende Anfragen: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Tageslimit erreicht.',
+        TKey.NEED_SUBSCRIPTION: 'Abonniere @wikifeat für Zugriff.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Sprache geändert: {value}',
+        TKey.AVAILABLE_LANGS: 'Verfügbare Sprachen: {values}',
+    },
+
+    'fr': {
+        TKey.START_COMMANDS: (
+            "Commandes disponibles:\n"
+            "/status — vérifier le statut\n"
+            "/random — article aléatoire\n"
+            "/limit — limite restante\n"
+            "/lang — choisir la langue (choose language)\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Trop de requêtes.',
+        TKey.LIMIT_REMAINING: 'Requêtes restantes : {count}',
+        TKey.LIMIT_EXHAUSTED: 'Limite quotidienne atteinte.',
+        TKey.NEED_SUBSCRIPTION: 'Abonnez-vous à @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Langue changée : {value}',
+        TKey.AVAILABLE_LANGS: 'Langues disponibles : {values}',
+    },
+
+    'es': {
+        TKey.START_COMMANDS: (
+            "Comandos disponibles:\n"
+            "/status — comprobar estado\n"
+            "/random — artículo aleatorio\n"
+            "/limit — límite restante\n"
+            "/lang — elegir idioma (choose language)\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
+        TKey.LIMIT_REMAINING: 'Solicitudes restantes: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Límite diario alcanzado.',
+        TKey.NEED_SUBSCRIPTION: 'Suscríbete a @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Idioma cambiado: {value}',
+        TKey.AVAILABLE_LANGS: 'Idiomas disponibles: {values}',
+    },
+
+    'it': {
+        TKey.START_COMMANDS: (
+            "Comandi disponibili:\n"
+            "/status — controlla stato\n"
+            "/random — articolo casuale\n"
+            "/limit — limite rimanente\n"
+            "/lang — scegli lingua (choose language)\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Troppe richieste.',
+        TKey.LIMIT_REMAINING: 'Richieste rimanenti: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Limite giornaliero raggiunto.',
+        TKey.NEED_SUBSCRIPTION: 'Iscriviti a @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Lingua cambiata: {value}',
+        TKey.AVAILABLE_LANGS: 'Lingue disponibili: {values}',
+    },
+
+    'pt': {
+        TKey.START_COMMANDS: (
+            "Comandos disponíveis:\n"
+            "/status — verificar status\n"
+            "/random — artigo aleatório\n"
+            "/limit — limite restante\n"
+            "/lang — escolher idioma (choose language)\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Muitas solicitações.',
+        TKey.LIMIT_REMAINING: 'Solicitações restantes: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Limite diário atingido.',
+        TKey.NEED_SUBSCRIPTION: 'Inscreva-se em @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Idioma alterado: {value}',
+        TKey.AVAILABLE_LANGS: 'Idiomas disponíveis: {values}',
+    },
+
+    'pl': {
+        TKey.START_COMMANDS: (
+            "Dostępne komendy:\n"
+            "/status — sprawdź status\n"
+            "/random — losowy artykuł\n"
+            "/limit — pozostały limit\n"
+            "/lang — wybierz język (choose language)\n"
+            "/info — info"
+        ),
+        TKey.SPAM_BLOCK: 'Zbyt wiele запросów.',
+        TKey.LIMIT_REMAINING: 'Pozostałe запросы: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Limit dzienny wyczerpany.',
+        TKey.NEED_SUBSCRIPTION: 'Zasubskrybuj @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Język zmieniony: {value}',
+        TKey.AVAILABLE_LANGS: 'Dostępne języki: {values}',
+    },
+
+    'be': {
+        TKey.START_COMMANDS: (
+            "Даступныя каманды:\n"
+            "/status — праверыць статус\n"
+            "/random — выпадковы артыкул\n"
+            "/limit — астатні ліміт\n"
+            "/lang — выбраць мову (choose language)\n"
+            "/info — інфармацыя"
+        ),
+        TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
+        TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Сутачны ліміт вычарпаны.',
+        TKey.NEED_SUBSCRIPTION: 'Падпішыцеся на @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Мова зменена: {value}',
+        TKey.AVAILABLE_LANGS: 'Даступныя мовы: {values}',
+    },
+
+    'kk': {
+        TKey.START_COMMANDS: (
+            "Қолжетімді командалар:\n"
+            "/status — күйді тексеру\n"
+            "/random — кездейсоқ мақала\n"
+            "/limit — қалған лимит\n"
+            "/lang — тілді таңдау (choose language)\n"
+            "/info — ақпарат"
+        ),
+        TKey.SPAM_BLOCK: 'Өте жиі сұраулар.',
+        TKey.LIMIT_REMAINING: 'Қалған сұраулар: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Күндік лимит аяқталды.',
+        TKey.NEED_SUBSCRIPTION: '@wikifeat арнасына жазылыңыз.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
+        TKey.AVAILABLE_LANGS: 'Қолжетімді тілдер: {values}',
+    },
+}
+
+for lang, data in BOT_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)
 
 def translate(lang: str, key: TKey, **kwargs) -> str:
     lang_dict = TRANSLATIONS.get(lang, TRANSLATIONS['en'])
