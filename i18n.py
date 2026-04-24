@@ -1,5 +1,7 @@
 from enum import Enum
 
+from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT
+
 
 class TKey(str, Enum):
     READ_ARTICLE = 'read_article'
@@ -331,12 +333,12 @@ for lang, data in ADDITIONAL_TRANSLATIONS.items():
 BOT_TRANSLATIONS = {
     'ru': {
         TKey.START_COMMANDS: (
-            "Доступные команды:\n"
-            "/status — проверить статус\n"
-            "/random — получить случайную статью\n"
-            "/limit — посмотреть оставшийся лимит\n"
-            "/lang — выбрать язык (choose language)\n"
-            "/info — информация"
+            f"Доступные команды:\n"
+            f"{CMD_STATUS} — проверить статус\n"
+            f"{CMD_RANDOM} — получить случайную статью\n"
+            f"{CMD_LIMIT} — посмотреть оставшийся лимит\n"
+            f"{CMD_LANG} — выбрать язык (choose language)\n"
+            f"{CMD_ABOUT} — о боте"
         ),
         TKey.SPAM_BLOCK: 'Слишком частые запросы.',
         TKey.LIMIT_REMAINING: 'Осталось запросов: {count}',
@@ -349,12 +351,12 @@ BOT_TRANSLATIONS = {
 
     'en': {
         TKey.START_COMMANDS: (
-            "Available commands:\n"
-            "/status — check status\n"
-            "/random — get random article\n"
-            "/limit — check remaining limit\n"
-            "/lang — choose language\n"
-            "/info — info"
+            f"Available commands:\n"
+            f"{CMD_STATUS} — check status\n"
+            f"{CMD_RANDOM} — get random article\n"
+            f"{CMD_LIMIT} — check remaining limit\n"
+            f"{CMD_LANG} — choose language\n"
+            f"{CMD_ABOUT} — about"
         ),
         TKey.SPAM_BLOCK: 'Too many requests.',
         TKey.LIMIT_REMAINING: 'Requests remaining: {count}',
@@ -367,12 +369,12 @@ BOT_TRANSLATIONS = {
 
     'de': {
         TKey.START_COMMANDS: (
-            "Verfügbare Befehle:\n"
-            "/status — Status prüfen\n"
-            "/random — zufälligen Artikel erhalten\n"
-            "/limit — verbleibendes Limit\n"
-            "/lang — Sprache wählen (choose language)\n"
-            "/info — Info"
+            f"Verfügbare Befehle:\n"
+            f"{CMD_STATUS} — Status prüfen\n"
+            f"{CMD_RANDOM} — zufälligen Artikel erhalten\n"
+            f"{CMD_LIMIT} — verbleibendes Limit\n"
+            f"{CMD_LANG} — Sprache wählen (choose language)\n"
+            f"{CMD_ABOUT} — über den Bot"
         ),
         TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
         TKey.LIMIT_REMAINING: 'Verbleibende Anfragen: {count}',
@@ -385,12 +387,12 @@ BOT_TRANSLATIONS = {
 
     'fr': {
         TKey.START_COMMANDS: (
-            "Commandes disponibles:\n"
-            "/status — vérifier le statut\n"
-            "/random — article aléatoire\n"
-            "/limit — limite restante\n"
-            "/lang — choisir la langue (choose language)\n"
-            "/info — info"
+            f"Commandes disponibles:\n"
+            f"{CMD_STATUS} — vérifier le statut\n"
+            f"{CMD_RANDOM} — article aléatoire\n"
+            f"{CMD_LIMIT} — limite restante\n"
+            f"{CMD_LANG} — choisir la langue (choose language)\n"
+            f"{CMD_ABOUT} — à propos"
         ),
         TKey.SPAM_BLOCK: 'Trop de requêtes.',
         TKey.LIMIT_REMAINING: 'Requêtes restantes : {count}',
@@ -398,17 +400,17 @@ BOT_TRANSLATIONS = {
         TKey.NEED_SUBSCRIPTION: 'Abonnez-vous à @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Langue changée : {value}',
-        TKey.AVAILABLE_LANGS: 'Langues disponibles : {values}',
+        TKey.AVAILABLE_LANGS: 'Langues disponibles: {values}',
     },
 
     'es': {
         TKey.START_COMMANDS: (
-            "Comandos disponibles:\n"
-            "/status — comprobar estado\n"
-            "/random — artículo aleatorio\n"
-            "/limit — límite restante\n"
-            "/lang — elegir idioma (choose language)\n"
-            "/info — info"
+            f"Comandos disponibles:\n"
+            f"{CMD_STATUS} — comprobar estado\n"
+            f"{CMD_RANDOM} — artículo aleatorio\n"
+            f"{CMD_LIMIT} — límite restante\n"
+            f"{CMD_LANG} — elegir idioma (choose language)\n"
+            f"{CMD_ABOUT} — acerca del bot"
         ),
         TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
         TKey.LIMIT_REMAINING: 'Solicitudes restantes: {count}',
@@ -421,12 +423,12 @@ BOT_TRANSLATIONS = {
 
     'it': {
         TKey.START_COMMANDS: (
-            "Comandi disponibili:\n"
-            "/status — controlla stato\n"
-            "/random — articolo casuale\n"
-            "/limit — limite rimanente\n"
-            "/lang — scegli lingua (choose language)\n"
-            "/info — info"
+            f"Comandi disponibili:\n"
+            f"{CMD_STATUS} — controlla stato\n"
+            f"{CMD_RANDOM} — articolo casuale\n"
+            f"{CMD_LIMIT} — limite rimanente\n"
+            f"{CMD_LANG} — scegli lingua (choose language)\n"
+            f"{CMD_ABOUT} — informazioni sul bot"
         ),
         TKey.SPAM_BLOCK: 'Troppe richieste.',
         TKey.LIMIT_REMAINING: 'Richieste rimanenti: {count}',
@@ -439,12 +441,12 @@ BOT_TRANSLATIONS = {
 
     'pt': {
         TKey.START_COMMANDS: (
-            "Comandos disponíveis:\n"
-            "/status — verificar status\n"
-            "/random — artigo aleatório\n"
-            "/limit — limite restante\n"
-            "/lang — escolher idioma (choose language)\n"
-            "/info — info"
+            f"Comandos disponíveis:\n"
+            f"{CMD_STATUS} — verificar status\n"
+            f"{CMD_RANDOM} — artigo aleatório\n"
+            f"{CMD_LIMIT} — limite restante\n"
+            f"{CMD_LANG} — escolher idioma (choose language)\n"
+            f"{CMD_ABOUT} — sobre o bot"
         ),
         TKey.SPAM_BLOCK: 'Muitas solicitações.',
         TKey.LIMIT_REMAINING: 'Solicitações restantes: {count}',
@@ -457,61 +459,26 @@ BOT_TRANSLATIONS = {
 
     'pl': {
         TKey.START_COMMANDS: (
-            "Dostępne komendy:\n"
-            "/status — sprawdź status\n"
-            "/random — losowy artykuł\n"
-            "/limit — pozostały limit\n"
-            "/lang — wybierz język (choose language)\n"
-            "/info — info"
+            f"Dostępne komendy:\n"
+            f"{CMD_STATUS} — sprawdź status\n"
+            f"{CMD_RANDOM} — losowy artykuł\n"
+            f"{CMD_LIMIT} — pozostały limit\n"
+            f"{CMD_LANG} — wybierz język (choose language)\n"
+            f"{CMD_ABOUT} — o bocie"
         ),
-        TKey.SPAM_BLOCK: 'Zbyt wiele запросów.',
-        TKey.LIMIT_REMAINING: 'Pozostałe запросы: {count}',
+        TKey.SPAM_BLOCK: 'Zbyt wiele zapytań.',
+        TKey.LIMIT_REMAINING: 'Pozostałe zapytania: {count}',
         TKey.LIMIT_EXHAUSTED: 'Limit dzienny wyczerpany.',
         TKey.NEED_SUBSCRIPTION: 'Zasubskrybuj @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Język zmieniony: {value}',
         TKey.AVAILABLE_LANGS: 'Dostępne języki: {values}',
     },
-
-    'be': {
-        TKey.START_COMMANDS: (
-            "Даступныя каманды:\n"
-            "/status — праверыць статус\n"
-            "/random — выпадковы артыкул\n"
-            "/limit — астатні ліміт\n"
-            "/lang — выбраць мову (choose language)\n"
-            "/info — інфармацыя"
-        ),
-        TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
-        TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Сутачны ліміт вычарпаны.',
-        TKey.NEED_SUBSCRIPTION: 'Падпішыцеся на @wikifeat.',
-        TKey.STATUS_OK: 'ok',
-        TKey.LANG_CHANGED: 'Мова зменена: {value}',
-        TKey.AVAILABLE_LANGS: 'Даступныя мовы: {values}',
-    },
-
-    'kk': {
-        TKey.START_COMMANDS: (
-            "Қолжетімді командалар:\n"
-            "/status — күйді тексеру\n"
-            "/random — кездейсоқ мақала\n"
-            "/limit — қалған лимит\n"
-            "/lang — тілді таңдау (choose language)\n"
-            "/info — ақпарат"
-        ),
-        TKey.SPAM_BLOCK: 'Өте жиі сұраулар.',
-        TKey.LIMIT_REMAINING: 'Қалған сұраулар: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Күндік лимит аяқталды.',
-        TKey.NEED_SUBSCRIPTION: '@wikifeat арнасына жазылыңыз.',
-        TKey.STATUS_OK: 'ok',
-        TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
-        TKey.AVAILABLE_LANGS: 'Қолжетімді тілдер: {values}',
-    },
 }
 
 for lang, data in BOT_TRANSLATIONS.items():
     TRANSLATIONS.setdefault(lang, {}).update(data)
+
 
 def translate(lang: str, key: TKey, **kwargs) -> str:
     lang_dict = TRANSLATIONS.get(lang, TRANSLATIONS['en'])

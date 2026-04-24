@@ -7,8 +7,11 @@ from datetime import datetime, UTC
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, \
-    SPAM_INTERVAL
+from config import (
+    TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE,
+    DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
+    CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT
+)
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
 
@@ -23,6 +26,13 @@ LANG_FILE = os.path.join(TMP_FOLDER_PATH, "user_lang.json")
 lang_lock = threading.Lock()
 
 SUPPORTED_LANGS = {"ru", "en", "de", "fr", "es", "it", "pt", "pl", "be", "kk"}
+
+
+# =========================
+# CMD HELPER
+# =========================
+def cmd(c: str) -> str:
+    return c.lstrip('/')
 
 
 # =========================
@@ -100,7 +110,7 @@ def get_more_keyboard():
 
 
 # =========================
-# LIMIT + SPAM (UNCHANGED LOGIC)
+# LIMIT + SPAM
 # =========================
 def load_limit():
     if not os.path.exists(LIMIT_FILE):
@@ -213,25 +223,24 @@ def start_text(lang: str):
     return translate(lang, TKey.START_COMMANDS)
 
 
-@bot.message_handler(commands=['start', 'about'])
+@bot.message_handler(commands=['start', cmd(CMD_ABOUT)])
 def handle_start_about(message):
     ensure_user_lang(message.from_user.id, message.from_user.language_code)
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
     bot.send_message(message.chat.id, start_text(lang))
 
 
-@bot.message_handler(commands=['status'])
+@bot.message_handler(commands=[cmd(CMD_STATUS)])
 def handle_status(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
     bot.send_message(message.chat.id, translate(lang, TKey.STATUS_OK))
 
 
-@bot.message_handler(commands=['limit'])
+@bot.message_handler(commands=[cmd(CMD_LIMIT)])
 def handle_limit(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
 
     data = get_limit_state()
-
     user_key = str(message.from_user.id)
     user_count = data["users"].get(user_key, 0)
 
@@ -253,7 +262,6 @@ def get_lang_keyboard():
     for lang in sorted(SUPPORTED_LANGS):
         buttons.append(InlineKeyboardButton(lang, callback_data=f"lang:{lang}"))
 
-    # разбиваем по 4 кнопки в ряд
     row = []
     for i, b in enumerate(buttons, 1):
         row.append(b)
@@ -267,7 +275,7 @@ def get_lang_keyboard():
     return kb
 
 
-@bot.message_handler(commands=['lang'])
+@bot.message_handler(commands=[cmd(CMD_LANG)])
 def handle_lang(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
 
@@ -295,7 +303,7 @@ def handle_lang_select(call):
 # =========================
 # RANDOM
 # =========================
-@bot.message_handler(commands=['random'])
+@bot.message_handler(commands=[cmd(CMD_RANDOM)])
 def handle_random(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)

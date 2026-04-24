@@ -19,6 +19,14 @@ SPAM_INTERVAL = 1.0
 # ==== FILES ====
 LIMIT_FILE = os.path.join(TMP_FOLDER_PATH, "daily_limit.json")
 
+# ==== COMMANDS ====
+CMD_STATUS = "/status"
+CMD_RANDOM = "/random"
+CMD_LIMIT = "/limit"
+CMD_LANG = "/lang"
+CMD_ABOUT = "/about"
+
+
 @dataclass
 class Config:
     TELEGRAM_CHANNELS: List[str]
