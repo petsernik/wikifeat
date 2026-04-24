@@ -1,3 +1,4 @@
+import copy
 import html
 import os
 import re
@@ -82,6 +83,17 @@ def get_paragraphs(soup: PageElement | Tag | NavigableString | None | int) -> li
     return [soup.get_text().strip()]  # 20260221 case (en.wikipedia.org main page hosted on web.archive.org)
 
 
+def _attr_list(tag: Tag, attr: str) -> list[str]:
+    val = tag.get(attr)
+
+    if isinstance(val, str):
+        return val.lower().split()
+    if isinstance(val, (list, tuple)):
+        return [v.lower() for v in val if isinstance(v, str)]
+
+    return []
+
+
 def is_hidden(tag: Tag) -> bool:
     # style="display:none"
     style = tag.get("style", "").replace(" ", "").lower()
@@ -92,9 +104,12 @@ def is_hidden(tag: Tag) -> bool:
     if tag.has_attr("hidden"):
         return True
 
+    # role
+    if {"note", "presentation"} & set(_attr_list(tag, "role")):
+        return True
+
     # классы
-    classes = tag.get("class") or []
-    if any(c.lower() in {"noprint", "hidden", "metadata", "infobox-above"} for c in classes):
+    if {"noprint", "hidden", "metadata", "infobox-above"} & set(_attr_list(tag, "class")):
         return True
 
     return False
@@ -104,6 +119,18 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     for tag in soup.find_all(True):
         if not tag.decomposed and is_hidden(tag):
             tag.decompose()
+
+    for table in soup.find_all('table'):
+        if table.decomposed:
+            continue
+
+        img = table.select_one('a[href] img')
+
+        if img and img.parent and img.parent.name == 'a':
+            table.replace_with(copy.copy(img.parent))
+        else:
+            table.decompose()
+
     return soup
 
 
