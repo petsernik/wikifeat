@@ -11,7 +11,7 @@ from config import (
     TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE,
     DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
-    CMD_DOWNLOAD, CMD_CANCEL
+    CMD_DOWNLOAD, CMD_CANCEL, OWNER_ID
 )
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
@@ -166,7 +166,10 @@ def check_and_increment_limit(user_id: int):
         user_count = data["users"].get(user_key, 0)
 
         if user_count >= DAILY_USER_LIMIT:
-            return False, "user_limit"
+            if user_id != OWNER_ID:
+                return False, "user_limit"
+            else:
+                bot.send_message(user_id, TKey.LIMIT_EXHAUSTED)
 
         data["total"] += 1
         data["users"][user_key] = user_count + 1
