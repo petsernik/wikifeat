@@ -10,7 +10,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import (
     TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE,
     DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
-    CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT
+    CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
+    CMD_DOWNLOAD, CMD_CANCEL
 )
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
@@ -26,6 +27,11 @@ LANG_FILE = os.path.join(TMP_FOLDER_PATH, "user_lang.json")
 lang_lock = threading.Lock()
 
 SUPPORTED_LANGS = {"ru", "en", "de", "fr", "es", "it", "pt", "pl", "be", "kk"}
+
+# =========================
+# DOWNLOAD STATE
+# =========================
+download_pending = {}  # user_id -> bool
 
 
 # =========================
@@ -183,11 +189,11 @@ def is_spam(user_id: int) -> bool:
 # =========================
 # SEND
 # =========================
-def send(chat_id: int | str, lang: str):
+def send(chat_id: int | str, lang: str, url_or_name: str):
     cfg = Config(
         TELEGRAM_CHANNELS=[chat_id],
         RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL_OR_NAME=TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE],
+        WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
         LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
         WITH_IMAGE=True,
@@ -249,6 +255,71 @@ def handle_limit(message):
     bot.send_message(
         message.chat.id,
         translate(lang, TKey.LIMIT_REMAINING, count=remaining)
+    )
+
+
+# =========================
+# DOWNLOAD COMMAND
+# =========================
+@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_DOWNLOAD))
+def handle_download(message):
+    user_id = message.from_user.id
+    lang = get_user_lang(user_id, message.from_user.language_code)
+
+    if not is_subscribed(user_id):
+        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
+        return
+
+    download_pending[user_id] = True
+
+    bot.send_message(
+        message.chat.id,
+        translate(lang, TKey.DOWNLOAD_PROMPT)
+    )
+
+
+@bot.message_handler(func=lambda m: m.from_user.id in download_pending)
+def handle_download_input(message):
+    user_id = message.from_user.id
+    lang = get_user_lang(user_id, message.from_user.language_code)
+
+    if not download_pending.get(user_id):
+        return
+
+    if not is_subscribed(user_id):
+        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
+        return
+
+    try:
+        query = message.text.strip()
+        allowed, reason = check_and_increment_limit(user_id)
+
+        if not allowed:
+            bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
+            download_pending.pop(user_id, None)
+            return
+
+        send(message.chat.id, lang, query)
+
+        download_pending.pop(user_id, None)
+
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            translate(lang, TKey.DOWNLOAD_ERROR)
+        )
+
+
+@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_CANCEL))
+def handle_cancel(message):
+    user_id = message.from_user.id
+    lang = get_user_lang(user_id, message.from_user.language_code)
+
+    download_pending.pop(user_id, None)
+
+    bot.send_message(
+        message.chat.id,
+        translate(lang, TKey.CANCEL_OK)
     )
 
 
@@ -322,7 +393,37 @@ def handle_random(message):
         bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
         return
 
-    send(message.chat.id, lang)
+    send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE])
+
+
+# =========================
+# DOWNLOAD INPUT HANDLER
+# =========================
+@bot.message_handler(func=lambda m: m.from_user.id in download_pending)
+def handle_download_input(message):
+    user_id = message.from_user.id
+    lang = get_user_lang(user_id, message.from_user.language_code)
+
+    if not download_pending.get(user_id):
+        return
+
+    if not is_subscribed(user_id):
+        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
+        return
+
+    try:
+        query = message.text.strip()
+
+        # простая логика: либо URL, либо название статьи
+        send(message.chat.id, lang, query)
+
+        download_pending.pop(user_id, None)
+
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            translate(lang, TKey.DOWNLOAD_ERROR)
+        )
 
 
 # =========================
@@ -344,7 +445,7 @@ def handle_more(call):
         return
 
     bot.answer_callback_query(call.id)
-    send(call.message.chat.id, lang)
+    send(call.message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE])
 
 
 # =========================
