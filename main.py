@@ -283,15 +283,21 @@ def handle_download_input(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
+    text = (message.text or "").strip()
+
+    if text.startswith("/"):
+        download_pending.pop(user_id, None)
+        return
+
     if not download_pending.get(user_id):
         return
 
     if not is_subscribed(user_id):
         bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
+        download_pending.pop(user_id, None)
         return
 
     try:
-        query = message.text.strip()
         allowed, reason = check_and_increment_limit(user_id)
 
         if not allowed:
@@ -299,15 +305,16 @@ def handle_download_input(message):
             download_pending.pop(user_id, None)
             return
 
-        send(message.chat.id, lang, query)
-
-        download_pending.pop(user_id, None)
+        send(message.chat.id, lang, text)
 
     except Exception:
         bot.send_message(
             message.chat.id,
             translate(lang, TKey.DOWNLOAD_ERROR)
         )
+
+    finally:
+        download_pending.pop(user_id, None)
 
 
 @bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_CANCEL))
