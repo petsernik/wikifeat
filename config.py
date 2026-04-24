@@ -37,5 +37,5 @@ class Config:
     RULES_URL: str
     LANG_CODE: str
     WIKI_URL_OR_NAME: str
-    LAST_ARTICLE_FILE: str
+    LAST_ARTICLE_FILE: str # not used if empty
     WITH_IMAGE: bool

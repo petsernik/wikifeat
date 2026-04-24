@@ -305,7 +305,9 @@ def get_article(config: Config) -> tuple[Article | None, ArticleContext]:
             f'TRANSLATIONS[lang][TKey.MAIN_PAGE] instead (or update i18n.py file)'
         )
 
-    last_title = read_last_article(config.LAST_ARTICLE_FILE)
+    last_title = ''
+    if config.LAST_ARTICLE_FILE:
+        last_title = read_last_article(config.LAST_ARTICLE_FILE)
 
     ctx = ArticleContext(
         lang=config.LANG_CODE,
@@ -326,7 +328,8 @@ def run(config: Config) -> bool:
         return False
 
     send_to_targets(article, config.TELEGRAM_CHANNELS, config.RULES_URL, ctx)
-    write_last_article(article.title, config.LAST_ARTICLE_FILE)
+    if config.LAST_ARTICLE_FILE:
+        write_last_article(article.title, config.LAST_ARTICLE_FILE)
 
     print(ctx.t(TKey.NEW_ARTICLE_SELECTED, title=article.title))
     return True

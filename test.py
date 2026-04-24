@@ -13,7 +13,7 @@ def _test_page(lang: str, url_or_name: str, with_image: bool):
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
+        LAST_ARTICLE_FILE='',
         WITH_IMAGE=with_image,
     )
     run(cfg)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # _test_today_template('ru')
     # _test_today_template('en')
-    _test_main_page('ru', False)
+    _test_main_page('ru')
     # _test_main_pages()
     # _test_random_pages_by_iterable(['fr'])
     # _test_page('ru', 'Портрет Текумсе')

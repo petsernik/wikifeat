@@ -195,7 +195,7 @@ def send(chat_id: int | str, lang: str, url_or_name: str):
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, "last_article_test.txt"),
+        LAST_ARTICLE_FILE='',
         WITH_IMAGE=True,
     )
 
