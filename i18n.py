@@ -338,11 +338,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Доступные команды:\n"
             f"{CMD_STATUS} — проверить статус\n"
-            f"{CMD_RANDOM} — получить случайную статью\n"
-            f"{CMD_LIMIT} — посмотреть оставшийся лимит\n"
+            f"{CMD_RANDOM} — получить избранную статью\n"
+            f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно)\n"
             f"{CMD_LANG} — выбрать язык (choose language)\n"
             f"{CMD_ABOUT} — о боте\n"
-            f"{CMD_DOWNLOAD} — скачать статью\n"
+            f"{CMD_DOWNLOAD} — получить статью по ссылке или заголовку\n"
             f"{CMD_CANCEL} — отменить действие"
         ),
         TKey.SPAM_BLOCK: 'Слишком частые запросы.',
@@ -352,7 +352,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Язык изменён: {value}',
         TKey.AVAILABLE_LANGS: 'Доступные языки: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Отправьте точное название статьи (регистр важен) или ссылку на неё.',
         TKey.DOWNLOAD_ERROR: 'Не удалось найти или скачать статью.',
         TKey.CANCEL_OK: 'Действие отменено.',
@@ -362,11 +361,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Available commands:\n"
             f"{CMD_STATUS} — check status\n"
-            f"{CMD_RANDOM} — get random article\n"
-            f"{CMD_LIMIT} — check remaining limit\n"
+            f"{CMD_RANDOM} — get featured article\n"
+            f"{CMD_LIMIT} — check remaining daily limit (resets daily)\n"
             f"{CMD_LANG} — choose language\n"
             f"{CMD_ABOUT} — about\n"
-            f"{CMD_DOWNLOAD} — download article\n"
+            f"{CMD_DOWNLOAD} — get article by link or title\n"
             f"{CMD_CANCEL} — cancel action"
         ),
         TKey.SPAM_BLOCK: 'Too many requests.',
@@ -376,7 +375,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Language changed: {value}',
         TKey.AVAILABLE_LANGS: 'Available languages: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Send exact article title (case-sensitive) or a link.',
         TKey.DOWNLOAD_ERROR: 'Failed to find or download the article.',
         TKey.CANCEL_OK: 'Action cancelled.',
@@ -386,11 +384,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Verfügbare Befehle:\n"
             f"{CMD_STATUS} — Status prüfen\n"
-            f"{CMD_RANDOM} — zufälligen Artikel erhalten\n"
-            f"{CMD_LIMIT} — verbleibendes Limit\n"
+            f"{CMD_RANDOM} — hervorgehobenen Artikel erhalten\n"
+            f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich zurückgesetzt)\n"
             f"{CMD_LANG} — Sprache wählen (choose language)\n"
             f"{CMD_ABOUT} — über den Bot\n"
-            f"{CMD_DOWNLOAD} — Artikel herunterladen\n"
+            f"{CMD_DOWNLOAD} — Artikel per Link oder Titel erhalten\n"
             f"{CMD_CANCEL} — abbrechen"
         ),
         TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
@@ -400,7 +398,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Sprache geändert: {value}',
         TKey.AVAILABLE_LANGS: 'Verfügbare Sprachen: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Exakten Artikelnamen (Groß-/Kleinschreibung beachten) oder Link senden.',
         TKey.DOWNLOAD_ERROR: 'Artikel konnte nicht gefunden oder geladen werden.',
         TKey.CANCEL_OK: 'Aktion abgebrochen.',
@@ -410,11 +407,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Commandes disponibles:\n"
             f"{CMD_STATUS} — vérifier le statut\n"
-            f"{CMD_RANDOM} — article aléatoire\n"
-            f"{CMD_LIMIT} — limite restante\n"
+            f"{CMD_RANDOM} — article en vedette\n"
+            f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour)\n"
             f"{CMD_LANG} — choisir la langue (choose language)\n"
             f"{CMD_ABOUT} — à propos\n"
-            f"{CMD_DOWNLOAD} — télécharger un article\n"
+            f"{CMD_DOWNLOAD} — obtenir un article par lien ou titre\n"
             f"{CMD_CANCEL} — annuler"
         ),
         TKey.SPAM_BLOCK: 'Trop de requêtes.',
@@ -424,7 +421,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Langue changée : {value}',
         TKey.AVAILABLE_LANGS: 'Langues disponibles: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Envoyez le titre exact de l’article ou un lien.',
         TKey.DOWNLOAD_ERROR: 'Impossible de trouver ou télécharger l’article.',
         TKey.CANCEL_OK: 'Action annulée.',
@@ -434,11 +430,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandos disponibles:\n"
             f"{CMD_STATUS} — comprobar estado\n"
-            f"{CMD_RANDOM} — artículo aleatorio\n"
-            f"{CMD_LIMIT} — límite restante\n"
+            f"{CMD_RANDOM} — artículo destacado\n"
+            f"{CMD_LIMIT} — límite diario restante (se reinicia cada día)\n"
             f"{CMD_LANG} — elegir idioma (choose language)\n"
             f"{CMD_ABOUT} — acerca del bot\n"
-            f"{CMD_DOWNLOAD} — descargar artículo\n"
+            f"{CMD_DOWNLOAD} — obtener artículo por enlace o título\n"
             f"{CMD_CANCEL} — cancelar"
         ),
         TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
@@ -448,7 +444,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Idioma cambiado: {value}',
         TKey.AVAILABLE_LANGS: 'Idiomas disponibles: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Envía el título exacto del artículo o un enlace.',
         TKey.DOWNLOAD_ERROR: 'No se pudo encontrar o descargar el artículo.',
         TKey.CANCEL_OK: 'Acción cancelada.',
@@ -458,11 +453,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandi disponibili:\n"
             f"{CMD_STATUS} — controlla stato\n"
-            f"{CMD_RANDOM} — articolo casuale\n"
-            f"{CMD_LIMIT} — limite rimanente\n"
+            f"{CMD_RANDOM} — articolo in evidenza\n"
+            f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno)\n"
             f"{CMD_LANG} — scegli lingua (choose language)\n"
             f"{CMD_ABOUT} — informazioni\n"
-            f"{CMD_DOWNLOAD} — scarica articolo\n"
+            f"{CMD_DOWNLOAD} — ottenere articolo tramite link o titolo\n"
             f"{CMD_CANCEL} — annulla"
         ),
         TKey.SPAM_BLOCK: 'Troppe richieste.',
@@ -472,7 +467,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Lingua cambiata: {value}',
         TKey.AVAILABLE_LANGS: 'Lingue disponibili: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Invia il titolo esatto dell’articolo o un link.',
         TKey.DOWNLOAD_ERROR: 'Impossibile trovare o scaricare l’articolo.',
         TKey.CANCEL_OK: 'Azione annullata.',
@@ -482,11 +476,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandos disponíveis:\n"
             f"{CMD_STATUS} — verificar status\n"
-            f"{CMD_RANDOM} — artigo aleatório\n"
-            f"{CMD_LIMIT} — limite restante\n"
+            f"{CMD_RANDOM} — artigo em destaque\n"
+            f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias)\n"
             f"{CMD_LANG} — escolher idioma (choose language)\n"
             f"{CMD_ABOUT} — sobre o bot\n"
-            f"{CMD_DOWNLOAD} — baixar artigo\n"
+            f"{CMD_DOWNLOAD} — obter artigo por link ou título\n"
             f"{CMD_CANCEL} — cancelar"
         ),
         TKey.SPAM_BLOCK: 'Muitas solicitações.',
@@ -496,7 +490,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Idioma alterado: {value}',
         TKey.AVAILABLE_LANGS: 'Idiomas disponíveis: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Envie o título exato do artigo ou um link.',
         TKey.DOWNLOAD_ERROR: 'Não foi possível encontrar ou baixar o artigo.',
         TKey.CANCEL_OK: 'Ação cancelada.',
@@ -506,11 +499,11 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Dostępne komendy:\n"
             f"{CMD_STATUS} — sprawdź status\n"
-            f"{CMD_RANDOM} — losowy artykuł\n"
-            f"{CMD_LIMIT} — pozostały limit\n"
+            f"{CMD_RANDOM} — wyróżniony artykuł\n"
+            f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie)\n"
             f"{CMD_LANG} — wybierz język (choose language)\n"
             f"{CMD_ABOUT} — o bocie\n"
-            f"{CMD_DOWNLOAD} — pobierz artykuł\n"
+            f"{CMD_DOWNLOAD} — pobierz artykuł po linku lub tytule\n"
             f"{CMD_CANCEL} — anuluj"
         ),
         TKey.SPAM_BLOCK: 'Zbyt wiele zapytań.',
@@ -520,7 +513,6 @@ BOT_TRANSLATIONS = {
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Język zmieniony: {value}',
         TKey.AVAILABLE_LANGS: 'Dostępne języki: {values}',
-
         TKey.DOWNLOAD_PROMPT: 'Wyślij dokładny tytuł artykułu lub link.',
         TKey.DOWNLOAD_ERROR: 'Nie udało się znaleźć lub pobrać artykułu.',
         TKey.CANCEL_OK: 'Anulowano.',
