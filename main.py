@@ -26,7 +26,7 @@ CHANNEL_USERNAME = "@wikifeat"
 LANG_FILE = os.path.join(TMP_FOLDER_PATH, "user_lang.json")
 lang_lock = threading.Lock()
 
-SUPPORTED_LANGS = {"ru", "en", "de", "fr", "es", "it", "pt", "pl", "be", "kk"}
+SUPPORTED_LANGS = TRANSLATIONS.keys()
 
 # =========================
 # DOWNLOAD STATE
