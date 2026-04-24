@@ -77,10 +77,10 @@ def get_paragraphs(soup: PageElement | Tag | NavigableString | None | int) -> li
     paragraphs = clean_select_list(soup, ':scope > * > p')
     if len(paragraphs) > 0:
         return paragraphs
-    paragraphs = clean_select_list(soup, ':scope > p')  # 20240321 case (hosted on web.archive.org)
+    paragraphs = clean_select_list(soup, ':scope > p')
     if len(paragraphs) > 0:
         return paragraphs
-    return [soup.get_text().strip()]  # 20260221 case (en.wikipedia.org main page hosted on web.archive.org)
+    return clean_select_list(soup, 'p')
 
 
 def _attr_list(tag: Tag, attr: str) -> list[str]:
@@ -109,7 +109,8 @@ def is_hidden(tag: Tag) -> bool:
         return True
 
     # классы
-    if {"noprint", "hidden", "metadata", "infobox-above"} & set(_attr_list(tag, "class")):
+    if ({"noprint", "hidden", "metadata", "infobox-above", "ts-doc-footer", "ts-doc-doc"}
+            & set(_attr_list(tag, "class"))):
         return True
 
     return False

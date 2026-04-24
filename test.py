@@ -7,7 +7,7 @@ from core import run
 from i18n import TRANSLATIONS, TKey
 
 
-def _test_page(lang: str, url_or_name: str, with_image: bool):
+def _test_page(lang: str, url_or_name: str, with_image: bool = True):
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeattest"],
         RULES_URL="https://t.me/wikifeat/4",
@@ -67,9 +67,9 @@ def _test_random_pages(with_image=True):
 if __name__ == "__main__":
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
-    # _test_today_template('ru')
+    _test_today_template('ru')
     # _test_today_template('en')
-    _test_main_page('ru')
+    # _test_main_page('ru')
     # _test_main_pages()
     # _test_random_pages_by_iterable(['fr'])
     # _test_page('ru', 'Портрет Текумсе')

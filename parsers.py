@@ -54,7 +54,14 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
     if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
         main_block = filter_soup(main_block, remove_kwargs={"role": "presentation"}) if main_block else None
-        link_tag = main_block.find('a', href=True) if main_block else None
+        link_tag = None
+
+        if main_block:
+            for p in main_block.find_all('p'):
+                a = p.find('a', href=True)
+                if a:
+                    link_tag = a
+                    break
 
         if not link_tag:
             _unexpected("ru")
