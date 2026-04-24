@@ -517,6 +517,52 @@ BOT_TRANSLATIONS = {
         TKey.DOWNLOAD_ERROR: 'Nie udało się znaleźć lub pobrać artykułu.',
         TKey.CANCEL_OK: 'Anulowano.',
     },
+
+    'be': {
+        TKey.START_COMMANDS: (
+            f"Даступныя каманды:\n"
+            f"{CMD_STATUS} — праверыць статус\n"
+            f"{CMD_RANDOM} — выпадковы артыкул\n"
+            f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня)\n"
+            f"{CMD_LANG} — выбраць мову (choose language)\n"
+            f"{CMD_ABOUT} — пра бота\n"
+            f"{CMD_DOWNLOAD} — атрымаць артыкул па спасылцы або загалоўку\n"
+            f"{CMD_CANCEL} — скасаваць дзеянне"
+        ),
+        TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
+        TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Дзённы ліміт вычарпаны.',
+        TKey.NEED_SUBSCRIPTION: 'Для доступу трэба падпісацца на @wikifeat.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Мова зменена: {value}',
+        TKey.AVAILABLE_LANGS: 'Даступныя мовы: {values}',
+        TKey.DOWNLOAD_PROMPT: 'Дашліце дакладную назву артыкула або спасылку.',
+        TKey.DOWNLOAD_ERROR: 'Не ўдалося знайсці або загрузіць артыкул.',
+        TKey.CANCEL_OK: 'Дзеянне адменена.',
+    },
+
+    'kk': {
+        TKey.START_COMMANDS: (
+            f"Қолжетімді командалар:\n"
+            f"{CMD_STATUS} — статусты тексеру\n"
+            f"{CMD_RANDOM} — таңдаулы мақала\n"
+            f"{CMD_LIMIT} — күндік лимит (күн сайын жаңартылады)\n"
+            f"{CMD_LANG} — тілді таңдау (choose language)\n"
+            f"{CMD_ABOUT} — бот туралы\n"
+            f"{CMD_DOWNLOAD} — сілтеме немесе атауы бойынша мақала алу\n"
+            f"{CMD_CANCEL} — болдырмау"
+        ),
+        TKey.SPAM_BLOCK: 'Тым көп сұраным.',
+        TKey.LIMIT_REMAINING: 'Қалған сұранымдар: {count}',
+        TKey.LIMIT_EXHAUSTED: 'Күндік лимит бітті.',
+        TKey.NEED_SUBSCRIPTION: 'Қол жеткізу үшін @wikifeat-қа жазылыңыз.',
+        TKey.STATUS_OK: 'ok',
+        TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
+        TKey.AVAILABLE_LANGS: 'Қолжетімді тілдер: {values}',
+        TKey.DOWNLOAD_PROMPT: 'Мақаланың нақты атауын немесе сілтемесін жіберіңіз.',
+        TKey.DOWNLOAD_ERROR: 'Мақаланы табу немесе жүктеу мүмкін болмады.',
+        TKey.CANCEL_OK: 'Әрекет тоқтатылды.',
+    },
 }
 
 for lang, data in BOT_TRANSLATIONS.items():
