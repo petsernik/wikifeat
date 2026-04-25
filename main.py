@@ -28,8 +28,30 @@ lang_lock = threading.Lock()
 
 SUPPORTED_LANGS = TRANSLATIONS.keys()
 
+
+def check_access(user_id: int, with_decrease_limit: bool = False) -> tuple[bool, TKey]:
+    if user_id == OWNER_ID:
+        return True, TKey.STATUS_OK
+
+    # SPAM
+    if is_spam(user_id):
+        return False, TKey.SPAM_BLOCK
+
+    # SUBSCRIPTION
+    if not is_subscribed(user_id):
+        return False, TKey.NEED_SUBSCRIPTION
+
+    # LIMIT
+    if with_decrease_limit:
+        allowed = check_and_increment_limit(user_id)
+        if not allowed:
+            return False, TKey.LIMIT_EXHAUSTED
+
+    return True, TKey.STATUS_OK
+
+
 # =========================
-# DOWNLOAD STATE
+# GET STATE
 # =========================
 get_pending = {}  # user_id -> bool
 
@@ -151,7 +173,7 @@ def get_limit_state():
         return data
 
 
-def check_and_increment_limit(user_id: int):
+def check_and_increment_limit(user_id: int) -> bool:
     with limit_lock:
         today = get_today()
         data = load_limit()
@@ -160,22 +182,19 @@ def check_and_increment_limit(user_id: int):
             data = {"date": today, "total": 0, "users": {}}
 
         if data["total"] >= DAILY_TOTAL_LIMIT:
-            return False, "global_limit"
+            return False
 
         user_key = str(user_id)
         user_count = data["users"].get(user_key, 0)
 
         if user_count >= DAILY_USER_LIMIT:
-            if user_id != OWNER_ID:
-                return False, "user_limit"
-            else:
-                bot.send_message(user_id, TKey.LIMIT_EXHAUSTED)
+            return False
 
         data["total"] += 1
         data["users"][user_key] = user_count + 1
 
         save_limit_atomic(data)
-        return True, "ok"
+        return True
 
 
 def is_spam(user_id: int) -> bool:
@@ -269,8 +288,10 @@ def handle_get(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
-    if not is_subscribed(user_id):
-        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
+    allowed, reason = check_access(user_id)
+
+    if not allowed:
+        bot.send_message(message.chat.id, translate(lang, reason))
         return
 
     get_pending[user_id] = True
@@ -295,16 +316,11 @@ def handle_get_input(message):
     if not get_pending.get(user_id):
         return
 
-    if not is_subscribed(user_id):
-        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
-        get_pending.pop(user_id, None)
-        return
-
     try:
-        allowed, reason = check_and_increment_limit(user_id)
+        allowed, reason = check_access(user_id, with_decrease_limit=True)
 
         if not allowed:
-            bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
+            bot.send_message(message.chat.id, translate(lang, reason))
             get_pending.pop(user_id, None)
             return
 
@@ -389,18 +405,10 @@ def handle_random(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
-    if is_spam(user_id):
-        bot.send_message(message.chat.id, translate(lang, TKey.SPAM_BLOCK))
-        return
-
-    if not is_subscribed(user_id):
-        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
-        return
-
-    allowed, reason = check_and_increment_limit(user_id)
+    allowed, reason = check_access(user_id, with_decrease_limit=True)
 
     if not allowed:
-        bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
+        bot.send_message(message.chat.id, translate(lang, reason))
         return
 
     send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
@@ -414,14 +422,10 @@ def handle_more(call):
     user_id = call.from_user.id
     lang = get_user_lang(user_id, call.from_user.language_code)
 
-    if is_spam(user_id):
-        bot.answer_callback_query(call.id, "Too fast")
-        return
-
-    allowed, reason = check_and_increment_limit(user_id)
+    allowed, reason = check_access(user_id, with_decrease_limit=True)
 
     if not allowed:
-        bot.answer_callback_query(call.id, "Limit")
+        bot.answer_callback_query(call.id, translate(lang, reason))
         return
 
     bot.answer_callback_query(call.id)
