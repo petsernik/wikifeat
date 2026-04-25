@@ -30,9 +30,6 @@ SUPPORTED_LANGS = TRANSLATIONS.keys()
 
 
 def check_access(user_id: int, with_decrease_limit: bool = False) -> tuple[bool, TKey]:
-    if user_id == OWNER_ID:
-        return True, TKey.STATUS_OK
-
     # SPAM
     if is_spam(user_id):
         return False, TKey.SPAM_BLOCK
@@ -430,6 +427,21 @@ def handle_more(call):
 
     bot.answer_callback_query(call.id)
     send(call.message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
+
+
+# =========================
+# OWNER COMMANDS
+# =========================
+@bot.message_handler(commands=['reborn'])
+def handle_reborn(message):
+    user_id = message.from_user.id
+    if user_id == OWNER_ID:
+        with limit_lock:
+            data = load_limit()
+            user_key = str(user_id)
+            data["users"][user_key] = 0
+            save_limit_atomic(data)
+        bot.send_message(message.chat.id, "Reborn was successful")
 
 
 # =========================
