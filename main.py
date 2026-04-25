@@ -13,11 +13,36 @@ from config import (
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
     CMD_GET, CMD_CANCEL, OWNER_ID
 )
+
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
 
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
+# =========================
+# FSM STATE
+# =========================
+STATE_NONE = "none"
+STATE_GET = "get"
+
+user_state = {}
+
+
+def get_state(user_id: int):
+    return user_state.get(user_id, STATE_NONE)
+
+
+def set_state(user_id: int, state: str):
+    user_state[user_id] = state
+
+
+def clear_state(user_id: int):
+    user_state[user_id] = STATE_NONE
+
+
+# =========================
+# LIMIT / SPAM
+# =========================
 limit_lock = threading.Lock()
 user_last_request_time = {}
 
@@ -29,41 +54,75 @@ lang_lock = threading.Lock()
 SUPPORTED_LANGS = TRANSLATIONS.keys()
 
 
-def check_access(user_id: int, with_decrease_limit: bool = False) -> tuple[bool, TKey]:
-    # SPAM
-    if is_spam(user_id):
-        return False, TKey.SPAM_BLOCK
+def is_spam(user_id: int) -> bool:
+    now = time.time()
+    last = user_last_request_time.get(user_id, 0)
 
-    # SUBSCRIPTION
-    if not is_subscribed(user_id):
-        return False, TKey.NEED_SUBSCRIPTION
+    if now - last < SPAM_INTERVAL:
+        return True
 
-    # LIMIT
-    if with_decrease_limit:
-        allowed = check_and_increment_limit(user_id)
-        if not allowed:
-            return False, TKey.LIMIT_EXHAUSTED
+    user_last_request_time[user_id] = now
+    return False
 
-    return True, TKey.STATUS_OK
+
+def load_limit():
+    if not os.path.exists(LIMIT_FILE):
+        return {"date": None, "total": 0, "users": {}}
+
+    try:
+        with open(LIMIT_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {"date": None, "total": 0, "users": {}}
+
+
+def save_limit(data):
+    tmp = LIMIT_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+    os.replace(tmp, LIMIT_FILE)
+
+
+def get_today():
+    return datetime.now(UTC).strftime("%Y-%m-%d")
+
+
+def check_and_increment_limit(user_id: int) -> bool:
+    with limit_lock:
+        today = get_today()
+        data = load_limit()
+
+        if data["date"] != today:
+            data = {"date": today, "total": 0, "users": {}}
+
+        if data["total"] >= DAILY_TOTAL_LIMIT:
+            return False
+
+        uid = str(user_id)
+        count = data["users"].get(uid, 0)
+
+        if count >= DAILY_USER_LIMIT:
+            return False
+
+        data["total"] += 1
+        data["users"][uid] = count + 1
+
+        save_limit(data)
+        return True
+
+
+def is_subscribed(user_id: int) -> bool:
+    try:
+        m = bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        return m.status in ("member", "administrator", "creator")
+    except:
+        return False
 
 
 # =========================
-# GET STATE
+# LANG SYSTEM
 # =========================
-get_pending = {}  # user_id -> bool
-
-
-# =========================
-# CMD HELPER
-# =========================
-def cmd(c: str) -> str:
-    return c.lstrip('/')
-
-
-# =========================
-# LANG SYSTEM (fallback + telegram locale)
-# =========================
-def normalize_lang(code: str | None) -> str:
+def normalize_lang(code: str | None):
     if not code:
         return "en"
     base = code.lower().split("-")[0]
@@ -87,134 +146,54 @@ def save_langs(data):
     os.replace(tmp, LANG_FILE)
 
 
-def get_user_lang(user_id: int, telegram_lang: str | None = None) -> str:
+def get_user_lang(user_id: int, tg_lang: str | None):
     data = load_langs()
-
     if str(user_id) in data:
         return data[str(user_id)]
-
-    return normalize_lang(telegram_lang)
+    return normalize_lang(tg_lang)
 
 
 def set_user_lang(user_id: int, lang: str):
     lang = normalize_lang(lang)
-
     with lang_lock:
         data = load_langs()
         data[str(user_id)] = lang
         save_langs(data)
 
 
-def ensure_user_lang(user_id: int, telegram_lang: str | None):
-    data = load_langs()
-    key = str(user_id)
+# =========================
+# ACCESS CONTROL
+# =========================
+def check_access(user_id: int, decrease=False):
+    if is_spam(user_id):
+        return False, TKey.SPAM_BLOCK
 
-    if key not in data:
-        data[key] = normalize_lang(telegram_lang)
-        save_langs(data)
+    if not is_subscribed(user_id):
+        return False, TKey.NEED_SUBSCRIPTION
+
+    if decrease:
+        if not check_and_increment_limit(user_id):
+            return False, TKey.LIMIT_EXHAUSTED
+
+    return True, TKey.STATUS_OK
 
 
 # =========================
-# SUBSCRIPTION
-# =========================
-def is_subscribed(user_id: int) -> bool:
-    try:
-        member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
-        return member.status in ("member", "administrator", "creator")
-    except Exception:
-        return False
-
-
-# =========================
-# INLINE BUTTON
+# ARTICLE SENDER
 # =========================
 def get_more_keyboard():
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("🔄", callback_data="more_random"))
-    return markup
+    kb = InlineKeyboardMarkup()
+    kb.add(InlineKeyboardButton("🔄", callback_data="more_random"))
+    return kb
 
 
-# =========================
-# LIMIT + SPAM
-# =========================
-def load_limit():
-    if not os.path.exists(LIMIT_FILE):
-        return {"date": None, "total": 0, "users": {}}
-
-    try:
-        with open(LIMIT_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {"date": None, "total": 0, "users": {}}
-
-
-def save_limit_atomic(data):
-    tmp_file = LIMIT_FILE + ".tmp"
-    with open(tmp_file, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-    os.replace(tmp_file, LIMIT_FILE)
-
-
-def get_today():
-    return datetime.now(UTC).strftime("%Y-%m-%d")
-
-
-def get_limit_state():
-    with limit_lock:
-        today = get_today()
-        data = load_limit()
-
-        if data["date"] != today:
-            return {"date": today, "total": 0, "users": {}}
-
-        return data
-
-
-def check_and_increment_limit(user_id: int) -> bool:
-    with limit_lock:
-        today = get_today()
-        data = load_limit()
-
-        if data["date"] != today:
-            data = {"date": today, "total": 0, "users": {}}
-
-        if data["total"] >= DAILY_TOTAL_LIMIT:
-            return False
-
-        user_key = str(user_id)
-        user_count = data["users"].get(user_key, 0)
-
-        if user_count >= DAILY_USER_LIMIT:
-            return False
-
-        data["total"] += 1
-        data["users"][user_key] = user_count + 1
-
-        save_limit_atomic(data)
-        return True
-
-
-def is_spam(user_id: int) -> bool:
-    now = time.time()
-    last = user_last_request_time.get(user_id, 0)
-
-    if now - last < SPAM_INTERVAL:
-        return True
-
-    user_last_request_time[user_id] = now
-    return False
-
-
-# =========================
-# SEND
-# =========================
-def send(chat_id: int | str, lang: str, url_or_name: str, with_more_button: bool = False):
+def send(chat_id, lang, query, more=False):
     cfg = Config(
         TELEGRAM_CHANNELS=[chat_id],
         RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL_OR_NAME=url_or_name,
+        WIKI_URL_OR_NAME=query,
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE='',
+        LAST_ARTICLE_FILE="",
         WITH_IMAGE=True,
     )
 
@@ -225,130 +204,116 @@ def send(chat_id: int | str, lang: str, url_or_name: str, with_more_button: bool
         return
 
     caption = get_caption(article, cfg.RULES_URL, ctx)
-    keyboard = get_more_keyboard() if with_more_button else None
+    kb = get_more_keyboard() if more else None
 
     if not article.image:
-        bot.send_message(chat_id, caption, parse_mode='HTML', reply_markup=keyboard)
+        bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=kb)
         return
 
-    if article.image.desc.startswith('https://'):
-        bot.send_photo(chat_id, article.image.desc, caption=caption,
-                       parse_mode='HTML', reply_markup=keyboard)
+    if article.image.desc.startswith("https://"):
+        bot.send_photo(chat_id, article.image.desc,
+                       caption=caption, parse_mode="HTML", reply_markup=kb)
         return
 
-    with open(article.image.desc, 'rb') as img:
-        bot.send_photo(chat_id, img, caption=caption,
-                       parse_mode='HTML', reply_markup=keyboard)
+    with open(article.image.desc, "rb") as img:
+        bot.send_photo(chat_id, img,
+                       caption=caption, parse_mode="HTML", reply_markup=kb)
+
+
+# =========================
+# COMMAND REGISTRY
+# =========================
+COMMANDS = {}
+
+
+def command(cmd):
+    def wrapper(func):
+        COMMANDS[cmd] = func
+        return func
+
+    return wrapper
+
+
+def handle_command(message):
+    text = (message.text or "").split()[0]
+
+    for cmd_key, func in COMMANDS.items():
+        if text.startswith(cmd_key):
+            func(message)
+            return
+
+    if text == "/reborn":
+        handle_reborn(message)
+        return
+
+    bot.send_message(message.chat.id, "Unknown command")
+
+
+# =========================
+# ROUTER (FSM CORE)
+# =========================
+@bot.message_handler(content_types=["text"])
+def router(message):
+    user_id = message.from_user.id
+    text = (message.text or "").strip()
+
+    if text.startswith("/"):
+        handle_command(message)
+        return
+
+    state = get_state(user_id)
+
+    if state == STATE_GET or state == STATE_NONE:
+        handle_get_input(message)
+        return
 
 
 # =========================
 # COMMANDS
 # =========================
-def start_text(lang: str):
-    return translate(lang, TKey.START_COMMANDS)
+def ensure_user_lang(user_id: int, telegram_lang: str | None):
+    with lang_lock:
+        data = load_langs()
+        key = str(user_id)
+
+        if key not in data:
+            data[key] = normalize_lang(telegram_lang)
+            save_langs(data)
 
 
-@bot.message_handler(commands=['start', cmd(CMD_ABOUT)])
-def handle_start_about(message):
+@command("/start")
+def handle_start(message):
     ensure_user_lang(message.from_user.id, message.from_user.language_code)
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, start_text(lang))
+    bot.send_message(message.chat.id, translate(lang, TKey.START_COMMANDS))
 
 
-@bot.message_handler(commands=[cmd(CMD_STATUS)])
+@command(CMD_ABOUT)
+def handle_about(message):
+    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
+    bot.send_message(message.chat.id, translate(lang, TKey.START_COMMANDS))
+
+
+@command(CMD_STATUS)
 def handle_status(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
     bot.send_message(message.chat.id, translate(lang, TKey.STATUS_OK))
 
 
-@bot.message_handler(commands=[cmd(CMD_LIMIT)])
+@command(CMD_LIMIT)
 def handle_limit(message):
+    data = load_limit()
+    uid = str(message.from_user.id)
+    used = data["users"].get(uid, 0)
+
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
 
-    data = get_limit_state()
-    user_key = str(message.from_user.id)
-    user_count = data["users"].get(user_key, 0)
-
-    remaining = max(0, DAILY_USER_LIMIT - user_count)
-
     bot.send_message(
         message.chat.id,
-        translate(lang, TKey.LIMIT_REMAINING, count=remaining)
+        translate(lang, TKey.LIMIT_REMAINING, count=DAILY_USER_LIMIT - used)
     )
 
 
-# =========================
-# GET COMMAND
-# =========================
-@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_GET))
-def handle_get(message):
-    user_id = message.from_user.id
-    lang = get_user_lang(user_id, message.from_user.language_code)
-
-    allowed, reason = check_access(user_id)
-
-    if not allowed:
-        bot.send_message(message.chat.id, translate(lang, reason))
-        return
-
-    get_pending[user_id] = True
-
-    bot.send_message(
-        message.chat.id,
-        translate(lang, TKey.GET_PROMPT)
-    )
-
-
-@bot.message_handler(func=lambda m: m.from_user.id in get_pending)
-def handle_get_input(message):
-    user_id = message.from_user.id
-    lang = get_user_lang(user_id, message.from_user.language_code)
-
-    text = (message.text or "").strip()
-
-    if text.startswith("/"):
-        get_pending.pop(user_id, None)
-        return
-
-    if not get_pending.get(user_id):
-        return
-
-    try:
-        allowed, reason = check_access(user_id, with_decrease_limit=True)
-
-        if not allowed:
-            bot.send_message(message.chat.id, translate(lang, reason))
-            get_pending.pop(user_id, None)
-            return
-
-        send(message.chat.id, lang, text)
-
-    except Exception:
-        bot.send_message(
-            message.chat.id,
-            translate(lang, TKey.GET_ERROR)
-        )
-
-    finally:
-        get_pending.pop(user_id, None)
-
-
-@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_CANCEL))
-def handle_cancel(message):
-    user_id = message.from_user.id
-    lang = get_user_lang(user_id, message.from_user.language_code)
-
-    get_pending.pop(user_id, None)
-
-    bot.send_message(
-        message.chat.id,
-        translate(lang, TKey.CANCEL_OK)
-    )
-
-
-# =========================
-# LANG COMMAND
-# =========================
 def get_lang_keyboard():
     kb = InlineKeyboardMarkup()
 
@@ -369,7 +334,7 @@ def get_lang_keyboard():
     return kb
 
 
-@bot.message_handler(commands=[cmd(CMD_LANG)])
+@command(CMD_LANG)
 def handle_lang(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
 
@@ -380,6 +345,83 @@ def handle_lang(message):
     )
 
 
+# =========================
+# RANDOM
+# =========================
+
+@command(CMD_RANDOM)
+def handle_random(message):
+    uid = message.from_user.id
+    lang = get_user_lang(uid, message.from_user.language_code)
+
+    ok, reason = check_access(uid, decrease=True)
+
+    if not ok:
+        bot.send_message(message.chat.id, translate(lang, reason))
+        return
+
+    send(
+        message.chat.id,
+        lang,
+        TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE],
+        True
+    )
+
+
+# =========================
+# GET FLOW (FSM)
+# =========================
+@command(CMD_GET)
+def handle_get(message):
+    uid = message.from_user.id
+    lang = get_user_lang(uid, message.from_user.language_code)
+
+    ok, reason = check_access(uid)
+
+    if not ok:
+        bot.send_message(message.chat.id, translate(lang, reason))
+        return
+
+    set_state(uid, STATE_GET)
+    bot.send_message(message.chat.id, translate(lang, TKey.GET_PROMPT))
+
+
+def handle_get_input(message):
+    uid = message.from_user.id
+    lang = get_user_lang(uid, message.from_user.language_code)
+    text = (message.text or "").strip()
+
+    try:
+        ok, reason = check_access(uid, decrease=True)
+
+        if not ok:
+            bot.send_message(message.chat.id, translate(lang, reason))
+            clear_state(uid)
+            return
+
+        send(message.chat.id, lang, text)
+
+    except:
+        bot.send_message(message.chat.id, translate(lang, TKey.GET_ERROR))
+
+    finally:
+        clear_state(uid)
+
+
+# =========================
+# CANCEL
+# =========================
+@command(CMD_CANCEL)
+def handle_cancel(message):
+    clear_state(message.from_user.id)
+
+    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
+    bot.send_message(message.chat.id, translate(lang, TKey.CANCEL_OK))
+
+
+# =========================
+# CALLBACKS
+# =========================
 @bot.callback_query_handler(func=lambda c: c.data.startswith("lang:"))
 def handle_lang_select(call):
     lang = call.data.split(":", 1)[1]
@@ -394,54 +436,33 @@ def handle_lang_select(call):
     )
 
 
-# =========================
-# RANDOM
-# =========================
-@bot.message_handler(commands=[cmd(CMD_RANDOM)])
-def handle_random(message):
-    user_id = message.from_user.id
-    lang = get_user_lang(user_id, message.from_user.language_code)
+@bot.callback_query_handler(func=lambda c: c.data == "more_random")
+def more(call):
+    uid = call.from_user.id
+    lang = get_user_lang(uid, call.from_user.language_code)
 
-    allowed, reason = check_access(user_id, with_decrease_limit=True)
+    ok, reason = check_access(uid, decrease=True)
 
-    if not allowed:
-        bot.send_message(message.chat.id, translate(lang, reason))
-        return
-
-    send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
-
-
-# =========================
-# CALLBACK
-# =========================
-@bot.callback_query_handler(func=lambda call: call.data == "more_random")
-def handle_more(call):
-    user_id = call.from_user.id
-    lang = get_user_lang(user_id, call.from_user.language_code)
-
-    allowed, reason = check_access(user_id, with_decrease_limit=True)
-
-    if not allowed:
+    if not ok:
         bot.answer_callback_query(call.id, translate(lang, reason))
         return
 
     bot.answer_callback_query(call.id)
-    send(call.message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
+    send(call.message.chat.id, lang,
+         TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], True)
 
 
 # =========================
 # OWNER COMMANDS
 # =========================
-@bot.message_handler(commands=['reborn'])
 def handle_reborn(message):
-    user_id = message.from_user.id
-    if user_id == OWNER_ID:
-        with limit_lock:
-            data = load_limit()
-            user_key = str(user_id)
-            data["users"][user_key] = 0
-            save_limit_atomic(data)
-        bot.send_message(message.chat.id, "Reborn was successful")
+    if message.from_user.id != OWNER_ID:
+        return
+    with limit_lock:
+        data = load_limit()
+        data["users"][str(OWNER_ID)] = 0
+        save_limit(data)
+    bot.send_message(message.chat.id, "Reborn OK")
 
 
 # =========================

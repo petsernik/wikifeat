@@ -9,7 +9,7 @@ OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 TMP_FOLDER_PATH = 'tmp'
 TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
 
-User_Agent = 'wikifeat/0.4 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.41 (https://github.com/petsernik/wikifeat)'
 
 # ==== LIMITS ====
 DAILY_TOTAL_LIMIT = 4900

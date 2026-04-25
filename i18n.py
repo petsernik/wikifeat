@@ -341,7 +341,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — получить случайную избранную статью\n"
             f"{CMD_GET} — получить статью по ссылке или заголовку\n"
             f"{CMD_CANCEL} — отменить действие\n"
-            f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно)\n"
+            f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно в 00:00 по UTC времени)\n"
             f"{CMD_LANG} — выбрать язык (choose language)\n"
             f"{CMD_ABOUT} — о боте"
         ),
@@ -353,7 +353,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Язык изменён: {value}',
         TKey.AVAILABLE_LANGS: 'Доступные языки: {values}',
         TKey.GET_PROMPT: 'Отправьте точное название статьи (регистр важен) или ссылку на неё.',
-        TKey.GET_ERROR: 'Не удалось найти или скачать статью.',
+        TKey.GET_ERROR: 'Не удалось найти или получить статью.',
         TKey.CANCEL_OK: 'Действие отменено.',
     },
 
@@ -364,7 +364,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — get random featured article\n"
             f"{CMD_GET} — get article by link or title\n"
             f"{CMD_CANCEL} — cancel action\n"
-            f"{CMD_LIMIT} — check remaining daily limit (resets daily)\n"
+            f"{CMD_LIMIT} — check remaining daily limit (resets daily at 00:00 UTC)\n"
             f"{CMD_LANG} — choose language\n"
             f"{CMD_ABOUT} — about"
         ),
@@ -376,7 +376,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Language changed: {value}',
         TKey.AVAILABLE_LANGS: 'Available languages: {values}',
         TKey.GET_PROMPT: 'Send exact article title (case-sensitive) or a link.',
-        TKey.GET_ERROR: 'Failed to find or download the article.',
+        TKey.GET_ERROR: 'Failed to find or get the article.',
         TKey.CANCEL_OK: 'Action cancelled.',
     },
 
@@ -387,7 +387,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — zufälligen hervorgehobenen Artikel erhalten\n"
             f"{CMD_GET} — Artikel per Link oder Titel erhalten\n"
             f"{CMD_CANCEL} — abbrechen\n"
-            f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich zurückgesetzt)\n"
+            f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich um 00:00 UTC zurückgesetzt)\n"
             f"{CMD_LANG} — Sprache wählen (choose language)\n"
             f"{CMD_ABOUT} — über den Bot"
         ),
@@ -399,7 +399,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Sprache geändert: {value}',
         TKey.AVAILABLE_LANGS: 'Verfügbare Sprachen: {values}',
         TKey.GET_PROMPT: 'Exakten Artikelnamen (Groß-/Kleinschreibung beachten) oder Link senden.',
-        TKey.GET_ERROR: 'Artikel konnte nicht gefunden oder geladen werden.',
+        TKey.GET_ERROR: 'Artikel konnte nicht gefunden oder erhalten werden.',
         TKey.CANCEL_OK: 'Aktion abgebrochen.',
     },
 
@@ -410,7 +410,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — article en vedette aléatoire\n"
             f"{CMD_GET} — obtenir un article par lien ou titre\n"
             f"{CMD_CANCEL} — annuler\n"
-            f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour)\n"
+            f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour à 00:00 UTC)\n"
             f"{CMD_LANG} — choisir la langue (choose language)\n"
             f"{CMD_ABOUT} — à propos"
         ),
@@ -422,7 +422,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Langue changée : {value}',
         TKey.AVAILABLE_LANGS: 'Langues disponibles: {values}',
         TKey.GET_PROMPT: 'Envoyez le titre exact de l’article ou un lien.',
-        TKey.GET_ERROR: 'Impossible de trouver ou télécharger l’article.',
+        TKey.GET_ERROR: 'Impossible de trouver ou d’obtenir l’article.',
         TKey.CANCEL_OK: 'Action annulée.',
     },
 
@@ -433,7 +433,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — artículo destacado aleatorio\n"
             f"{CMD_GET} — obtener artículo por enlace o título\n"
             f"{CMD_CANCEL} — cancelar\n"
-            f"{CMD_LIMIT} — límite diario restante (se reinicia cada día)\n"
+            f"{CMD_LIMIT} — límite diario restante (se reinicia cada día a las 00:00 UTC)\n"
             f"{CMD_LANG} — elegir idioma (choose language)\n"
             f"{CMD_ABOUT} — acerca del bot"
         ),
@@ -445,7 +445,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Idioma cambiado: {value}',
         TKey.AVAILABLE_LANGS: 'Idiomas disponibles: {values}',
         TKey.GET_PROMPT: 'Envía el título exacto del artículo o un enlace.',
-        TKey.GET_ERROR: 'No se pudo encontrar o descargar el artículo.',
+        TKey.GET_ERROR: 'No se pudo encontrar u obtener el artículo.',
         TKey.CANCEL_OK: 'Acción cancelada.',
     },
 
@@ -456,7 +456,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — articolo in evidenza casuale\n"
             f"{CMD_GET} — ottenere articolo tramite link o titolo\n"
             f"{CMD_CANCEL} — annulla\n"
-            f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno)\n"
+            f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno alle 00:00 UTC)\n"
             f"{CMD_LANG} — scegli lingua (choose language)\n"
             f"{CMD_ABOUT} — informazioni"
         ),
@@ -468,7 +468,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Lingua cambiata: {value}',
         TKey.AVAILABLE_LANGS: 'Lingue disponibili: {values}',
         TKey.GET_PROMPT: 'Invia il titolo esatto dell’articolo o un link.',
-        TKey.GET_ERROR: 'Impossibile trovare o scaricare l’articolo.',
+        TKey.GET_ERROR: 'Impossibile trovare o ottenere l’articolo.',
         TKey.CANCEL_OK: 'Azione annullata.',
     },
 
@@ -479,7 +479,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — artigo em destaque aleatório\n"
             f"{CMD_GET} — obter artigo por link ou título\n"
             f"{CMD_CANCEL} — cancelar\n"
-            f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias)\n"
+            f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias às 00:00 UTC)\n"
             f"{CMD_LANG} — escolher idioma (choose language)\n"
             f"{CMD_ABOUT} — sobre o bot"
         ),
@@ -491,7 +491,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Idioma alterado: {value}',
         TKey.AVAILABLE_LANGS: 'Idiomas disponíveis: {values}',
         TKey.GET_PROMPT: 'Envie o título exato do artigo ou um link.',
-        TKey.GET_ERROR: 'Não foi possível encontrar ou baixar o artigo.',
+        TKey.GET_ERROR: 'Não foi possível encontrar ou obter o artigo.',
         TKey.CANCEL_OK: 'Ação cancelada.',
     },
 
@@ -502,7 +502,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — losowy wyróżniony artykuł\n"
             f"{CMD_GET} — pobierz artykuł po linku lub tytule\n"
             f"{CMD_CANCEL} — anuluj\n"
-            f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie)\n"
+            f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie o 00:00 UTC)\n"
             f"{CMD_LANG} — wybierz język (choose language)\n"
             f"{CMD_ABOUT} — o bocie"
         ),
@@ -514,7 +514,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Język zmieniony: {value}',
         TKey.AVAILABLE_LANGS: 'Dostępne języki: {values}',
         TKey.GET_PROMPT: 'Wyślij dokładny tytuł artykułu lub link.',
-        TKey.GET_ERROR: 'Nie udało się znaleźć lub pobrać artykułu.',
+        TKey.GET_ERROR: 'Nie udało się znaleźć lub uzyskać artykułu.',
         TKey.CANCEL_OK: 'Anulowano.',
     },
 
@@ -525,7 +525,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — выпадковы абраны артыкул\n"
             f"{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
             f"{CMD_CANCEL} — скасаваць дзеянне\n"
-            f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня)\n"
+            f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня ў 00:00 UTC)\n"
             f"{CMD_LANG} — выбраць мову (choose language)\n"
             f"{CMD_ABOUT} — пра бота"
         ),
@@ -537,7 +537,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Мова зменена: {value}',
         TKey.AVAILABLE_LANGS: 'Даступныя мовы: {values}',
         TKey.GET_PROMPT: 'Дашліце дакладную назву артыкула або спасылку.',
-        TKey.GET_ERROR: 'Не ўдалося знайсці або загрузіць артыкул.',
+        TKey.GET_ERROR: 'Не ўдалося знайсці або атрымаць артыкул.',
         TKey.CANCEL_OK: 'Дзеянне адменена.',
     },
 
@@ -548,7 +548,7 @@ BOT_TRANSLATIONS = {
             f"{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
             f"{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
             f"{CMD_CANCEL} — болдырмау\n"
-            f"{CMD_LIMIT} — күндік лимит (күн сайын жаңартылады)\n"
+            f"{CMD_LIMIT} — күндік лимит (күн сайын 00:00 UTC уақытта жаңартылады)\n"
             f"{CMD_LANG} — тілді таңдау (choose language)\n"
             f"{CMD_ABOUT} — бот туралы"
         ),
@@ -560,7 +560,7 @@ BOT_TRANSLATIONS = {
         TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
         TKey.AVAILABLE_LANGS: 'Қолжетімді тілдер: {values}',
         TKey.GET_PROMPT: 'Мақаланың нақты атауын немесе сілтемесін жіберіңіз.',
-        TKey.GET_ERROR: 'Мақаланы табу немесе жүктеу мүмкін болмады.',
+        TKey.GET_ERROR: 'Мақаланы табу немесе алу мүмкін болмады.',
         TKey.CANCEL_OK: 'Әрекет тоқтатылды.',
     },
 }
