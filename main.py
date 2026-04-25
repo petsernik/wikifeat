@@ -112,11 +112,8 @@ def check_and_increment_limit(user_id: int) -> bool:
 
 
 def is_subscribed(user_id: int) -> bool:
-    try:
-        m = bot.get_chat_member(CHANNEL_USERNAME, user_id)
-        return m.status in ("member", "administrator", "creator")
-    except:
-        return False
+    m = bot.get_chat_member(CHANNEL_USERNAME, user_id)
+    return m.status in ("member", "administrator", "creator")
 
 
 # =========================
