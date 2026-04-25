@@ -153,7 +153,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
         image_author_text = html_to_text(image_author_html)
         unknown = any(
             word in image_author_text.lower()
-            for word in ('не указан', 'неизвест', 'аноним', 'unknown', 'unbekannt')
+            for word in ('не указан', 'неизвест', 'аноним', 'unknown', 'unbekannt', 'anonymous')
         )
         if not unknown:
             if not has_link(image_author_html):
