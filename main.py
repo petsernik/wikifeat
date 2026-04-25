@@ -192,7 +192,7 @@ def is_spam(user_id: int) -> bool:
 # =========================
 # SEND
 # =========================
-def send(chat_id: int | str, lang: str, url_or_name: str):
+def send(chat_id: int | str, lang: str, url_or_name: str, with_more_button: bool = False):
     cfg = Config(
         TELEGRAM_CHANNELS=[chat_id],
         RULES_URL="https://t.me/wikifeat/4",
@@ -209,7 +209,7 @@ def send(chat_id: int | str, lang: str, url_or_name: str):
         return
 
     caption = get_caption(article, cfg.RULES_URL, ctx)
-    keyboard = get_more_keyboard()
+    keyboard = get_more_keyboard() if with_more_button else None
 
     if not article.image:
         bot.send_message(chat_id, caption, parse_mode='HTML', reply_markup=keyboard)
@@ -403,7 +403,7 @@ def handle_random(message):
         bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
         return
 
-    send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE])
+    send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
 
 
 # =========================
@@ -425,7 +425,7 @@ def handle_more(call):
         return
 
     bot.answer_callback_query(call.id)
-    send(call.message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE])
+    send(call.message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], with_more_button=True)
 
 
 # =========================
