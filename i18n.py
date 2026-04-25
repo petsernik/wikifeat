@@ -1,6 +1,6 @@
 from enum import Enum
 
-from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_DOWNLOAD, CMD_CANCEL
+from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_GET, CMD_CANCEL
 
 
 class TKey(str, Enum):
@@ -339,11 +339,11 @@ BOT_TRANSLATIONS = {
             f"Доступные команды:\n"
             f"{CMD_STATUS} — проверить статус\n"
             f"{CMD_RANDOM} — получить избранную статью\n"
+            f"{CMD_GET} — получить статью по ссылке или заголовку\n"
+            f"{CMD_CANCEL} — отменить действие\n"
             f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно)\n"
             f"{CMD_LANG} — выбрать язык (choose language)\n"
-            f"{CMD_ABOUT} — о боте\n"
-            f"{CMD_DOWNLOAD} — получить статью по ссылке или заголовку\n"
-            f"{CMD_CANCEL} — отменить действие"
+            f"{CMD_ABOUT} — о боте"
         ),
         TKey.SPAM_BLOCK: 'Слишком частые запросы.',
         TKey.LIMIT_REMAINING: 'Осталось запросов: {count}',
@@ -362,11 +362,11 @@ BOT_TRANSLATIONS = {
             f"Available commands:\n"
             f"{CMD_STATUS} — check status\n"
             f"{CMD_RANDOM} — get featured article\n"
+            f"{CMD_GET} — get article by link or title\n"
+            f"{CMD_CANCEL} — cancel action\n"
             f"{CMD_LIMIT} — check remaining daily limit (resets daily)\n"
             f"{CMD_LANG} — choose language\n"
-            f"{CMD_ABOUT} — about\n"
-            f"{CMD_DOWNLOAD} — get article by link or title\n"
-            f"{CMD_CANCEL} — cancel action"
+            f"{CMD_ABOUT} — about"
         ),
         TKey.SPAM_BLOCK: 'Too many requests.',
         TKey.LIMIT_REMAINING: 'Requests remaining: {count}',
@@ -385,11 +385,11 @@ BOT_TRANSLATIONS = {
             f"Verfügbare Befehle:\n"
             f"{CMD_STATUS} — Status prüfen\n"
             f"{CMD_RANDOM} — hervorgehobenen Artikel erhalten\n"
+            f"{CMD_GET} — Artikel per Link oder Titel erhalten\n"
+            f"{CMD_CANCEL} — abbrechen\n"
             f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich zurückgesetzt)\n"
             f"{CMD_LANG} — Sprache wählen (choose language)\n"
-            f"{CMD_ABOUT} — über den Bot\n"
-            f"{CMD_DOWNLOAD} — Artikel per Link oder Titel erhalten\n"
-            f"{CMD_CANCEL} — abbrechen"
+            f"{CMD_ABOUT} — über den Bot"
         ),
         TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
         TKey.LIMIT_REMAINING: 'Verbleibende Anfragen: {count}',
@@ -408,11 +408,11 @@ BOT_TRANSLATIONS = {
             f"Commandes disponibles:\n"
             f"{CMD_STATUS} — vérifier le statut\n"
             f"{CMD_RANDOM} — article en vedette\n"
+            f"{CMD_GET} — obtenir un article par lien ou titre\n"
+            f"{CMD_CANCEL} — annuler\n"
             f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour)\n"
             f"{CMD_LANG} — choisir la langue (choose language)\n"
-            f"{CMD_ABOUT} — à propos\n"
-            f"{CMD_DOWNLOAD} — obtenir un article par lien ou titre\n"
-            f"{CMD_CANCEL} — annuler"
+            f"{CMD_ABOUT} — à propos"
         ),
         TKey.SPAM_BLOCK: 'Trop de requêtes.',
         TKey.LIMIT_REMAINING: 'Requêtes restantes : {count}',
@@ -431,11 +431,11 @@ BOT_TRANSLATIONS = {
             f"Comandos disponibles:\n"
             f"{CMD_STATUS} — comprobar estado\n"
             f"{CMD_RANDOM} — artículo destacado\n"
+            f"{CMD_GET} — obtener artículo por enlace o título\n"
+            f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — límite diario restante (se reinicia cada día)\n"
             f"{CMD_LANG} — elegir idioma (choose language)\n"
-            f"{CMD_ABOUT} — acerca del bot\n"
-            f"{CMD_DOWNLOAD} — obtener artículo por enlace o título\n"
-            f"{CMD_CANCEL} — cancelar"
+            f"{CMD_ABOUT} — acerca del bot"
         ),
         TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
         TKey.LIMIT_REMAINING: 'Solicitudes restantes: {count}',
@@ -454,11 +454,11 @@ BOT_TRANSLATIONS = {
             f"Comandi disponibili:\n"
             f"{CMD_STATUS} — controlla stato\n"
             f"{CMD_RANDOM} — articolo in evidenza\n"
+            f"{CMD_GET} — ottenere articolo tramite link o titolo\n"
+            f"{CMD_CANCEL} — annulla\n"
             f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno)\n"
             f"{CMD_LANG} — scegli lingua (choose language)\n"
-            f"{CMD_ABOUT} — informazioni\n"
-            f"{CMD_DOWNLOAD} — ottenere articolo tramite link o titolo\n"
-            f"{CMD_CANCEL} — annulla"
+            f"{CMD_ABOUT} — informazioni"
         ),
         TKey.SPAM_BLOCK: 'Troppe richieste.',
         TKey.LIMIT_REMAINING: 'Richieste rimanenti: {count}',
@@ -477,11 +477,11 @@ BOT_TRANSLATIONS = {
             f"Comandos disponíveis:\n"
             f"{CMD_STATUS} — verificar status\n"
             f"{CMD_RANDOM} — artigo em destaque\n"
+            f"{CMD_GET} — obter artigo por link ou título\n"
+            f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias)\n"
             f"{CMD_LANG} — escolher idioma (choose language)\n"
-            f"{CMD_ABOUT} — sobre o bot\n"
-            f"{CMD_DOWNLOAD} — obter artigo por link ou título\n"
-            f"{CMD_CANCEL} — cancelar"
+            f"{CMD_ABOUT} — sobre o bot"
         ),
         TKey.SPAM_BLOCK: 'Muitas solicitações.',
         TKey.LIMIT_REMAINING: 'Solicitações restantes: {count}',
@@ -500,11 +500,11 @@ BOT_TRANSLATIONS = {
             f"Dostępne komendy:\n"
             f"{CMD_STATUS} — sprawdź status\n"
             f"{CMD_RANDOM} — wyróżniony artykuł\n"
+            f"{CMD_GET} — pobierz artykuł po linku lub tytule\n"
+            f"{CMD_CANCEL} — anuluj\n"
             f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie)\n"
             f"{CMD_LANG} — wybierz język (choose language)\n"
-            f"{CMD_ABOUT} — o bocie\n"
-            f"{CMD_DOWNLOAD} — pobierz artykuł po linku lub tytule\n"
-            f"{CMD_CANCEL} — anuluj"
+            f"{CMD_ABOUT} — o bocie"
         ),
         TKey.SPAM_BLOCK: 'Zbyt wiele zapytań.',
         TKey.LIMIT_REMAINING: 'Pozostałe zapytania: {count}',
@@ -523,11 +523,11 @@ BOT_TRANSLATIONS = {
             f"Даступныя каманды:\n"
             f"{CMD_STATUS} — праверыць статус\n"
             f"{CMD_RANDOM} — выпадковы артыкул\n"
+            f"{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
+            f"{CMD_CANCEL} — скасаваць дзеянне\n"
             f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня)\n"
             f"{CMD_LANG} — выбраць мову (choose language)\n"
-            f"{CMD_ABOUT} — пра бота\n"
-            f"{CMD_DOWNLOAD} — атрымаць артыкул па спасылцы або загалоўку\n"
-            f"{CMD_CANCEL} — скасаваць дзеянне"
+            f"{CMD_ABOUT} — пра бота"
         ),
         TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
         TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
@@ -546,11 +546,11 @@ BOT_TRANSLATIONS = {
             f"Қолжетімді командалар:\n"
             f"{CMD_STATUS} — статусты тексеру\n"
             f"{CMD_RANDOM} — таңдаулы мақала\n"
+            f"{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
+            f"{CMD_CANCEL} — болдырмау\n"
             f"{CMD_LIMIT} — күндік лимит (күн сайын жаңартылады)\n"
             f"{CMD_LANG} — тілді таңдау (choose language)\n"
-            f"{CMD_ABOUT} — бот туралы\n"
-            f"{CMD_DOWNLOAD} — сілтеме немесе атауы бойынша мақала алу\n"
-            f"{CMD_CANCEL} — болдырмау"
+            f"{CMD_ABOUT} — бот туралы"
         ),
         TKey.SPAM_BLOCK: 'Тым көп сұраным.',
         TKey.LIMIT_REMAINING: 'Қалған сұранымдар: {count}',

@@ -24,11 +24,11 @@ LIMIT_FILE = os.path.join(TMP_FOLDER_PATH, "daily_limit.json")
 # ==== COMMANDS ====
 CMD_STATUS = "/status"
 CMD_RANDOM = "/random"
+CMD_GET = "/get"
+CMD_CANCEL = "/cancel"
 CMD_LIMIT = "/limit"
 CMD_LANG = "/lang"
 CMD_ABOUT = "/about"
-CMD_DOWNLOAD = "/download"
-CMD_CANCEL = "/cancel"
 
 
 @dataclass

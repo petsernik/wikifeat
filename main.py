@@ -11,7 +11,7 @@ from config import (
     TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE,
     DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
-    CMD_DOWNLOAD, CMD_CANCEL, OWNER_ID
+    CMD_GET, CMD_CANCEL, OWNER_ID
 )
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
@@ -264,7 +264,7 @@ def handle_limit(message):
 # =========================
 # DOWNLOAD COMMAND
 # =========================
-@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_DOWNLOAD))
+@bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_GET))
 def handle_download(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
