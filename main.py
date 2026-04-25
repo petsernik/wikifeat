@@ -31,7 +31,7 @@ SUPPORTED_LANGS = TRANSLATIONS.keys()
 # =========================
 # DOWNLOAD STATE
 # =========================
-download_pending = {}  # user_id -> bool
+get_pending = {}  # user_id -> bool
 
 
 # =========================
@@ -262,10 +262,10 @@ def handle_limit(message):
 
 
 # =========================
-# DOWNLOAD COMMAND
+# GET COMMAND
 # =========================
 @bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_GET))
-def handle_download(message):
+def handle_get(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
@@ -273,31 +273,31 @@ def handle_download(message):
         bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
         return
 
-    download_pending[user_id] = True
+    get_pending[user_id] = True
 
     bot.send_message(
         message.chat.id,
-        translate(lang, TKey.DOWNLOAD_PROMPT)
+        translate(lang, TKey.GET_PROMPT)
     )
 
 
-@bot.message_handler(func=lambda m: m.from_user.id in download_pending)
-def handle_download_input(message):
+@bot.message_handler(func=lambda m: m.from_user.id in get_pending)
+def handle_get_input(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
     text = (message.text or "").strip()
 
     if text.startswith("/"):
-        download_pending.pop(user_id, None)
+        get_pending.pop(user_id, None)
         return
 
-    if not download_pending.get(user_id):
+    if not get_pending.get(user_id):
         return
 
     if not is_subscribed(user_id):
         bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
-        download_pending.pop(user_id, None)
+        get_pending.pop(user_id, None)
         return
 
     try:
@@ -305,7 +305,7 @@ def handle_download_input(message):
 
         if not allowed:
             bot.send_message(message.chat.id, translate(lang, TKey.LIMIT_EXHAUSTED))
-            download_pending.pop(user_id, None)
+            get_pending.pop(user_id, None)
             return
 
         send(message.chat.id, lang, text)
@@ -313,11 +313,11 @@ def handle_download_input(message):
     except Exception:
         bot.send_message(
             message.chat.id,
-            translate(lang, TKey.DOWNLOAD_ERROR)
+            translate(lang, TKey.GET_ERROR)
         )
 
     finally:
-        download_pending.pop(user_id, None)
+        get_pending.pop(user_id, None)
 
 
 @bot.message_handler(func=lambda m: m.text and m.text.startswith(CMD_CANCEL))
@@ -325,7 +325,7 @@ def handle_cancel(message):
     user_id = message.from_user.id
     lang = get_user_lang(user_id, message.from_user.language_code)
 
-    download_pending.pop(user_id, None)
+    get_pending.pop(user_id, None)
 
     bot.send_message(
         message.chat.id,
@@ -404,36 +404,6 @@ def handle_random(message):
         return
 
     send(message.chat.id, lang, TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE])
-
-
-# =========================
-# DOWNLOAD INPUT HANDLER
-# =========================
-@bot.message_handler(func=lambda m: m.from_user.id in download_pending)
-def handle_download_input(message):
-    user_id = message.from_user.id
-    lang = get_user_lang(user_id, message.from_user.language_code)
-
-    if not download_pending.get(user_id):
-        return
-
-    if not is_subscribed(user_id):
-        bot.send_message(message.chat.id, translate(lang, TKey.NEED_SUBSCRIPTION))
-        return
-
-    try:
-        query = message.text.strip()
-
-        # простая логика: либо URL, либо название статьи
-        send(message.chat.id, lang, query)
-
-        download_pending.pop(user_id, None)
-
-    except Exception:
-        bot.send_message(
-            message.chat.id,
-            translate(lang, TKey.DOWNLOAD_ERROR)
-        )
 
 
 # =========================
