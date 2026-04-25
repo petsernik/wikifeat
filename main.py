@@ -285,13 +285,13 @@ def ensure_user_lang(user_id: int, telegram_lang: str | None):
 def handle_start(message):
     ensure_user_lang(message.from_user.id, message.from_user.language_code)
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.START_COMMANDS))
+    bot.send_message(message.chat.id, translate(lang, TKey.ABOUT))
 
 
 @command(CMD_ABOUT)
 def handle_about(message):
     lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.START_COMMANDS))
+    bot.send_message(message.chat.id, translate(lang, TKey.ABOUT))
 
 
 @command(CMD_STATUS)

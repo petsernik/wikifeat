@@ -30,7 +30,7 @@ class TKey(str, Enum):
     RANDOM_FEATURED_PAGE = 'random_featured_page'
 
     # UX
-    START_COMMANDS = 'start_commands'
+    ABOUT = 'start_commands'
     SPAM_BLOCK = 'spam_block'
     LIMIT_REMAINING = 'limit_remaining'
     LIMIT_EXHAUSTED = 'limit_exhausted'
@@ -335,7 +335,7 @@ for lang, data in ADDITIONAL_TRANSLATIONS.items():
 
 BOT_TRANSLATIONS = {
     'ru': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Доступные команды:\n"
             f"{CMD_STATUS} — проверить статус\n"
             f"{CMD_RANDOM} — получить случайную избранную статью\n"
@@ -343,7 +343,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — отменить действие\n"
             f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно в 00:00 по UTC времени)\n"
             f"{CMD_LANG} — выбрать язык (choose language)\n"
-            f"{CMD_ABOUT} — о боте"
+            f"{CMD_ABOUT} — о боте\n"
+            f"Также можно просто отправлять текст, тогда бот пришлёт в ответ статью (то же поведение будет и после вызова {CMD_GET}), отправлять можно название статьи или же саму ссылку на статью"
         ),
         TKey.SPAM_BLOCK: 'Слишком частые запросы.',
         TKey.LIMIT_REMAINING: 'Осталось запросов: {count}',
@@ -358,7 +359,7 @@ BOT_TRANSLATIONS = {
     },
 
     'en': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Available commands:\n"
             f"{CMD_STATUS} — check status\n"
             f"{CMD_RANDOM} — get random featured article\n"
@@ -366,7 +367,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — cancel action\n"
             f"{CMD_LIMIT} — check remaining daily limit (resets daily at 00:00 UTC)\n"
             f"{CMD_LANG} — choose language\n"
-            f"{CMD_ABOUT} — about"
+            f"{CMD_ABOUT} — about\n"
+            f"You can also just send text — the bot will reply with an article (same behavior as after {CMD_GET}). You can send either the article title or a link."
         ),
         TKey.SPAM_BLOCK: 'Too many requests.',
         TKey.LIMIT_REMAINING: 'Requests remaining: {count}',
@@ -381,7 +383,7 @@ BOT_TRANSLATIONS = {
     },
 
     'de': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Verfügbare Befehle:\n"
             f"{CMD_STATUS} — Status prüfen\n"
             f"{CMD_RANDOM} — zufälligen hervorgehobenen Artikel erhalten\n"
@@ -389,7 +391,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — abbrechen\n"
             f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich um 00:00 UTC zurückgesetzt)\n"
             f"{CMD_LANG} — Sprache wählen (choose language)\n"
-            f"{CMD_ABOUT} — über den Bot"
+            f"{CMD_ABOUT} — über den Bot\n"
+            f"Sie können auch einfach Text senden — der Bot antwortet mit einem Artikel (gleiches Verhalten wie nach {CMD_GET}). Sie können entweder den Artikeltitel oder einen Link senden."
         ),
         TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
         TKey.LIMIT_REMAINING: 'Verbleibende Anfragen: {count}',
@@ -404,7 +407,7 @@ BOT_TRANSLATIONS = {
     },
 
     'fr': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Commandes disponibles:\n"
             f"{CMD_STATUS} — vérifier le statut\n"
             f"{CMD_RANDOM} — article en vedette aléatoire\n"
@@ -412,7 +415,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — annuler\n"
             f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour à 00:00 UTC)\n"
             f"{CMD_LANG} — choisir la langue (choose language)\n"
-            f"{CMD_ABOUT} — à propos"
+            f"{CMD_ABOUT} — à propos\n"
+            f"Vous pouvez aussi simplement envoyer du texte — le bot répondra avec un article (même comportement qu’après {CMD_GET}). Vous pouvez envoyer le titre ou un lien."
         ),
         TKey.SPAM_BLOCK: 'Trop de requêtes.',
         TKey.LIMIT_REMAINING: 'Requêtes restantes : {count}',
@@ -427,7 +431,7 @@ BOT_TRANSLATIONS = {
     },
 
     'es': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Comandos disponibles:\n"
             f"{CMD_STATUS} — comprobar estado\n"
             f"{CMD_RANDOM} — artículo destacado aleatorio\n"
@@ -435,7 +439,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — límite diario restante (se reinicia cada día a las 00:00 UTC)\n"
             f"{CMD_LANG} — elegir idioma (choose language)\n"
-            f"{CMD_ABOUT} — acerca del bot"
+            f"{CMD_ABOUT} — acerca del bot\n"
+            f"También puedes enviar texto directamente — el bot responderá con un artículo (mismo comportamiento que después de {CMD_GET}). Puedes enviar el título o un enlace."
         ),
         TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
         TKey.LIMIT_REMAINING: 'Solicitudes restantes: {count}',
@@ -450,7 +455,7 @@ BOT_TRANSLATIONS = {
     },
 
     'it': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Comandi disponibili:\n"
             f"{CMD_STATUS} — controlla stato\n"
             f"{CMD_RANDOM} — articolo in evidenza casuale\n"
@@ -458,7 +463,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — annulla\n"
             f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno alle 00:00 UTC)\n"
             f"{CMD_LANG} — scegli lingua (choose language)\n"
-            f"{CMD_ABOUT} — informazioni"
+            f"{CMD_ABOUT} — informazioni\n"
+            f"Puoi anche inviare semplicemente del testo — il bot risponderà con un articolo (stesso comportamento dopo {CMD_GET}). Puoi inviare il titolo o un link."
         ),
         TKey.SPAM_BLOCK: 'Troppe richieste.',
         TKey.LIMIT_REMAINING: 'Richieste rimanenti: {count}',
@@ -473,7 +479,7 @@ BOT_TRANSLATIONS = {
     },
 
     'pt': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Comandos disponíveis:\n"
             f"{CMD_STATUS} — verificar status\n"
             f"{CMD_RANDOM} — artigo em destaque aleatório\n"
@@ -481,7 +487,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias às 00:00 UTC)\n"
             f"{CMD_LANG} — escolher idioma (choose language)\n"
-            f"{CMD_ABOUT} — sobre o bot"
+            f"{CMD_ABOUT} — sobre o bot\n"
+            f"Você também pode enviar texto diretamente — o bot responderá com um artigo (mesmo comportamento após {CMD_GET}). Você pode enviar o título ou um link."
         ),
         TKey.SPAM_BLOCK: 'Muitas solicitações.',
         TKey.LIMIT_REMAINING: 'Solicitações restantes: {count}',
@@ -496,7 +503,7 @@ BOT_TRANSLATIONS = {
     },
 
     'pl': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Dostępne komendy:\n"
             f"{CMD_STATUS} — sprawdź status\n"
             f"{CMD_RANDOM} — losowy wyróżniony artykuł\n"
@@ -504,7 +511,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — anuluj\n"
             f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie o 00:00 UTC)\n"
             f"{CMD_LANG} — wybierz język (choose language)\n"
-            f"{CMD_ABOUT} — o bocie"
+            f"{CMD_ABOUT} — o bocie\n"
+            f"Możesz też po prostu wysłać tekst — bot odpowie artykułem (takie samo działanie jak po {CMD_GET}). Możesz wysłać tytuł lub link."
         ),
         TKey.SPAM_BLOCK: 'Zbyt wiele zapytań.',
         TKey.LIMIT_REMAINING: 'Pozostałe zapytania: {count}',
@@ -519,7 +527,7 @@ BOT_TRANSLATIONS = {
     },
 
     'be': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Даступныя каманды:\n"
             f"{CMD_STATUS} — праверыць статус\n"
             f"{CMD_RANDOM} — выпадковы абраны артыкул\n"
@@ -527,7 +535,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — скасаваць дзеянне\n"
             f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня ў 00:00 UTC)\n"
             f"{CMD_LANG} — выбраць мову (choose language)\n"
-            f"{CMD_ABOUT} — пра бота"
+            f"{CMD_ABOUT} — пра бота\n"
+            f"Таксама можна проста даслаць тэкст — бот адправіць артыкул у адказ (такія ж паводзіны пасля {CMD_GET}). Можна даслаць назву або спасылку."
         ),
         TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
         TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
@@ -542,7 +551,7 @@ BOT_TRANSLATIONS = {
     },
 
     'kk': {
-        TKey.START_COMMANDS: (
+        TKey.ABOUT: (
             f"Қолжетімді командалар:\n"
             f"{CMD_STATUS} — статусты тексеру\n"
             f"{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
@@ -550,7 +559,8 @@ BOT_TRANSLATIONS = {
             f"{CMD_CANCEL} — болдырмау\n"
             f"{CMD_LIMIT} — күндік лимит (күн сайын 00:00 UTC уақытта жаңартылады)\n"
             f"{CMD_LANG} — тілді таңдау (choose language)\n"
-            f"{CMD_ABOUT} — бот туралы"
+            f"{CMD_ABOUT} — бот туралы\n"
+            f"Сондай-ақ мәтінді жай жіберуге болады — бот жауап ретінде мақала жібереді (дәл сондай әрекет {CMD_GET} кейін де болады). Атауды немесе сілтемені жіберуге болады."
         ),
         TKey.SPAM_BLOCK: 'Тым көп сұраным.',
         TKey.LIMIT_REMAINING: 'Қалған сұранымдар: {count}',
