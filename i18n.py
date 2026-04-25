@@ -338,7 +338,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Доступные команды:\n"
             f"{CMD_STATUS} — проверить статус\n"
-            f"{CMD_RANDOM} — получить избранную статью\n"
+            f"{CMD_RANDOM} — получить случайную избранную статью\n"
             f"{CMD_GET} — получить статью по ссылке или заголовку\n"
             f"{CMD_CANCEL} — отменить действие\n"
             f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно)\n"
@@ -361,7 +361,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Available commands:\n"
             f"{CMD_STATUS} — check status\n"
-            f"{CMD_RANDOM} — get featured article\n"
+            f"{CMD_RANDOM} — get random featured article\n"
             f"{CMD_GET} — get article by link or title\n"
             f"{CMD_CANCEL} — cancel action\n"
             f"{CMD_LIMIT} — check remaining daily limit (resets daily)\n"
@@ -384,7 +384,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Verfügbare Befehle:\n"
             f"{CMD_STATUS} — Status prüfen\n"
-            f"{CMD_RANDOM} — hervorgehobenen Artikel erhalten\n"
+            f"{CMD_RANDOM} — zufälligen hervorgehobenen Artikel erhalten\n"
             f"{CMD_GET} — Artikel per Link oder Titel erhalten\n"
             f"{CMD_CANCEL} — abbrechen\n"
             f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich zurückgesetzt)\n"
@@ -407,7 +407,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Commandes disponibles:\n"
             f"{CMD_STATUS} — vérifier le statut\n"
-            f"{CMD_RANDOM} — article en vedette\n"
+            f"{CMD_RANDOM} — article en vedette aléatoire\n"
             f"{CMD_GET} — obtenir un article par lien ou titre\n"
             f"{CMD_CANCEL} — annuler\n"
             f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour)\n"
@@ -430,7 +430,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandos disponibles:\n"
             f"{CMD_STATUS} — comprobar estado\n"
-            f"{CMD_RANDOM} — artículo destacado\n"
+            f"{CMD_RANDOM} — artículo destacado aleatorio\n"
             f"{CMD_GET} — obtener artículo por enlace o título\n"
             f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — límite diario restante (se reinicia cada día)\n"
@@ -453,7 +453,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandi disponibili:\n"
             f"{CMD_STATUS} — controlla stato\n"
-            f"{CMD_RANDOM} — articolo in evidenza\n"
+            f"{CMD_RANDOM} — articolo in evidenza casuale\n"
             f"{CMD_GET} — ottenere articolo tramite link o titolo\n"
             f"{CMD_CANCEL} — annulla\n"
             f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno)\n"
@@ -476,7 +476,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Comandos disponíveis:\n"
             f"{CMD_STATUS} — verificar status\n"
-            f"{CMD_RANDOM} — artigo em destaque\n"
+            f"{CMD_RANDOM} — artigo em destaque aleatório\n"
             f"{CMD_GET} — obter artigo por link ou título\n"
             f"{CMD_CANCEL} — cancelar\n"
             f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias)\n"
@@ -499,7 +499,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Dostępne komendy:\n"
             f"{CMD_STATUS} — sprawdź status\n"
-            f"{CMD_RANDOM} — wyróżniony artykuł\n"
+            f"{CMD_RANDOM} — losowy wyróżniony artykuł\n"
             f"{CMD_GET} — pobierz artykuł po linku lub tytule\n"
             f"{CMD_CANCEL} — anuluj\n"
             f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie)\n"
@@ -522,7 +522,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Даступныя каманды:\n"
             f"{CMD_STATUS} — праверыць статус\n"
-            f"{CMD_RANDOM} — выпадковы артыкул\n"
+            f"{CMD_RANDOM} — выпадковы абраны артыкул\n"
             f"{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
             f"{CMD_CANCEL} — скасаваць дзеянне\n"
             f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня)\n"
@@ -545,7 +545,7 @@ BOT_TRANSLATIONS = {
         TKey.START_COMMANDS: (
             f"Қолжетімді командалар:\n"
             f"{CMD_STATUS} — статусты тексеру\n"
-            f"{CMD_RANDOM} — таңдаулы мақала\n"
+            f"{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
             f"{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
             f"{CMD_CANCEL} — болдырмау\n"
             f"{CMD_LIMIT} — күндік лимит (күн сайын жаңартылады)\n"
