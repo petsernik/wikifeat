@@ -1,8 +1,8 @@
 import copy
 import html
-import os
 import re
 import string
+from datetime import datetime, UTC
 from typing import Optional
 from urllib.parse import urlparse, unquote, quote
 
@@ -12,7 +12,8 @@ from bs4 import Tag, BeautifulSoup
 from bs4.element import PageElement, NavigableString
 from requests import Response
 
-from config import User_Agent
+from config import User_Agent, FONT_PATH
+from i18n import TRANSLATIONS
 from models import ArticleContext
 
 
@@ -62,10 +63,10 @@ def join_url(netloc: str, path: str) -> str:
         return f'https://{netloc}{path}'
 
 
-def has_link(html: str) -> bool:
-    if not html:
+def has_link(html_code: str) -> bool:
+    if not html_code:
         return False
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html_code, 'html.parser')
     return soup.find('a', href=True) is not None
 
 
@@ -277,25 +278,25 @@ def remove_brackets(text: str) -> str:
     return " ".join("".join(res).split())
 
 
-def html_to_text(html: str) -> str:
+def html_to_text(html_code: str) -> str:
     depth = 0
     parts = []
     prev = 0
-    for i in range(len(html)):
-        if html[i] == "<":
+    for i in range(len(html_code)):
+        if html_code[i] == "<":
             depth += 1
             if depth == 1:
-                parts.append(html[prev:i])
-        elif html[i] == ">":
+                parts.append(html_code[prev:i])
+        elif html_code[i] == ">":
             depth -= 1
             if depth == 0:
                 prev = i + 1
-    parts.append(html[prev:])
+    parts.append(html_code[prev:])
     return ''.join(parts)
 
 
-def update_links(netloc: str, html: str) -> str:
-    soup = BeautifulSoup(html, 'html.parser')
+def update_links(netloc: str, html_code: str) -> str:
+    soup = BeautifulSoup(html_code, 'html.parser')
 
     for a in soup.find_all('a', href=True):
         a['href'] = quote_url(join_url(netloc, a['href']))
@@ -303,7 +304,7 @@ def update_links(netloc: str, html: str) -> str:
     return str(soup)
 
 
-def replace_links_with_numbers(html: str) -> str:
+def replace_links_with_numbers(html_code: str) -> str:
     """Заменяет ссылки в тексте (но не в тегах) на числа"""
     counter = 0
     links_map = {}
@@ -313,17 +314,17 @@ def replace_links_with_numbers(html: str) -> str:
     stop_chars = string.whitespace + '"()[]{}<>,!'
 
     prev, i = 0, 0
-    while i < len(html):
-        if html[i] == "<":
+    while i < len(html_code):
+        if html_code[i] == "<":
             depth += 1
-        elif html[i] == ">":
+        elif html_code[i] == ">":
             depth -= 1
-        if depth == 0 and html.startswith(prefix, i):
-            parts.append(html[prev:i])
+        if depth == 0 and html_code.startswith(prefix, i):
+            parts.append(html_code[prev:i])
             end = i + len(prefix)
-            while end < len(html) and html[end] not in stop_chars:
+            while end < len(html_code) and html_code[end] not in stop_chars:
                 end += 1
-            link = html[i:end]
+            link = html_code[i:end]
             if link not in links_map:
                 counter += 1
                 links_map[link] = f'[{counter}]'
@@ -331,22 +332,8 @@ def replace_links_with_numbers(html: str) -> str:
             prev, i = end, end
         else:
             i += 1
-    parts.append(html[prev:])
+    parts.append(html_code[prev:])
     return ''.join(parts)
-
-
-def read_last_article(last_article_file: str) -> str:
-    # Читаем название последней статьи из файла
-    if not os.path.exists(last_article_file):
-        return ''
-    with open(last_article_file, 'r', encoding='utf-8') as file:
-        return file.read().strip()
-
-
-def write_last_article(title: str, last_article_file: str):
-    # Записываем последнюю статью в файл
-    with open(last_article_file, 'w', encoding='utf-8') as file:
-        file.write(title)
 
 
 def visible_length(html_text: str) -> int:
@@ -357,7 +344,7 @@ def visible_length(html_text: str) -> int:
 
 def draw_centered_text(
         text: str,
-        font_path: str = "Renju.otf",
+        font_path: str = FONT_PATH,
         image_size: int = 1500,
         margin: int = 100,
         max_lines: int = 5,
@@ -465,3 +452,14 @@ def is_balanced(s: str) -> tuple[bool, int]:
         return False, stack[0][0]
 
     return True, -1
+
+
+def get_today():
+    return datetime.now(UTC).strftime("%Y-%m-%d")
+
+
+def normalize_lang(code: str | None):
+    if not code:
+        return "en"
+    base = code.lower().split("-")[0]
+    return base if base in TRANSLATIONS.keys() else "en"

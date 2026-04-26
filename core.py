@@ -12,14 +12,13 @@ from config import Config, TELEGRAM_BOT_TOKEN, TEXT_IMAGE_PATH
 from i18n import TKey
 from models import Article, Image, ArticleContext
 from parsers import LANG_PARSERS
+from storage import read_last_article, write_last_article
 from utils import (
     get_request,
     get_quote_url_by_context,
     get_quote_url_by_tag,
     clean_soup,
     remove_brackets,
-    read_last_article,
-    write_last_article,
     visible_length,
     extract_attrs_info,
     html_to_text,

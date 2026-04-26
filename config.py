@@ -6,9 +6,12 @@ from typing import List
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
-TMP_FOLDER_PATH = 'tmp'
+DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")
+TMP_FOLDER_PATH = os.path.join(DIR_PATH, 'tmp')
 TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
 
+CHANNEL_USERNAME = "@wikifeat"
 User_Agent = 'wikifeat/0.41 (https://github.com/petsernik/wikifeat)'
 
 # ==== LIMITS ====
@@ -37,5 +40,5 @@ class Config:
     RULES_URL: str
     LANG_CODE: str
     WIKI_URL_OR_NAME: str
-    LAST_ARTICLE_FILE: str # not used if empty
+    LAST_ARTICLE_FILE: str  # not used if empty
     WITH_IMAGE: bool

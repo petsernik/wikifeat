@@ -1,21 +1,18 @@
-import json
-import os
 import threading
 import time
-from datetime import datetime, UTC
 
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import (
-    TELEGRAM_BOT_TOKEN, Config, TMP_FOLDER_PATH, LIMIT_FILE,
-    DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
+    TELEGRAM_BOT_TOKEN, Config, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
-    CMD_GET, CMD_CANCEL, OWNER_ID
+    CMD_GET, CMD_CANCEL, OWNER_ID, CHANNEL_USERNAME
 )
-
 from core import get_article, get_caption
 from i18n import TKey, TRANSLATIONS, translate
+from storage import load_limit, save_limit, load_langs, save_langs, check_tmp_folder_exists
+from utils import get_today, normalize_lang
 
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
@@ -46,12 +43,7 @@ def clear_state(user_id: int):
 limit_lock = threading.Lock()
 user_last_request_time = {}
 
-CHANNEL_USERNAME = "@wikifeat"
-
-LANG_FILE = os.path.join(TMP_FOLDER_PATH, "user_lang.json")
 lang_lock = threading.Lock()
-
-SUPPORTED_LANGS = TRANSLATIONS.keys()
 
 
 def is_spam(user_id: int) -> bool:
@@ -63,28 +55,6 @@ def is_spam(user_id: int) -> bool:
 
     user_last_request_time[user_id] = now
     return False
-
-
-def load_limit():
-    if not os.path.exists(LIMIT_FILE):
-        return {"date": None, "total": 0, "users": {}}
-
-    try:
-        with open(LIMIT_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {"date": None, "total": 0, "users": {}}
-
-
-def save_limit(data):
-    tmp = LIMIT_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-    os.replace(tmp, LIMIT_FILE)
-
-
-def get_today():
-    return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
 def check_and_increment_limit(user_id: int) -> bool:
@@ -114,33 +84,6 @@ def check_and_increment_limit(user_id: int) -> bool:
 def is_subscribed(user_id: int) -> bool:
     m = bot.get_chat_member(CHANNEL_USERNAME, user_id)
     return m.status in ("member", "administrator", "creator")
-
-
-# =========================
-# LANG SYSTEM
-# =========================
-def normalize_lang(code: str | None):
-    if not code:
-        return "en"
-    base = code.lower().split("-")[0]
-    return base if base in SUPPORTED_LANGS else "en"
-
-
-def load_langs():
-    if not os.path.exists(LANG_FILE):
-        return {}
-    try:
-        with open(LANG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {}
-
-
-def save_langs(data):
-    tmp = LANG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-    os.replace(tmp, LANG_FILE)
 
 
 def get_user_lang(user_id: int, tg_lang: str | None):
@@ -184,7 +127,7 @@ def get_more_keyboard():
     return kb
 
 
-def send(chat_id, lang, query, more=False):
+def send(chat_id, lang, query, with_more_keyboard=False):
     cfg = Config(
         TELEGRAM_CHANNELS=[chat_id],
         RULES_URL="https://t.me/wikifeat/4",
@@ -201,7 +144,7 @@ def send(chat_id, lang, query, more=False):
         return
 
     caption = get_caption(article, cfg.RULES_URL, ctx)
-    kb = get_more_keyboard() if more else None
+    kb = get_more_keyboard() if with_more_keyboard else None
 
     if not article.image:
         bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=kb)
@@ -315,7 +258,7 @@ def get_lang_keyboard():
     kb = InlineKeyboardMarkup()
 
     buttons = []
-    for lang in sorted(SUPPORTED_LANGS):
+    for lang in sorted(TRANSLATIONS.keys()):
         buttons.append(InlineKeyboardButton(lang, callback_data=f"lang:{lang}"))
 
     row = []
@@ -337,7 +280,7 @@ def handle_lang(message):
 
     bot.send_message(
         message.chat.id,
-        translate(lang, TKey.AVAILABLE_LANGS, values=", ".join(sorted(SUPPORTED_LANGS))),
+        translate(lang, TKey.AVAILABLE_LANGS, values=", ".join(sorted(TRANSLATIONS.keys()))),
         reply_markup=get_lang_keyboard()
     )
 
@@ -466,5 +409,5 @@ def handle_reborn(message):
 # RUN
 # =========================
 if __name__ == "__main__":
-    os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
+    check_tmp_folder_exists()
     bot.infinity_polling()
