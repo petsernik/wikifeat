@@ -67,12 +67,10 @@ def _test_random_pages(with_image=True):
 if __name__ == "__main__":
     os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
 
-    _test_today_template('ru')
+    # _test_today_template('ru')
     # _test_today_template('en')
     # _test_main_page('ru')
     # _test_main_pages()
     # _test_random_pages_by_iterable(['fr'])
-    # _test_page('ru', 'Портрет Текумсе')
 
-    # _test_page('ru', 'Солнце')
-    # _test_page('ru', 'Эссекс (королевство)')
+    _test_page('ru', 'Marvel’s Spider-Man (игра)')

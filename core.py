@@ -27,7 +27,7 @@ from utils import (
     draw_centered_text,
     is_balanced,
     ends_with_one_char_abbr,
-    unquote_url, has_link
+    unquote_url, has_link, quote_url
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -203,22 +203,6 @@ def get_image_by_text(text: str, ctx: ArticleContext) -> Optional[Image]:
     )
 
 
-def get_featured_article(last_title: str, ctx: ArticleContext) -> Optional[Article]:
-    response = get_request(get_quote_url_by_context(ctx))
-    if response.status_code != 200:
-        raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
-                        f'Response body: {response.content}')
-    response.encoding = 'utf-8'
-    parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
-    soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
-    article, netloc, main_block = parser(soup, unquote_url(response.url), last_title)
-    if not article:
-        return None
-    if ctx.with_image:
-        article.image = get_image_by_tag(netloc, main_block, ctx) or get_image_by_text(article.title, ctx)
-    return article
-
-
 def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
     total_length, text = 0, ''
     for paragraph in paragraphs:
@@ -314,7 +298,20 @@ def get_article(config: Config) -> tuple[Article | None, ArticleContext]:
         with_image=config.WITH_IMAGE
     )
 
-    article = get_featured_article(last_title, ctx)
+    response = get_request(get_quote_url_by_context(ctx))
+    if response.status_code != 200:
+        raise Exception(f'Unexpected response code when get wiki page: {response.status_code}\n'
+                        f'Response body: {response.content}')
+    response.encoding = 'utf-8'
+    parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
+    soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
+    article, netloc, main_block = parser(soup, unquote_url(response.url), last_title)
+    if not article:
+        return None, ctx
+
+    article.link = quote_url(article.link)
+    if ctx.with_image:
+        article.image = get_image_by_tag(netloc, main_block, ctx) or get_image_by_text(article.title, ctx)
 
     return article, ctx
 
