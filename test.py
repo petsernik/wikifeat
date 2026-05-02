@@ -1,76 +1,91 @@
-import os
-from time import sleep
+import asyncio
+from types import SimpleNamespace
 from typing import Iterable
 
-from config import Config, TMP_FOLDER_PATH
-from core import run
+from telegram.ext import Application
+
+from config import Config
+from core import run, async_run
 from i18n import TRANSLATIONS, TKey
 
 
-def _test_page(lang: str, url_or_name: str, with_image: bool = True):
+# =========================
+# BASE TEST RUNNER
+# =========================
+async def _test_page(app: Application, lang: str, url_or_name: str, with_image: bool = True):
+    ctx = SimpleNamespace(bot=app.bot)
+
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeattest"],
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE='',
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
         WITH_IMAGE=with_image,
     )
-    run(cfg)
-    sleep(1)
+
+    await run(ctx, cfg)
+    await asyncio.sleep(1)
 
 
-def _test_page_by_key(lang: str, key: TKey, with_image: bool = True):
-    _test_page(lang, TRANSLATIONS[lang][key], with_image)
-    sleep(1)
+# =========================
+# BY KEY
+# =========================
+async def _test_page_by_key(app: Application, lang: str, key: TKey, with_image: bool = True):
+    await _test_page(app, lang, TRANSLATIONS[lang][key], with_image)
+    await asyncio.sleep(1)
 
 
-def _test_today_template(lang: str, with_image: bool = True):
-    _test_page_by_key(lang, TKey.TODAY_TEMPLATE, with_image)
+# =========================
+# PRESET TESTS
+# =========================
+async def _test_today_template(app: Application, lang: str, with_image: bool = True):
+    await _test_page_by_key(app, lang, TKey.TODAY_TEMPLATE, with_image)
 
 
-def _test_main_page(lang: str, with_image: bool = True):
-    _test_page_by_key(lang, TKey.MAIN_PAGE, with_image)
+async def _test_main_page(app: Application, lang: str, with_image: bool = True):
+    await _test_page_by_key(app, lang, TKey.MAIN_PAGE, with_image)
 
 
-def _test_today_templates_by_iterable(languages: Iterable[str], with_image: bool = True):
+async def _test_random_page(app: Application, lang: str, with_image: bool = True):
+    await _test_page_by_key(app, lang, TKey.RANDOM_FEATURED_PAGE, with_image)
+
+
+# =========================
+# ITERABLE TESTS
+# =========================
+async def _test_today_templates_by_iterable(app: Application, languages: Iterable[str], with_image: bool = True):
     for lang in languages:
-        _test_today_template(lang, with_image)
+        await _test_today_template(app, lang, with_image)
 
 
-def _test_main_pages_by_iterable(languages: Iterable[str], with_image: bool = True):
+async def _test_main_pages_by_iterable(app: Application, languages: Iterable[str], with_image: bool = True):
     for lang in languages:
-        _test_main_page(lang, with_image)
+        await _test_main_page(app, lang, with_image)
 
 
-def _test_today_templates(with_image: bool = True):
-    _test_today_templates_by_iterable(TRANSLATIONS.keys(), with_image)
-
-
-def _test_main_pages(with_image: bool = True):
-    _test_main_pages_by_iterable(TRANSLATIONS.keys(), with_image)
-
-
-def _test_random_page(lang: str, with_image: bool = True):
-    _test_page_by_key(lang, TKey.RANDOM_FEATURED_PAGE, with_image)
-
-
-def _test_random_pages_by_iterable(languages: Iterable[str], with_image: bool = True):
+async def _test_random_pages_by_iterable(app: Application, languages: Iterable[str], with_image: bool = True):
     for lang in languages:
-        _test_random_page(lang, with_image)
+        await _test_random_page(app, lang, with_image)
 
 
-def _test_random_pages(with_image=True):
-    _test_random_pages_by_iterable(TRANSLATIONS.keys(), with_image)
+# =========================
+# MAIN
+# =========================
+async def main(app: Application):
+    # ===== TEST CASES =====
+    # await _test_main_page(app, "fr", True)
+    # await _test_main_page(app, "es", True)
+    await _test_today_template(app, "ru", True)
+    # await _test_main_page(app, "ru", True)
+    # await _test_page(app, 'ru', 'Голова', True)
+    # ====== TEST UPDATING FEATURED ALL ======
+    # for lang in TRANSLATIONS.keys():
+    #     try:
+    #         await update_featured_articles_in_db(lang, await fetch_featured_titles(lang))
+    #     except Exception as exc:
+    #         print(exc)
 
 
 if __name__ == "__main__":
-    os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
-
-    # _test_today_template('ru')
-    # _test_today_template('en')
-    # _test_main_page('ru')
-    # _test_main_pages()
-    # _test_random_pages_by_iterable(['fr'])
-
-    _test_page('ru', 'Marvel’s Spider-Man (игра)')
+    async_run(main)

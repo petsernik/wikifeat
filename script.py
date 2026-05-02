@@ -1,37 +1,50 @@
-import os
-from time import sleep
+from types import SimpleNamespace
 
-from config import Config, TMP_FOLDER_PATH
-from core import run
+from telegram.ext import Application
+
+from config import Config
+from core import run, async_run
 from i18n import TRANSLATIONS, TKey
 
 
-def main():
-    os.makedirs(TMP_FOLDER_PATH, exist_ok=True)
-    lang = 'ru'
+# =========================
+# MAIN LOGIC
+# =========================
+async def main(app: Application):
+    lang = "ru"
+
+    ctx = SimpleNamespace(bot=app.bot)
+
+    # =========================
+    # FIRST (images)
+    # =========================
     cfg = Config(
         TELEGRAM_CHANNELS=["@wikifeat"],
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=TRANSLATIONS[lang][TKey.TODAY_TEMPLATE],
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, f"{lang}_last_article.txt"),
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=True,
         WITH_IMAGE=True,
     )
-    if not run(cfg):
+
+    ok = await run(ctx, cfg)
+    if not ok:
         return
 
-    sleep(1)
-
+    # =========================
+    # SECOND (text only)
+    # =========================
     cfg_text = Config(
         TELEGRAM_CHANNELS=["@wikifeattexts"],
         RULES_URL="https://t.me/wikifeattexts/3",
         WIKI_URL_OR_NAME=TRANSLATIONS[lang][TKey.TODAY_TEMPLATE],
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE=os.path.join(TMP_FOLDER_PATH, f"{lang}_last_article_only_text.txt"),
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
         WITH_IMAGE=False,
     )
-    run(cfg_text)
+
+    await run(ctx, cfg_text)
 
 
 if __name__ == "__main__":
-    main()
+    async_run(main)

@@ -1,28 +1,36 @@
-import threading
 import time
+from typing import Dict
 
-import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+    filters,
+)
 
 from config import (
     TELEGRAM_BOT_TOKEN, Config, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
-    CMD_GET, CMD_CANCEL, OWNER_ID, CHANNEL_USERNAME
+    CMD_GET, CMD_CANCEL, OWNER_ID, CHANNEL_USERNAME, CMD_UPDATE
 )
-from core import get_article, get_caption
+from core import get_article, get_caption, get_ctx_req_by_config
+from db import get_pool, init_db, close_db, get_random_featured_title, get_lang, set_lang, get_user_limit, \
+    reset_user_limit, has_featured_articles, update_featured_articles_in_db
 from i18n import TKey, TRANSLATIONS, translate
-from storage import load_limit, save_limit, load_langs, save_langs, check_tmp_folder_exists
-from utils import get_today, normalize_lang
-
-bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+from parsers import fetch_featured_titles
+from utils import normalize_lang
 
 # =========================
 # FSM STATE
 # =========================
 STATE_NONE = "none"
 STATE_GET = "get"
+STATE_UPDATE = "update"
 
-user_state = {}
+user_state: Dict[int, str] = {}
 
 
 def get_state(user_id: int):
@@ -40,10 +48,7 @@ def clear_state(user_id: int):
 # =========================
 # LIMIT / SPAM
 # =========================
-limit_lock = threading.Lock()
 user_last_request_time = {}
-
-lang_lock = threading.Lock()
 
 
 def is_spam(user_id: int) -> bool:
@@ -57,63 +62,89 @@ def is_spam(user_id: int) -> bool:
     return False
 
 
-def check_and_increment_limit(user_id: int) -> bool:
-    with limit_lock:
-        today = get_today()
-        data = load_limit()
+async def check_and_increment_limit(user_id: int) -> bool:
+    pool = get_pool()
 
-        if data["date"] != today:
-            data = {"date": today, "total": 0, "users": {}}
+    async with pool.acquire() as conn:
+        async with conn.transaction():
 
-        if data["total"] >= DAILY_TOTAL_LIMIT:
-            return False
+            # --- global limit ---
+            total_row = await conn.fetchrow(
+                "SELECT total FROM global_limits WHERE date = CURRENT_DATE"
+            )
+            total = total_row["total"] if total_row else 0
 
-        uid = str(user_id)
-        count = data["users"].get(uid, 0)
+            if total >= DAILY_TOTAL_LIMIT:
+                return False
 
-        if count >= DAILY_USER_LIMIT:
-            return False
+            # --- user limit ---
+            user_row = await conn.fetchrow(
+                """
+                SELECT count FROM user_limits
+                WHERE user_id=$1 AND date=CURRENT_DATE
+                """,
+                user_id
+            )
+            user_count = user_row["count"] if user_row else 0
 
-        data["total"] += 1
-        data["users"][uid] = count + 1
+            if user_count >= DAILY_USER_LIMIT:
+                return False
 
-        save_limit(data)
-        return True
+            # --- increment user ---
+            await conn.execute(
+                """
+                INSERT INTO user_limits(user_id, date, count)
+                VALUES($1, CURRENT_DATE, 1)
+                ON CONFLICT (user_id, date)
+                DO UPDATE SET count = user_limits.count + 1
+                """,
+                user_id
+            )
+
+            # --- increment global ---
+            await conn.execute(
+                """
+                INSERT INTO global_limits(date, total)
+                VALUES(CURRENT_DATE, 1)
+                ON CONFLICT (date)
+                DO UPDATE SET total = global_limits.total + 1
+                """
+            )
+
+            return True
 
 
-def is_subscribed(user_id: int) -> bool:
-    m = bot.get_chat_member(CHANNEL_USERNAME, user_id)
+async def is_subscribed(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:
+    m = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
     return m.status in ("member", "administrator", "creator")
 
 
-def get_user_lang(user_id: int, tg_lang: str | None):
-    data = load_langs()
-    if str(user_id) in data:
-        return data[str(user_id)]
-    return normalize_lang(tg_lang)
+async def get_user_lang(user_id: int, tg_lang: str | None):
+    lang = await get_lang(user_id)
+    if lang:
+        return lang
+    return await set_user_lang(user_id, tg_lang)
 
 
-def set_user_lang(user_id: int, lang: str):
+async def set_user_lang(user_id: int, lang: str) -> str:
     lang = normalize_lang(lang)
-    with lang_lock:
-        data = load_langs()
-        data[str(user_id)] = lang
-        save_langs(data)
+    await set_lang(user_id, lang)
+    return lang
 
 
 # =========================
 # ACCESS CONTROL
 # =========================
-def check_access(user_id: int, decrease=False):
+async def check_access(context, user_id: int, decrease=False):
     if is_spam(user_id):
         return False, TKey.SPAM_BLOCK
 
-    if not is_subscribed(user_id):
+    if not await is_subscribed(context, user_id):
         return False, TKey.NEED_SUBSCRIPTION
 
     if decrease:
-        if not check_and_increment_limit(user_id):
-            return False, TKey.LIMIT_EXHAUSTED
+        if not await check_and_increment_limit(user_id):
+            return False, TKey.LIMIT_EXCEEDED
 
     return True, TKey.STATUS_OK
 
@@ -122,165 +153,185 @@ def check_access(user_id: int, decrease=False):
 # ARTICLE SENDER
 # =========================
 def get_more_keyboard():
-    kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton("🔄", callback_data="more_random"))
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄", callback_data="more_random")]
+    ])
     return kb
 
 
-def send(chat_id, lang, query, with_more_keyboard=False):
-    cfg = Config(
+async def _get_config(chat_id, query, lang) -> Config:
+    return Config(
         TELEGRAM_CHANNELS=[chat_id],
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=query,
         LANG_CODE=lang,
-        LAST_ARTICLE_FILE="",
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
         WITH_IMAGE=True,
     )
 
-    article, ctx = get_article(cfg)
+
+async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
+    cfg = await _get_config(chat_id, query, lang)
+    article, ctx = await get_article(cfg, ctx_req)
 
     if not article:
-        bot.send_message(chat_id, "Error")
+        await context.bot.send_message(chat_id, "Error")
         return
 
     caption = get_caption(article, cfg.RULES_URL, ctx)
-    kb = get_more_keyboard() if with_more_keyboard else None
 
     if not article.image:
-        bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=kb)
+        await context.bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=keyboard)
         return
 
     if article.image.desc.startswith("https://"):
-        bot.send_photo(chat_id, article.image.desc,
-                       caption=caption, parse_mode="HTML", reply_markup=kb)
+        await context.bot.send_photo(
+            chat_id,
+            article.image.desc,
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
         return
 
     with open(article.image.desc, "rb") as img:
-        bot.send_photo(chat_id, img,
-                       caption=caption, parse_mode="HTML", reply_markup=kb)
+        await context.bot.send_photo(
+            chat_id,
+            img,
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
 
 
-# =========================
-# COMMAND REGISTRY
-# =========================
-COMMANDS = {}
+async def handle_article(
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        title: str,
+        lang_val: str,
+        uid: int,
+        chat_id: int,
+        check_limit: bool = True,
+        keyboard=None,
+        use_cache=True,
+):
+    if not title:
+        await update.message.reply_text("bot error: empty title when handling article")
+        return
 
+    ok, reason = await check_access(context, update.effective_user.id)
+    if not ok:
+        await update.message.reply_text(
+            translate(lang_val, reason)
+        )
+        return
 
-def command(cmd):
-    def wrapper(func):
-        COMMANDS[cmd] = func
-        return func
+    ctx_req = await get_ctx_req_by_config(
+        await _get_config(chat_id, title, lang_val),
+        use_cache
+    )
 
-    return wrapper
+    # кеш → сразу отправляем без лимита
+    if ctx_req.cached:
+        await send(
+            context,
+            chat_id,
+            lang_val,
+            title,
+            keyboard=keyboard, ctx_req=ctx_req
+        )
+        return
 
-
-def handle_command(message):
-    text = (message.text or "").split()[0]
-
-    for cmd_key, func in COMMANDS.items():
-        if text.startswith(cmd_key):
-            func(message)
+    # лимит (только если нужно)
+    if check_limit:
+        ok = await check_and_increment_limit(uid)
+        if not ok:
+            await update.message.reply_text(
+                translate(lang_val, TKey.LIMIT_EXCEEDED)
+            )
             return
 
-    if text == "/reborn":
-        handle_reborn(message)
-        return
-
-    bot.send_message(message.chat.id, "Unknown command")
-
-
-# =========================
-# ROUTER (FSM CORE)
-# =========================
-@bot.message_handler(content_types=["text"])
-def router(message):
-    user_id = message.from_user.id
-    text = (message.text or "").strip()
-
-    if text.startswith("/"):
-        handle_command(message)
-        return
-
-    state = get_state(user_id)
-
-    if state == STATE_GET or state == STATE_NONE:
-        handle_get_input(message)
-        return
+    await send(
+        context,
+        chat_id,
+        lang_val,
+        title,
+        keyboard=keyboard, ctx_req=ctx_req
+    )
 
 
 # =========================
 # COMMANDS
 # =========================
-def ensure_user_lang(user_id: int, telegram_lang: str | None):
-    with lang_lock:
-        data = load_langs()
-        key = str(user_id)
+async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    tg_lang = update.effective_user.language_code
 
-        if key not in data:
-            data[key] = normalize_lang(telegram_lang)
-            save_langs(data)
+    lang = await get_lang(user_id)
 
+    if not lang:
+        lang = normalize_lang(tg_lang)
+        await set_lang(user_id, lang)
 
-@command("/start")
-def handle_start(message):
-    ensure_user_lang(message.from_user.id, message.from_user.language_code)
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.ABOUT))
+    await update.message.reply_text(
+        translate(lang, TKey.ABOUT)
+    )
 
 
-@command(CMD_ABOUT)
-def handle_about(message):
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.ABOUT))
+async def about(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    tg_lang = update.effective_user.language_code
+
+    lang = await get_user_lang(user_id, tg_lang)
+
+    await update.message.reply_text(
+        translate(lang, TKey.ABOUT)
+    )
 
 
-@command(CMD_STATUS)
-def handle_status(message):
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.STATUS_OK))
+async def status(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    tg_lang = update.effective_user.language_code
+
+    lang = await get_user_lang(user_id, tg_lang)
+
+    await update.message.reply_text(
+        translate(lang, TKey.STATUS_OK)
+    )
 
 
-@command(CMD_LIMIT)
-def handle_limit(message):
-    data = load_limit()
-    uid = str(message.from_user.id)
-    used = data["users"].get(uid, 0)
+async def limit(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
 
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
+    used = await get_user_limit(user_id)
+    lang = await get_user_lang(user_id, update.effective_user.language_code)
 
-    bot.send_message(
-        message.chat.id,
+    await update.message.reply_text(
         translate(lang, TKey.LIMIT_REMAINING, count=DAILY_USER_LIMIT - used)
     )
 
 
+# =========================
+# LANG
+# =========================
 def get_lang_keyboard():
-    kb = InlineKeyboardMarkup()
+    buttons = [
+        InlineKeyboardButton(lang, callback_data=f"lang:{lang}")
+        for lang in sorted(TRANSLATIONS.keys())
+    ]
 
-    buttons = []
-    for lang in sorted(TRANSLATIONS.keys()):
-        buttons.append(InlineKeyboardButton(lang, callback_data=f"lang:{lang}"))
-
-    row = []
-    for i, b in enumerate(buttons, 1):
-        row.append(b)
-        if i % 4 == 0:
-            kb.row(*row)
-            row = []
-
-    if row:
-        kb.row(*row)
-
-    return kb
+    rows = [buttons[i:i + 4] for i in range(0, len(buttons), 4)]
+    return InlineKeyboardMarkup(rows)
 
 
-@command(CMD_LANG)
-def handle_lang(message):
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
+async def cmd_lang(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    lang_code = update.effective_user.language_code
 
-    bot.send_message(
-        message.chat.id,
-        translate(lang, TKey.AVAILABLE_LANGS, values=", ".join(sorted(TRANSLATIONS.keys()))),
+    lang_val = await get_user_lang(uid, lang_code)
+
+    await update.message.reply_text(
+        translate(lang_val, TKey.AVAILABLE_LANGS, values=", ".join(sorted(TRANSLATIONS.keys()))),
         reply_markup=get_lang_keyboard()
     )
 
@@ -288,126 +339,208 @@ def handle_lang(message):
 # =========================
 # RANDOM
 # =========================
+async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    lang_val = await get_user_lang(uid, update.effective_user.language_code)
 
-@command(CMD_RANDOM)
-def handle_random(message):
-    uid = message.from_user.id
-    lang = get_user_lang(uid, message.from_user.language_code)
+    title = await get_random_featured_title(lang_val)
 
-    ok, reason = check_access(uid, decrease=True)
-
-    if not ok:
-        bot.send_message(message.chat.id, translate(lang, reason))
-        return
-
-    send(
-        message.chat.id,
-        lang,
-        TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE],
-        True
+    await handle_article(
+        update,
+        context,
+        title,
+        lang_val,
+        uid,
+        update.effective_chat.id,
+        check_limit=True,
+        keyboard=get_more_keyboard(),
     )
 
 
 # =========================
 # GET FLOW (FSM)
 # =========================
-@command(CMD_GET)
-def handle_get(message):
-    uid = message.from_user.id
-    lang = get_user_lang(uid, message.from_user.language_code)
+async def get_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    lang_val = await get_user_lang(uid, update.effective_user.language_code)
 
-    ok, reason = check_access(uid)
+    used = await get_user_limit(uid)
 
-    if not ok:
-        bot.send_message(message.chat.id, translate(lang, reason))
+    if used >= DAILY_USER_LIMIT:
+        await update.message.reply_text(translate(lang_val, TKey.LIMIT_EXCEEDED))
         return
 
     set_state(uid, STATE_GET)
-    bot.send_message(message.chat.id, translate(lang, TKey.GET_PROMPT))
+
+    await update.message.reply_text(translate(lang_val, TKey.GET_PROMPT))
 
 
-def handle_get_input(message):
-    uid = message.from_user.id
-    lang = get_user_lang(uid, message.from_user.language_code)
-    text = (message.text or "").strip()
+async def update_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    lang_val = await get_user_lang(uid, update.effective_user.language_code)
 
-    try:
-        ok, reason = check_access(uid, decrease=True)
+    used = await get_user_limit(uid)
 
-        if not ok:
-            bot.send_message(message.chat.id, translate(lang, reason))
+    if used >= DAILY_USER_LIMIT:
+        await update.message.reply_text(translate(lang_val, TKey.LIMIT_EXCEEDED))
+        return
+
+    set_state(uid, STATE_UPDATE)
+
+    await update.message.reply_text(translate(lang_val, TKey.GET_PROMPT))
+
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    text = (update.message.text or "").strip()
+
+    state = get_state(uid)
+
+    lang_val = await get_user_lang(uid, update.effective_user.language_code)
+
+    if state in (STATE_GET, STATE_NONE, STATE_UPDATE):
+        try:
+            await handle_article(
+                update,
+                context,
+                text,
+                lang_val,
+                uid,
+                update.effective_chat.id,
+                check_limit=True,
+                use_cache=state != STATE_UPDATE,
+            )
+        except:
+            await update.message.reply_text(translate(lang_val, TKey.GET_ERROR))
+        finally:
             clear_state(uid)
-            return
-
-        send(message.chat.id, lang, text)
-
-    except:
-        bot.send_message(message.chat.id, translate(lang, TKey.GET_ERROR))
-
-    finally:
-        clear_state(uid)
 
 
 # =========================
 # CANCEL
 # =========================
-@command(CMD_CANCEL)
-def handle_cancel(message):
-    clear_state(message.from_user.id)
+async def cancel(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    clear_state(update.effective_user.id)
 
-    lang = get_user_lang(message.from_user.id, message.from_user.language_code)
-    bot.send_message(message.chat.id, translate(lang, TKey.CANCEL_OK))
+    uid = update.effective_user.id
+    lang_val = await get_user_lang(uid, update.effective_user.language_code)
+
+    await update.message.reply_text(translate(lang_val, TKey.CANCEL_OK))
 
 
 # =========================
 # CALLBACKS
 # =========================
-@bot.callback_query_handler(func=lambda c: c.data.startswith("lang:"))
-def handle_lang_select(call):
-    lang = call.data.split(":", 1)[1]
+async def lang_select(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    uid = query.from_user.id
 
-    set_user_lang(call.from_user.id, lang)
-    bot.answer_callback_query(call.id)
+    lang_code = query.data.split(":", 1)[1]
 
-    bot.edit_message_text(
-        chat_id=call.message.chat.id,
-        message_id=call.message.message_id,
-        text=translate(normalize_lang(lang), TKey.LANG_CHANGED, value=lang)
+    await set_user_lang(uid, lang_code)
+
+    await query.answer()
+
+    await query.edit_message_text(
+        translate(normalize_lang(lang_code), TKey.LANG_CHANGED, value=lang_code)
     )
 
 
-@bot.callback_query_handler(func=lambda c: c.data == "more_random")
-def more(call):
-    uid = call.from_user.id
-    lang = get_user_lang(uid, call.from_user.language_code)
+async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    uid = query.from_user.id
 
-    ok, reason = check_access(uid, decrease=True)
+    lang_val = await get_user_lang(uid, query.from_user.language_code)
 
-    if not ok:
-        bot.answer_callback_query(call.id, translate(lang, reason))
-        return
+    await query.answer()
 
-    bot.answer_callback_query(call.id)
-    send(call.message.chat.id, lang,
-         TRANSLATIONS[lang][TKey.RANDOM_FEATURED_PAGE], True)
+    title = await get_random_featured_title(lang_val)
+
+    await handle_article(
+        update,
+        context,
+        title,
+        lang_val,
+        uid,
+        query.message.chat.id,
+        check_limit=True,
+        keyboard=get_more_keyboard(),
+    )
 
 
 # =========================
 # OWNER COMMANDS
 # =========================
-def handle_reborn(message):
-    if message.from_user.id != OWNER_ID:
+async def reborn(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != OWNER_ID:
         return
-    with limit_lock:
-        data = load_limit()
-        data["users"][str(OWNER_ID)] = 0
-        save_limit(data)
-    bot.send_message(message.chat.id, "Reborn OK")
+
+    await reset_user_limit(OWNER_ID)
+
+    await update.message.reply_text("Reborn OK")
 
 
 # =========================
-# RUN
+# MAIN
+# =========================
+def main():
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # =========================
+    # DB INIT
+    # =========================
+    async def post_init(_: Application):
+        await init_db()
+        for lang in TRANSLATIONS.keys():
+            try:
+                if await has_featured_articles(lang):
+                    continue
+
+                titles = await fetch_featured_titles(lang)
+
+                if not titles:
+                    continue
+
+                await update_featured_articles_in_db(lang, titles)
+
+            except Exception as exc:
+                print(f"[featured init error] lang={lang}: {exc}")
+
+    async def post_shutdown(_: Application):
+        await close_db()
+
+    app.post_init = post_init
+    app.post_shutdown = post_shutdown
+
+    # =========================
+    # commands
+    # =========================
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler(CMD_ABOUT, about))
+    app.add_handler(CommandHandler(CMD_STATUS, status))
+    app.add_handler(CommandHandler(CMD_LIMIT, limit))
+    app.add_handler(CommandHandler(CMD_LANG, cmd_lang))
+    app.add_handler(CommandHandler(CMD_RANDOM, random))
+    app.add_handler(CommandHandler(CMD_GET, get_cmd))
+    app.add_handler(CommandHandler(CMD_CANCEL, cancel))
+    app.add_handler(CommandHandler(CMD_UPDATE, update_cmd))
+    app.add_handler(CommandHandler("reborn", reborn))
+
+    # callbacks
+    app.add_handler(CallbackQueryHandler(lang_select, pattern="^lang:"))
+    app.add_handler(CallbackQueryHandler(more_random, pattern="^more_random$"))
+
+    # text router
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+
+    # =========================
+    # RUN
+    # =========================
+    app.run_polling()
+
+
+# =========================
+# ENTRYPOINT
 # =========================
 if __name__ == "__main__":
-    check_tmp_folder_exists()
-    bot.infinity_polling()
+    main()

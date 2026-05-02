@@ -2,7 +2,6 @@ import os
 from dataclasses import dataclass
 from typing import List
 
-# получаем токен из переменной окружения
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
@@ -12,7 +11,7 @@ TMP_FOLDER_PATH = os.path.join(DIR_PATH, 'tmp')
 TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
 
 CHANNEL_USERNAME = "@wikifeat"
-User_Agent = 'wikifeat/0.41 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.5 (https://github.com/petsernik/wikifeat)'
 
 # ==== LIMITS ====
 DAILY_TOTAL_LIMIT = 4900
@@ -25,13 +24,24 @@ SPAM_INTERVAL = 1.0
 LIMIT_FILE = os.path.join(TMP_FOLDER_PATH, "daily_limit.json")
 
 # ==== COMMANDS ====
-CMD_STATUS = "/status"
-CMD_RANDOM = "/random"
-CMD_GET = "/get"
-CMD_CANCEL = "/cancel"
-CMD_LIMIT = "/limit"
-CMD_LANG = "/lang"
-CMD_ABOUT = "/about"
+CMD_STATUS = "status"
+CMD_RANDOM = "random"
+CMD_GET = "get"
+CMD_CANCEL = "cancel"
+CMD_LIMIT = "limit"
+CMD_LANG = "lang"
+CMD_ABOUT = "about"
+CMD_UPDATE = "update"
+
+# ==== POSTGRES PARAMETERS ====
+DB_USER = 'postgres'
+DB_PASSWORD = os.environ.get('POSTGRES_DB_PASSWORD')
+DB_NAME = 'wikifeat'
+DB_HOST = '127.0.0.1'
+DB_MIN_SIZE = 1
+DB_MAX_SIZE = 10
+
+INIT_SQL_PATH = os.path.join(DIR_PATH, 'schema.sql')
 
 
 @dataclass
@@ -40,5 +50,5 @@ class Config:
     RULES_URL: str
     LANG_CODE: str
     WIKI_URL_OR_NAME: str
-    LAST_ARTICLE_FILE: str  # not used if empty
+    USE_AND_UPDATE_LAST_FEATURED_TITLE: bool
     WITH_IMAGE: bool

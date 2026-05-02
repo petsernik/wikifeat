@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_GET, CMD_CANCEL
@@ -33,7 +34,7 @@ class TKey(str, Enum):
     ABOUT = 'start_commands'
     SPAM_BLOCK = 'spam_block'
     LIMIT_REMAINING = 'limit_remaining'
-    LIMIT_EXHAUSTED = 'limit_exhausted'
+    LIMIT_EXCEEDED = 'limit_exceeded'
     NEED_SUBSCRIPTION = 'need_subscription'
     STATUS_OK = 'status_ok'
     LANG_CHANGED = 'lang_changed'
@@ -337,18 +338,18 @@ BOT_TRANSLATIONS = {
     'ru': {
         TKey.ABOUT: (
             f"Доступные команды:\n"
-            f"{CMD_STATUS} — проверить статус\n"
-            f"{CMD_RANDOM} — получить случайную избранную статью\n"
-            f"{CMD_GET} — получить статью по ссылке или заголовку\n"
-            f"{CMD_CANCEL} — отменить действие\n"
-            f"{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно в 00:00 по UTC времени)\n"
-            f"{CMD_LANG} — выбрать язык (choose language)\n"
-            f"{CMD_ABOUT} — о боте\n"
-            f"Также можно просто отправлять текст, тогда бот пришлёт в ответ статью (то же поведение будет и после вызова {CMD_GET}), отправлять можно название статьи или же саму ссылку на статью"
+            f"/{CMD_STATUS} — проверить статус\n"
+            f"/{CMD_RANDOM} — получить случайную избранную статью\n"
+            f"/{CMD_GET} — получить статью по ссылке или заголовку\n"
+            f"/{CMD_CANCEL} — отменить действие\n"
+            f"/{CMD_LIMIT} — посмотреть оставшийся дневной лимит (обновляется ежедневно в 00:00 по UTC времени)\n"
+            f"/{CMD_LANG} — выбрать язык (choose language)\n"
+            f"/{CMD_ABOUT} — о боте\n"
+            f"Также можно просто отправлять текст, тогда бот пришлёт в ответ статью (то же поведение будет и после вызова /{CMD_GET}), отправлять можно название статьи или же саму ссылку на статью"
         ),
         TKey.SPAM_BLOCK: 'Слишком частые запросы.',
         TKey.LIMIT_REMAINING: 'Осталось запросов: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Суточный лимит исчерпан.',
+        TKey.LIMIT_EXCEEDED: 'Суточный лимит исчерпан.',
         TKey.NEED_SUBSCRIPTION: 'Для доступа нужно подписаться на @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Язык изменён: {value}',
@@ -361,18 +362,18 @@ BOT_TRANSLATIONS = {
     'en': {
         TKey.ABOUT: (
             f"Available commands:\n"
-            f"{CMD_STATUS} — check status\n"
-            f"{CMD_RANDOM} — get random featured article\n"
-            f"{CMD_GET} — get article by link or title\n"
-            f"{CMD_CANCEL} — cancel action\n"
-            f"{CMD_LIMIT} — check remaining daily limit (resets daily at 00:00 UTC)\n"
-            f"{CMD_LANG} — choose language\n"
-            f"{CMD_ABOUT} — about\n"
-            f"You can also just send text — the bot will reply with an article (same behavior as after {CMD_GET}). You can send either the article title or a link."
+            f"/{CMD_STATUS} — check status\n"
+            f"/{CMD_RANDOM} — get random featured article\n"
+            f"/{CMD_GET} — get article by link or title\n"
+            f"/{CMD_CANCEL} — cancel action\n"
+            f"/{CMD_LIMIT} — check remaining daily limit (resets daily at 00:00 UTC)\n"
+            f"/{CMD_LANG} — choose language\n"
+            f"/{CMD_ABOUT} — about\n"
+            f"You can also just send text — the bot will reply with an article (same behavior as after /{CMD_GET}). You can send either the article title or a link."
         ),
         TKey.SPAM_BLOCK: 'Too many requests.',
         TKey.LIMIT_REMAINING: 'Requests remaining: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Daily limit exceeded.',
+        TKey.LIMIT_EXCEEDED: 'Daily limit exceeded.',
         TKey.NEED_SUBSCRIPTION: 'You need to subscribe to @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Language changed: {value}',
@@ -385,18 +386,18 @@ BOT_TRANSLATIONS = {
     'de': {
         TKey.ABOUT: (
             f"Verfügbare Befehle:\n"
-            f"{CMD_STATUS} — Status prüfen\n"
-            f"{CMD_RANDOM} — zufälligen hervorgehobenen Artikel erhalten\n"
-            f"{CMD_GET} — Artikel per Link oder Titel erhalten\n"
-            f"{CMD_CANCEL} — abbrechen\n"
-            f"{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich um 00:00 UTC zurückgesetzt)\n"
-            f"{CMD_LANG} — Sprache wählen (choose language)\n"
-            f"{CMD_ABOUT} — über den Bot\n"
-            f"Sie können auch einfach Text senden — der Bot antwortet mit einem Artikel (gleiches Verhalten wie nach {CMD_GET}). Sie können entweder den Artikeltitel oder einen Link senden."
+            f"/{CMD_STATUS} — Status prüfen\n"
+            f"/{CMD_RANDOM} — zufälligen hervorgehobenen Artikel erhalten\n"
+            f"/{CMD_GET} — Artikel per Link oder Titel erhalten\n"
+            f"/{CMD_CANCEL} — abbrechen\n"
+            f"/{CMD_LIMIT} — verbleibendes Tageslimit prüfen (wird täglich um 00:00 UTC zurückgesetzt)\n"
+            f"/{CMD_LANG} — Sprache wählen (choose language)\n"
+            f"/{CMD_ABOUT} — über den Bot\n"
+            f"Sie können auch einfach Text senden — der Bot antwortet mit einem Artikel (gleiches Verhalten wie nach /{CMD_GET}). Sie können entweder den Artikeltitel oder einen Link senden."
         ),
         TKey.SPAM_BLOCK: 'Zu viele Anfragen.',
         TKey.LIMIT_REMAINING: 'Verbleibende Anfragen: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Tageslimit erreicht.',
+        TKey.LIMIT_EXCEEDED: 'Tageslimit erreicht.',
         TKey.NEED_SUBSCRIPTION: 'Abonniere @wikifeat für Zugriff.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Sprache geändert: {value}',
@@ -409,18 +410,18 @@ BOT_TRANSLATIONS = {
     'fr': {
         TKey.ABOUT: (
             f"Commandes disponibles:\n"
-            f"{CMD_STATUS} — vérifier le statut\n"
-            f"{CMD_RANDOM} — article en vedette aléatoire\n"
-            f"{CMD_GET} — obtenir un article par lien ou titre\n"
-            f"{CMD_CANCEL} — annuler\n"
-            f"{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour à 00:00 UTC)\n"
-            f"{CMD_LANG} — choisir la langue (choose language)\n"
-            f"{CMD_ABOUT} — à propos\n"
-            f"Vous pouvez aussi simplement envoyer du texte — le bot répondra avec un article (même comportement qu’après {CMD_GET}). Vous pouvez envoyer le titre ou un lien."
+            f"/{CMD_STATUS} — vérifier le statut\n"
+            f"/{CMD_RANDOM} — article en vedette aléatoire\n"
+            f"/{CMD_GET} — obtenir un article par lien ou titre\n"
+            f"/{CMD_CANCEL} — annuler\n"
+            f"/{CMD_LIMIT} — limite quotidienne restante (réinitialisée chaque jour à 00:00 UTC)\n"
+            f"/{CMD_LANG} — choisir la langue (choose language)\n"
+            f"/{CMD_ABOUT} — à propos\n"
+            f"Vous pouvez aussi simplement envoyer du texte — le bot répondra avec un article (même comportement qu’après /{CMD_GET}). Vous pouvez envoyer le titre ou un lien."
         ),
         TKey.SPAM_BLOCK: 'Trop de requêtes.',
         TKey.LIMIT_REMAINING: 'Requêtes restantes : {count}',
-        TKey.LIMIT_EXHAUSTED: 'Limite quotidienne atteinte.',
+        TKey.LIMIT_EXCEEDED: 'Limite quotidienne atteinte.',
         TKey.NEED_SUBSCRIPTION: 'Abonnez-vous à @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Langue changée : {value}',
@@ -433,18 +434,18 @@ BOT_TRANSLATIONS = {
     'es': {
         TKey.ABOUT: (
             f"Comandos disponibles:\n"
-            f"{CMD_STATUS} — comprobar estado\n"
-            f"{CMD_RANDOM} — artículo destacado aleatorio\n"
-            f"{CMD_GET} — obtener artículo por enlace o título\n"
-            f"{CMD_CANCEL} — cancelar\n"
-            f"{CMD_LIMIT} — límite diario restante (se reinicia cada día a las 00:00 UTC)\n"
-            f"{CMD_LANG} — elegir idioma (choose language)\n"
-            f"{CMD_ABOUT} — acerca del bot\n"
-            f"También puedes enviar texto directamente — el bot responderá con un artículo (mismo comportamiento que después de {CMD_GET}). Puedes enviar el título o un enlace."
+            f"/{CMD_STATUS} — comprobar estado\n"
+            f"/{CMD_RANDOM} — artículo destacado aleatorio\n"
+            f"/{CMD_GET} — obtener artículo por enlace o título\n"
+            f"/{CMD_CANCEL} — cancelar\n"
+            f"/{CMD_LIMIT} — límite diario restante (se reinicia cada día a las 00:00 UTC)\n"
+            f"/{CMD_LANG} — elegir idioma (choose language)\n"
+            f"/{CMD_ABOUT} — acerca del bot\n"
+            f"También puedes enviar texto directamente — el bot responderá con un artículo (mismo comportamiento que después de /{CMD_GET}). Puedes enviar el título o un enlace."
         ),
         TKey.SPAM_BLOCK: 'Demasiadas solicitudes.',
         TKey.LIMIT_REMAINING: 'Solicitudes restantes: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Límite diario alcanzado.',
+        TKey.LIMIT_EXCEEDED: 'Límite diario alcanzado.',
         TKey.NEED_SUBSCRIPTION: 'Suscríbete a @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Idioma cambiado: {value}',
@@ -457,18 +458,18 @@ BOT_TRANSLATIONS = {
     'it': {
         TKey.ABOUT: (
             f"Comandi disponibili:\n"
-            f"{CMD_STATUS} — controlla stato\n"
-            f"{CMD_RANDOM} — articolo in evidenza casuale\n"
-            f"{CMD_GET} — ottenere articolo tramite link o titolo\n"
-            f"{CMD_CANCEL} — annulla\n"
-            f"{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno alle 00:00 UTC)\n"
-            f"{CMD_LANG} — scegli lingua (choose language)\n"
-            f"{CMD_ABOUT} — informazioni\n"
-            f"Puoi anche inviare semplicemente del testo — il bot risponderà con un articolo (stesso comportamento dopo {CMD_GET}). Puoi inviare il titolo o un link."
+            f"/{CMD_STATUS} — controlla stato\n"
+            f"/{CMD_RANDOM} — articolo in evidenza casuale\n"
+            f"/{CMD_GET} — ottenere articolo tramite link o titolo\n"
+            f"/{CMD_CANCEL} — annulla\n"
+            f"/{CMD_LIMIT} — limite giornaliero rimanente (si resetta ogni giorno alle 00:00 UTC)\n"
+            f"/{CMD_LANG} — scegli lingua (choose language)\n"
+            f"/{CMD_ABOUT} — informazioni\n"
+            f"Puoi anche inviare semplicemente del testo — il bot risponderà con un articolo (stesso comportamento dopo /{CMD_GET}). Puoi inviare il titolo o un link."
         ),
         TKey.SPAM_BLOCK: 'Troppe richieste.',
         TKey.LIMIT_REMAINING: 'Richieste rimanenti: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Limite giornaliero raggiunto.',
+        TKey.LIMIT_EXCEEDED: 'Limite giornaliero raggiunto.',
         TKey.NEED_SUBSCRIPTION: 'Iscriviti a @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Lingua cambiata: {value}',
@@ -481,18 +482,18 @@ BOT_TRANSLATIONS = {
     'pt': {
         TKey.ABOUT: (
             f"Comandos disponíveis:\n"
-            f"{CMD_STATUS} — verificar status\n"
-            f"{CMD_RANDOM} — artigo em destaque aleatório\n"
-            f"{CMD_GET} — obter artigo por link ou título\n"
-            f"{CMD_CANCEL} — cancelar\n"
-            f"{CMD_LIMIT} — limite diário restante (reinicia todos os dias às 00:00 UTC)\n"
-            f"{CMD_LANG} — escolher idioma (choose language)\n"
-            f"{CMD_ABOUT} — sobre o bot\n"
-            f"Você também pode enviar texto diretamente — o bot responderá com um artigo (mesmo comportamento após {CMD_GET}). Você pode enviar o título ou um link."
+            f"/{CMD_STATUS} — verificar status\n"
+            f"/{CMD_RANDOM} — artigo em destaque aleatório\n"
+            f"/{CMD_GET} — obter artigo por link ou título\n"
+            f"/{CMD_CANCEL} — cancelar\n"
+            f"/{CMD_LIMIT} — limite diário restante (reinicia todos os dias às 00:00 UTC)\n"
+            f"/{CMD_LANG} — escolher idioma (choose language)\n"
+            f"/{CMD_ABOUT} — sobre o bot\n"
+            f"Você também pode enviar texto diretamente — o bot responderá com um artigo (mesmo comportamento após /{CMD_GET}). Você pode enviar o título ou um link."
         ),
         TKey.SPAM_BLOCK: 'Muitas solicitações.',
         TKey.LIMIT_REMAINING: 'Solicitações restantes: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Limite diário atingido.',
+        TKey.LIMIT_EXCEEDED: 'Limite diário atingido.',
         TKey.NEED_SUBSCRIPTION: 'Inscreva-se em @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Idioma alterado: {value}',
@@ -505,18 +506,18 @@ BOT_TRANSLATIONS = {
     'pl': {
         TKey.ABOUT: (
             f"Dostępne komendy:\n"
-            f"{CMD_STATUS} — sprawdź status\n"
-            f"{CMD_RANDOM} — losowy wyróżniony artykuł\n"
-            f"{CMD_GET} — pobierz artykuł po linku lub tytule\n"
-            f"{CMD_CANCEL} — anuluj\n"
-            f"{CMD_LIMIT} — dzienny limit (odnawia się codziennie o 00:00 UTC)\n"
-            f"{CMD_LANG} — wybierz język (choose language)\n"
-            f"{CMD_ABOUT} — o bocie\n"
-            f"Możesz też po prostu wysłać tekst — bot odpowie artykułem (takie samo działanie jak po {CMD_GET}). Możesz wysłać tytuł lub link."
+            f"/{CMD_STATUS} — sprawdź status\n"
+            f"/{CMD_RANDOM} — losowy wyróżniony artykuł\n"
+            f"/{CMD_GET} — pobierz artykuł po linku lub tytule\n"
+            f"/{CMD_CANCEL} — anuluj\n"
+            f"/{CMD_LIMIT} — dzienny limit (odnawia się codziennie o 00:00 UTC)\n"
+            f"/{CMD_LANG} — wybierz język (choose language)\n"
+            f"/{CMD_ABOUT} — o bocie\n"
+            f"Możesz też po prostu wysłać tekst — bot odpowie artykułem (takie samo działanie jak po /{CMD_GET}). Możesz wysłać tytuł lub link."
         ),
         TKey.SPAM_BLOCK: 'Zbyt wiele zapytań.',
         TKey.LIMIT_REMAINING: 'Pozostałe zapytania: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Limit dzienny wyczerpany.',
+        TKey.LIMIT_EXCEEDED: 'Limit dzienny wyczerpany.',
         TKey.NEED_SUBSCRIPTION: 'Zasubskrybuj @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Język zmieniony: {value}',
@@ -529,18 +530,18 @@ BOT_TRANSLATIONS = {
     'be': {
         TKey.ABOUT: (
             f"Даступныя каманды:\n"
-            f"{CMD_STATUS} — праверыць статус\n"
-            f"{CMD_RANDOM} — выпадковы абраны артыкул\n"
-            f"{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
-            f"{CMD_CANCEL} — скасаваць дзеянне\n"
-            f"{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня ў 00:00 UTC)\n"
-            f"{CMD_LANG} — выбраць мову (choose language)\n"
-            f"{CMD_ABOUT} — пра бота\n"
-            f"Таксама можна проста даслаць тэкст — бот адправіць артыкул у адказ (такія ж паводзіны пасля {CMD_GET}). Можна даслаць назву або спасылку."
+            f"/{CMD_STATUS} — праверыць статус\n"
+            f"/{CMD_RANDOM} — выпадковы абраны артыкул\n"
+            f"/{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
+            f"/{CMD_CANCEL} — скасаваць дзеянне\n"
+            f"/{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня ў 00:00 UTC)\n"
+            f"/{CMD_LANG} — выбраць мову (choose language)\n"
+            f"/{CMD_ABOUT} — пра бота\n"
+            f"Таксама можна проста даслаць тэкст — бот адправіць артыкул у адказ (такія ж паводзіны пасля /{CMD_GET}). Можна даслаць назву або спасылку."
         ),
         TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
         TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Дзённы ліміт вычарпаны.',
+        TKey.LIMIT_EXCEEDED: 'Дзённы ліміт вычарпаны.',
         TKey.NEED_SUBSCRIPTION: 'Для доступу трэба падпісацца на @wikifeat.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Мова зменена: {value}',
@@ -553,18 +554,18 @@ BOT_TRANSLATIONS = {
     'kk': {
         TKey.ABOUT: (
             f"Қолжетімді командалар:\n"
-            f"{CMD_STATUS} — статусты тексеру\n"
-            f"{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
-            f"{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
-            f"{CMD_CANCEL} — болдырмау\n"
-            f"{CMD_LIMIT} — күндік лимит (күн сайын 00:00 UTC уақытта жаңартылады)\n"
-            f"{CMD_LANG} — тілді таңдау (choose language)\n"
-            f"{CMD_ABOUT} — бот туралы\n"
-            f"Сондай-ақ мәтінді жай жіберуге болады — бот жауап ретінде мақала жібереді (дәл сондай әрекет {CMD_GET} кейін де болады). Атауды немесе сілтемені жіберуге болады."
+            f"/{CMD_STATUS} — статусты тексеру\n"
+            f"/{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
+            f"/{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
+            f"/{CMD_CANCEL} — болдырмау\n"
+            f"/{CMD_LIMIT} — күндік лимит (күн сайын 00:00 UTC уақытта жаңартылады)\n"
+            f"/{CMD_LANG} — тілді таңдау (choose language)\n"
+            f"/{CMD_ABOUT} — бот туралы\n"
+            f"Сондай-ақ мәтінді жай жіберуге болады — бот жауап ретінде мақала жібереді (дәл сондай әрекет /{CMD_GET} кейін де болады). Атауды немесе сілтемені жіберуге болады."
         ),
         TKey.SPAM_BLOCK: 'Тым көп сұраным.',
         TKey.LIMIT_REMAINING: 'Қалған сұранымдар: {count}',
-        TKey.LIMIT_EXHAUSTED: 'Күндік лимит бітті.',
+        TKey.LIMIT_EXCEEDED: 'Күндік лимит бітті.',
         TKey.NEED_SUBSCRIPTION: 'Қол жеткізу үшін @wikifeat-қа жазылыңыз.',
         TKey.STATUS_OK: 'ok',
         TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
@@ -579,7 +580,17 @@ for lang, data in BOT_TRANSLATIONS.items():
     TRANSLATIONS.setdefault(lang, {}).update(data)
 
 
-def translate(lang: str, key: TKey, **kwargs) -> str:
-    lang_dict = TRANSLATIONS.get(lang, TRANSLATIONS['en'])
+def translate(language: str, key: TKey, **kwargs) -> str:
+    lang_dict = TRANSLATIONS.get(language, TRANSLATIONS['en'])
     template = lang_dict.get(key, key.value)
     return template.format(**kwargs)
+
+
+_UNKNOWN_AUTHOR_PATTERN = re.compile(
+    r"(неизвест|аноним|не указан|unknown|anonym|unbekannt|inconnu|desconocid|sconosciut|desconhecid|nieznan|невядом|белгісіз)",
+    re.IGNORECASE
+)
+
+
+def is_unknown_author(text: str) -> bool:
+    return bool(_UNKNOWN_AUTHOR_PATTERN.search(text))

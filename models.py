@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from typing import List, Optional
+import json
+from dataclasses import dataclass, asdict
+from typing import List, Optional, Any
 
 from i18n import TKey, translate
 
@@ -24,6 +25,13 @@ class Image:
     page_url: str
     author_html: str
 
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    @staticmethod
+    def from_dict(data: dict) -> "Image":
+        return Image(**data)
+
 
 @dataclass
 class Article:
@@ -45,12 +53,57 @@ class Article:
     link: str
     image: Optional[Image]
 
+    # ---------- DB serialization ----------
+
+    def to_db(self) -> dict:
+        """
+        Подготовка к сохранению в PostgreSQL.
+        """
+        return {
+            "title": self.title,
+            "paragraphs": json.dumps(self.paragraphs),
+            "link": self.link,
+            "image": json.dumps(self.image.to_dict()) if self.image else None,
+        }
+
+    @staticmethod
+    def from_db(row: Any) -> "Article":
+        """
+        Восстановление из записи БД (asyncpg.Record).
+        """
+        image = None
+
+        if row["image"]:
+            image_data = row["image"]
+            if isinstance(image_data, str):
+                image_data = json.loads(image_data)
+            image = Image.from_dict(image_data)
+
+        paragraphs = row["paragraphs"]
+        if isinstance(paragraphs, str):
+            paragraphs = json.loads(paragraphs)
+
+        return Article(
+            title=row["title"],
+            paragraphs=paragraphs,
+            link=row["link"],
+            image=image,
+        )
+
 
 @dataclass
 class ArticleContext:
     lang: str
     url_or_name: str
     with_image: bool
+    cached: bool
 
     def t(self, key: TKey, **kwargs) -> str:
         return translate(self.lang, key, **kwargs)
+
+
+@dataclass
+class ArticleContextRequest:
+    ctx: ArticleContext
+    url: str
+    cached: bool
