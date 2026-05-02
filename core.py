@@ -202,6 +202,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
         licenses=sorted(image_licenses),
         page_url=image_page_url,
         author_html=image_author_html,
+        is_animation=image_url.endswith(".gif")
     )
 
 
@@ -213,7 +214,8 @@ def empty_self_made_image(ctx: ArticleContext) -> Image:
         desc=SELF_MADE_IMAGE_CASE,
         licenses=['CC0'],
         page_url='https://typodermicfonts.com/public-domain/',
-        author_html=ctx.t(TKey.FONTS_AUTHOR, author='Ray Larabie')
+        author_html=ctx.t(TKey.FONTS_AUTHOR, author='Ray Larabie'),
+        is_animation=False
     )
 
 
@@ -305,15 +307,22 @@ async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, 
         else:
             photo = article.image.desc  # file_id или URL
 
-        msg = await context.bot.send_photo(
-            chat_id=target,
-            photo=photo,
-            caption=caption,
-            parse_mode='HTML'
-        )
-
-        # === Кэшируем file_id ===
-        file_id = msg.photo[-1].file_id
+        if article.image.is_animation:
+            msg = await context.bot.send_animation(
+                chat_id=target,
+                animation=photo,
+                caption=caption,
+                parse_mode='HTML'
+            )
+            file_id = msg.animation.file_id
+        else:
+            msg = await context.bot.send_photo(
+                chat_id=target,
+                photo=photo,
+                caption=caption,
+                parse_mode='HTML'
+            )
+            file_id = msg.photo[-1].file_id
 
         if article.image.desc != file_id:
             article.image.desc = file_id

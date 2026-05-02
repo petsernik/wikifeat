@@ -19,11 +19,13 @@ class Image:
         licenses (List[str]): Список сокращенных названий лицензий (например, ['CC-BY-SA', 'GFDL']).
         page_url (str): Ссылка на страницу с полной информацией о медиафайле.
         author_html (str): Строка в формате HTML для корректного отображения авторства.
+        is_animation (bool): Анимация(гифка), если True, иначе изображение
     """
     desc: str
     licenses: List[str]
     page_url: str
     author_html: str
+    is_animation: bool
 
     def to_dict(self) -> dict:
         return asdict(self)

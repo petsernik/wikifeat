@@ -189,15 +189,24 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
     else:
         photo = article.image.desc  # file_id или url
 
-    msg = await context.bot.send_photo(
-        chat_id,
-        photo=photo,
-        caption=caption,
-        parse_mode="HTML",
-        reply_markup=keyboard
-    )
-
-    file_id = msg.photo[-1].file_id
+    if article.image.is_animation:
+        msg = await context.bot.send_animation(
+            chat_id,
+            animation=photo,
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+        file_id = msg.animation.file_id
+    else:
+        msg = await context.bot.send_photo(
+            chat_id,
+            photo=photo,
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+        file_id = msg.photo[-1].file_id
 
     if article.image.desc != file_id:
         article.image.desc = file_id
