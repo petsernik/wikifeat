@@ -11,7 +11,7 @@ from telegram.ext import ContextTypes, Application
 
 from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
-    get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc
+    get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from i18n import TKey, is_unknown_author
 from models import Article, Image, ArticleContext, ArticleContextRequest
 from parsers import LANG_PARSERS, get_skip_prefixes
@@ -289,8 +289,6 @@ def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
 # =========================
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
-    print(f'[LOG] Trying to send {article.title} ({article.link})')
-
     caption = get_caption(article, rules_url, ctx)
 
     for target in targets:
@@ -394,7 +392,8 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
         if await is_url_for_article(ctx.lang, url):
             await set_cached_final_url(url, url_final)
         await set_cached_final_url(url_final, url_final)
-
+    if config.USE_AND_UPDATE_LAST_FEATURED_TITLE:
+        await update_featured_articles_in_db(ctx.lang, {article.title})
     return article, ctx
 
 

@@ -25,6 +25,8 @@ async def init_db():
     """
 
     global pool
+    if pool:
+        return
 
     pool = await asyncpg.create_pool(
         user=DB_USER,
@@ -90,7 +92,7 @@ async def get_random_featured_title(lang: str) -> Optional[str]:
     return row["title"] if row else None
 
 
-async def update_featured_articles_in_db(lang: str, titles: set[str]) -> int:
+async def clear_featured_articles_in_db(lang: str, titles: set[str]):
     async with pool.acquire() as conn:
         async with conn.transaction():
             await conn.execute(
@@ -98,12 +100,18 @@ async def update_featured_articles_in_db(lang: str, titles: set[str]) -> int:
                 lang
             )
 
+
+async def update_featured_articles_in_db(lang: str, titles: set[str]):
+    async with pool.acquire() as conn:
+        async with conn.transaction():
             await conn.executemany(
-                "INSERT INTO featured_articles (lang, title) VALUES ($1, $2)",
+                """
+                INSERT INTO featured_articles (lang, title)
+                VALUES ($1, $2)
+                ON CONFLICT (lang, title) DO NOTHING
+                """,
                 [(lang, t) for t in titles]
             )
-
-    return len(titles)
 
 
 async def has_featured_articles(lang: str) -> bool:
