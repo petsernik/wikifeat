@@ -256,6 +256,15 @@ async def save_article_to_db(article: Article) -> None:
         )
 
 
+async def update_image_desc(article_link: str, file_id: str):
+    query = """
+        UPDATE articles_cache
+        SET image = jsonb_set(image, '{desc}', to_jsonb($2::text))
+        WHERE link = $1
+    """
+    await pool.execute(query, article_link, file_id)
+
+
 async def get_article_from_db(link: str) -> Optional[Article]:
     async with pool.acquire() as conn:
         row = await conn.fetchrow("""

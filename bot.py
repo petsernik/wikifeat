@@ -14,14 +14,14 @@ from telegram.ext import (
 from config import (
     TELEGRAM_BOT_TOKEN, Config, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, SPAM_INTERVAL,
     CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_LANG, CMD_ABOUT,
-    CMD_GET, CMD_CANCEL, OWNER_ID, CHANNEL_USERNAME, CMD_UPDATE
+    CMD_GET, CMD_CANCEL, OWNER_ID, CHANNEL_USERNAME, CMD_UPDATE, SELF_MADE_IMAGE_CASE
 )
 from core import get_article, get_caption, get_ctx_req_by_config
 from db import get_pool, init_db, close_db, get_random_featured_title, get_lang, set_lang, get_user_limit, \
-    reset_user_limit, has_featured_articles, update_featured_articles_in_db
+    reset_user_limit, has_featured_articles, update_featured_articles_in_db, update_image_desc
 from i18n import TKey, TRANSLATIONS, translate
 from parsers import fetch_featured_titles
-from utils import normalize_lang
+from utils import normalize_lang, get_img_buf_by_text
 
 # =========================
 # FSM STATE
@@ -184,24 +184,24 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
         await context.bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=keyboard)
         return
 
-    if article.image.desc.startswith("https://"):
-        await context.bot.send_photo(
-            chat_id,
-            article.image.desc,
-            caption=caption,
-            parse_mode="HTML",
-            reply_markup=keyboard
-        )
-        return
+    if article.image.desc == SELF_MADE_IMAGE_CASE:
+        photo = get_img_buf_by_text(article.title)  # self-made photo
+    else:
+        photo = article.image.desc  # file_id или url
 
-    with open(article.image.desc, "rb") as img:
-        await context.bot.send_photo(
-            chat_id,
-            img,
-            caption=caption,
-            parse_mode="HTML",
-            reply_markup=keyboard
-        )
+    msg = await context.bot.send_photo(
+        chat_id,
+        photo=photo,
+        caption=caption,
+        parse_mode="HTML",
+        reply_markup=keyboard
+    )
+
+    file_id = msg.photo[-1].file_id
+
+    if article.image.desc != file_id:
+        article.image.desc = file_id
+        await update_image_desc(article.link, file_id)
 
 
 async def handle_article(

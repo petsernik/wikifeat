@@ -7,8 +7,7 @@ OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")
-TMP_FOLDER_PATH = os.path.join(DIR_PATH, 'tmp')
-TEXT_IMAGE_PATH = os.path.join(TMP_FOLDER_PATH, 'image.jpg')
+SELF_MADE_IMAGE_CASE = "If this appears in an exception, generate the image manually for this case."
 
 CHANNEL_USERNAME = "@wikifeat"
 User_Agent = 'wikifeat/0.5 (https://github.com/petsernik/wikifeat)'
@@ -19,9 +18,6 @@ DAILY_USER_LIMIT = 100
 
 # ==== SPAM ====
 SPAM_INTERVAL = 1.0
-
-# ==== FILES ====
-LIMIT_FILE = os.path.join(TMP_FOLDER_PATH, "daily_limit.json")
 
 # ==== COMMANDS ====
 CMD_STATUS = "status"

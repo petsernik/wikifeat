@@ -3,6 +3,7 @@ import html
 import re
 import string
 from datetime import datetime, UTC
+from io import BytesIO
 from typing import Optional
 from urllib.parse import urlparse, unquote, quote
 
@@ -340,6 +341,17 @@ def visible_length(html_text: str) -> int:
     text = re.sub(r'<[^>]+>', '', html_text)
     text = html.unescape(text)
     return len(text)
+
+
+def get_img_buf_by_text(text: str):
+    img = draw_centered_text(text)
+    if not img:
+        return None
+
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
 
 
 def draw_centered_text(

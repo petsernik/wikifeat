@@ -2,16 +2,16 @@ import asyncio
 import io
 import re
 import sys
-from typing import Optional, Tuple
+from typing import Optional
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from telegram.ext import ContextTypes, Application
 
-from config import Config, TEXT_IMAGE_PATH, TELEGRAM_BOT_TOKEN
+from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
-    get_article_from_db, set_cached_final_url, save_article_to_db
+    get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc
 from i18n import TKey, is_unknown_author
 from models import Article, Image, ArticleContext, ArticleContextRequest
 from parsers import LANG_PARSERS, get_skip_prefixes
@@ -26,12 +26,11 @@ from utils import (
     html_to_text,
     replace_links_with_numbers,
     update_links,
-    draw_centered_text,
     is_balanced,
     ends_with_one_char_abbr,
     unquote_url,
     has_link,
-    quote_url,
+    quote_url, get_img_buf_by_text,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -209,15 +208,9 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
 # =========================
 # IMAGE BY TEXT
 # =========================
-def get_image_by_text(text: str, ctx: ArticleContext) -> Optional[Image]:
-    img = draw_centered_text(text)
-    if not img:
-        return None
-
-    img.save(TEXT_IMAGE_PATH)
-
+def empty_self_made_image(ctx: ArticleContext) -> Image:
     return Image(
-        desc=TEXT_IMAGE_PATH,
+        desc=SELF_MADE_IMAGE_CASE,
         licenses=['CC0'],
         page_url='https://typodermicfonts.com/public-domain/',
         author_html=ctx.t(TKey.FONTS_AUTHOR, author='Ray Larabie')
@@ -309,22 +302,24 @@ async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, 
             )
             continue
 
-        if article.image.desc.startswith('https://'):
-            await context.bot.send_photo(
-                chat_id=target,
-                photo=article.image.desc,
-                caption=caption,
-                parse_mode='HTML'
-            )
-            continue
+        if article.image.desc == SELF_MADE_IMAGE_CASE:
+            photo = get_img_buf_by_text(article.title)  # self-made photo
+        else:
+            photo = article.image.desc  # file_id или URL
 
-        with open(article.image.desc, 'rb') as img:
-            await context.bot.send_photo(
-                chat_id=target,
-                photo=img,
-                caption=caption,
-                parse_mode='HTML'
-            )
+        msg = await context.bot.send_photo(
+            chat_id=target,
+            photo=photo,
+            caption=caption,
+            parse_mode='HTML'
+        )
+
+        # === Кэшируем file_id ===
+        file_id = msg.photo[-1].file_id
+
+        if article.image.desc != file_id:
+            article.image.desc = file_id
+            await update_image_desc(article.link, file_id)
 
 
 # =========================
@@ -387,7 +382,7 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
     if ctx.with_image:
         article.image = (
                 get_image_by_tag(netloc, main_block, ctx)
-                or get_image_by_text(article.title, ctx)
+                or empty_self_made_image(ctx)
         )
 
     article.link = quote_url(article.link)
