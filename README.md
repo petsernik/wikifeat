@@ -10,7 +10,7 @@ https://t.me/wikifeatbot. Его код хранится в файле bot.py.
 Далее Вы можете прочитать как запустить данный проект для публикаций в Вашем собственном канале,
 а также узнать какой дополнительный (опциональный) функционал предоставляется проектом (мультиязычность,
 получение случайной избранной статьи, возможность работы с конкретной статьёй,
-поддержка ссылок из web.archive.org).
+поддержка ссылок из web.archive.org, кэширование статей в датабазу для переиспользования).
 
 ## Используемые библиотеки и технологии
 
@@ -186,7 +186,7 @@ automate publications.
 Below you can read how to run this project for publishing in your own channel,
 as well as learn about the additional (optional) features provided by the project
 (multilingual support, random featured article support, the ability to work with a specific article,
-and support for links from web.archive.org).
+and support for links from web.archive.org, caching articles in the database for fast repeated delivery).
 
 ## Used Libraries and Technologies
 
