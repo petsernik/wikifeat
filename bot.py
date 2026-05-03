@@ -213,6 +213,16 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
         await update_image_desc(article.link, file_id)
 
 
+async def notify(update, text=None):
+    if update.callback_query:
+        await update.callback_query.answer(
+            text=text or "",
+            show_alert=bool(text)
+        )
+    elif text:
+        await update.effective_message.reply_text(text)
+
+
 async def handle_article(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
@@ -230,9 +240,7 @@ async def handle_article(
 
     ok, reason = await check_access(context, update.effective_user.id)
     if not ok:
-        await update.message.reply_text(
-            translate(lang_val, reason)
-        )
+        await notify(update, translate(lang_val, reason))
         return
 
     ctx_req = await get_ctx_req_by_config(
@@ -255,9 +263,7 @@ async def handle_article(
     if check_limit:
         ok = await check_and_increment_limit(uid)
         if not ok:
-            await update.message.reply_text(
-                translate(lang_val, TKey.LIMIT_EXCEEDED)
-            )
+            await notify(update, translate(lang_val, TKey.LIMIT_EXCEEDED))
             return
 
     await send(
@@ -267,6 +273,8 @@ async def handle_article(
         title,
         keyboard=keyboard, ctx_req=ctx_req
     )
+
+    await notify(update)
 
 
 # =========================
@@ -460,8 +468,6 @@ async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = query.from_user.id
 
     lang_val = await get_user_lang(uid, query.from_user.language_code)
-
-    await query.answer()
 
     title = await get_random_featured_title(lang_val)
 
