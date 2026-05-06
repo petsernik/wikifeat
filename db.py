@@ -15,6 +15,7 @@ from config import (
     INIT_SQL_PATH
 )
 from models import Article
+from utils import get_quote_url_by_str
 
 pool: asyncpg.Pool | None = None
 
@@ -377,3 +378,60 @@ async def save_skip_prefixes_to_db(lang: str, prefixes: Tuple[str, ...]):
         lang,
         json.dumps(prefixes),
     )
+
+
+async def delete_url(lang: str, url_or_name: str):
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            # нормализуем URL
+            url = get_quote_url_by_str(lang, url_or_name)
+
+            # -------------------------
+            # 1. articles_cache
+            # -------------------------
+            row = await conn.fetchrow(
+                """
+                DELETE FROM articles_cache
+                WHERE link = $1
+                RETURNING title
+                """,
+                url
+            )
+
+            title = row["title"] if row else None
+
+            # -------------------------
+            # 2. quote_url_cache
+            # -------------------------
+            await conn.execute(
+                """
+                DELETE FROM quote_url_cache
+                WHERE url_start = $1 OR url_final = $1
+                """,
+                url
+            )
+
+            # -------------------------
+            # 3. featured_articles
+            # -------------------------
+            if title:
+                await conn.execute(
+                    """
+                    DELETE FROM featured_articles
+                    WHERE lang = $1 AND title = $2
+                    """,
+                    lang,
+                    title
+                )
+
+                # -------------------------
+                # 4. last_featured_articles
+                # -------------------------
+                await conn.execute(
+                    """
+                    DELETE FROM last_featured_articles
+                    WHERE lang = $1 AND title = $2
+                    """,
+                    lang,
+                    title
+                )

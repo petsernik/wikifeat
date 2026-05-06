@@ -6,7 +6,8 @@ from telegram.ext import Application
 
 from config import Config
 from core import run, async_run
-from i18n import TRANSLATIONS, TKey
+from db import delete_url
+from i18n import TRANSLATIONS, TKey, ADDITIONAL_TRANSLATIONS
 
 
 # =========================
@@ -69,6 +70,19 @@ async def _test_random_pages_by_iterable(app: Application, languages: Iterable[s
         await _test_random_page(app, lang, with_image)
 
 
+async def cleanup_reserved_pages():
+    for lang, tr in ADDITIONAL_TRANSLATIONS.items():
+
+        main_page = tr.get(TKey.MAIN_PAGE)
+        today_page = tr.get(TKey.TODAY_TEMPLATE)
+
+        if main_page:
+            await delete_url(lang, main_page)
+
+        if today_page:
+            await delete_url(lang, today_page)
+
+
 # =========================
 # MAIN
 # =========================
@@ -76,7 +90,7 @@ async def main(app: Application):
     # ===== TEST CASES =====
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
-    await _test_today_template(app, "ru", True)
+    await cleanup_reserved_pages()
     # await _test_main_page(app, "ru", True)
     # await _test_page(app, 'ru', 'Голова', True)
     # ====== TEST UPDATING FEATURED ALL ======

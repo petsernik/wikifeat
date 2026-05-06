@@ -32,11 +32,15 @@ def quote_url(url: str) -> str:
     return quote(unquote(url), safe=":/?=&")
 
 
+def get_quote_url_by_str(lang: str, url_or_name: str) -> str:
+    if url_or_name.startswith('https://'):
+        return quote_url(url_or_name)
+    name = url_or_name.replace(' ', '_')
+    return quote_url(f'https://{lang}.wikipedia.org/wiki/{name}')
+
+
 def get_quote_url_by_context(ctx: ArticleContext) -> str:
-    if ctx.url_or_name.startswith('https://'):
-        return quote_url(ctx.url_or_name)
-    name = ctx.url_or_name.replace(' ', '_')
-    return quote_url(f'https://{ctx.lang}.wikipedia.org/wiki/{name}')
+    return get_quote_url_by_str(ctx.lang, ctx.url_or_name)
 
 
 def get_quote_url_by_tag(netloc: str, tag: Tag) -> str:
