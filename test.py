@@ -6,7 +6,8 @@ from telegram.ext import Application
 
 from config import Config
 from core import run, async_run
-from db import delete_url
+from db import delete_url, get_pool
+from filter import get_skip_prefixes
 from i18n import TRANSLATIONS, TKey, ADDITIONAL_TRANSLATIONS
 
 
@@ -70,9 +71,45 @@ async def _test_random_pages_by_iterable(app: Application, languages: Iterable[s
         await _test_random_page(app, lang, with_image)
 
 
+async def _cleanup_by_prefix(lang: str, prefix: str):
+    async with get_pool().acquire() as conn:
+        async with conn.transaction():
+            # articles_cache
+            await conn.execute(
+                """
+                DELETE FROM articles_cache
+                WHERE title LIKE $1
+                """,
+                f"{prefix}%"
+            )
+
+            # featured_articles
+            await conn.execute(
+                """
+                DELETE FROM featured_articles
+                WHERE lang = $1 AND title LIKE $2
+                """,
+                lang,
+                f"{prefix}%"
+            )
+
+            # last_featured_articles
+            await conn.execute(
+                """
+                DELETE FROM last_featured_articles
+                WHERE lang = $1 AND title LIKE $2
+                """,
+                lang,
+                f"{prefix}%"
+            )
+
+
 async def cleanup_reserved_pages():
     for lang, tr in ADDITIONAL_TRANSLATIONS.items():
 
+        # =========================
+        # 1. i18n страницы
+        # =========================
         main_page = tr.get(TKey.MAIN_PAGE)
         today_page = tr.get(TKey.TODAY_TEMPLATE)
 
@@ -81,6 +118,14 @@ async def cleanup_reserved_pages():
 
         if today_page:
             await delete_url(lang, today_page)
+
+        # =========================
+        # 2. namespace cleanup
+        # =========================
+        prefixes = await get_skip_prefixes(lang)
+
+        for prefix in prefixes:
+            await _cleanup_by_prefix(lang, prefix)
 
 
 # =========================
