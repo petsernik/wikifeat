@@ -12,9 +12,10 @@ from telegram.ext import ContextTypes, Application
 from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
+from filter import is_article
 from i18n import TKey, is_unknown_author
 from models import Article, Image, ArticleContext, ArticleContextRequest
-from parsers import LANG_PARSERS, get_skip_prefixes
+from parsers import LANG_PARSERS
 from utils import (
     get_request,
     get_quote_url_by_context,
@@ -359,11 +360,11 @@ async def get_ctx_req_by_config(config: Config, use_cache=True) -> ArticleContex
 async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> tuple[Article | None, ArticleContext]:
     if not ctx_req:
         ctx_req = await get_ctx_req_by_config(config)
-        ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
-    else:
-        ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
-        if cached:
-            return await get_article_from_db(url), ctx
+
+    ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
+
+    if cached:
+        return await get_article_from_db(url), ctx
 
     response = get_request(url)
 
@@ -393,25 +394,20 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
         )
 
     article.link = quote_url(article.link)
+    url_final = article.link
 
-    if not cached:
+    is_article_original = await is_article(ctx.lang, url)
+    is_article_final = await is_article(ctx.lang, url_final)
+
+    if is_article_final:
         await save_article_to_db(article)
-
-        url_final = article.link
-        if await is_url_for_article(ctx.lang, url):
+        if is_article_original:
             await set_cached_final_url(url, url_final)
         await set_cached_final_url(url_final, url_final)
+
     if config.USE_AND_UPDATE_LAST_FEATURED_TITLE:
         await update_featured_articles_in_db(ctx.lang, {article.title})
     return article, ctx
-
-
-async def is_url_for_article(lang: str, url: str) -> bool:
-    skip_prefixes = await get_skip_prefixes(lang)
-    for p in skip_prefixes:
-        if p in url:
-            return False
-    return True
 
 
 # =========================

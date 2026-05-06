@@ -20,7 +20,7 @@ async def _test_page(app: Application, lang: str, url_or_name: str, with_image: 
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
-        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=True,
         WITH_IMAGE=with_image,
     )
 

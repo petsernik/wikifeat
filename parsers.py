@@ -1,10 +1,8 @@
-import asyncio
 from typing import Optional, Tuple, Callable
 
 from bs4 import BeautifulSoup, Tag
 
 from config import User_Agent
-from db import get_skip_prefixes_from_db, save_skip_prefixes_to_db
 from models import Article
 from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url
 
@@ -346,82 +344,6 @@ LANG_PARSERS = {
 from typing import Dict
 import aiohttp
 from bs4 import BeautifulSoup, Tag
-
-# =========================
-# SKIP PREFIX CACHE (MediaWiki)
-# =========================
-
-_skip_cache: dict[str, Tuple[str, ...]] = {}
-_locks: dict[str, asyncio.Lock] = {}
-
-
-async def fetch_skip_prefixes(lang: str) -> Tuple[str, ...]:
-    url = f"https://{lang}.wikipedia.org/w/api.php"
-
-    params = {
-        "action": "query",
-        "meta": "siteinfo",
-        "siprop": "namespaces|namespacealiases",
-        "format": "json"
-    }
-
-    headers = {"User-Agent": User_Agent}
-
-    async with aiohttp.ClientSession(headers=headers) as session:
-        async with session.get(url, params=params) as resp:
-            resp.raise_for_status()
-            data = await resp.json()
-
-    namespaces = data["query"]["namespaces"]
-    aliases = data["query"].get("namespacealiases", [])
-
-    prefixes = set()
-
-    for ns_id, ns in namespaces.items():
-        if int(ns_id) == 0:
-            continue
-
-        name = ns.get("*")
-        if name:
-            prefixes.add(f"{name}:")
-
-    for alias in aliases:
-        name = alias.get("*")
-        if name:
-            prefixes.add(f"{name}:")
-
-    # Special namespace is not returned by API
-    prefixes.add("Special:")
-    prefixes.add("Служебная:")
-    return tuple(prefixes)
-
-
-async def get_skip_prefixes(lang: str) -> Tuple[str, ...]:
-    # fast path
-    if lang in _skip_cache:
-        return _skip_cache[lang]
-
-    lock = _locks.setdefault(lang, asyncio.Lock())
-
-    async with lock:
-        # double check
-        if lang in _skip_cache:
-            return _skip_cache[lang]
-
-        # db cache
-        prefixes = await get_skip_prefixes_from_db(lang)
-        if prefixes:
-            _skip_cache[lang] = prefixes
-            return prefixes
-
-        # fetch
-        prefixes = await fetch_skip_prefixes(lang)
-
-        # save
-        await save_skip_prefixes_to_db(lang, prefixes)
-
-        _skip_cache[lang] = prefixes
-        return prefixes
 
 
 # =========================
