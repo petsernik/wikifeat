@@ -93,7 +93,7 @@ async def get_random_featured_title(lang: str) -> Optional[str]:
     return row["title"] if row else None
 
 
-async def clear_featured_articles_in_db(lang: str, titles: set[str]):
+async def clear_all_featured_articles_in_db(lang: str):
     async with pool.acquire() as conn:
         async with conn.transaction():
             await conn.execute(
@@ -274,7 +274,7 @@ async def update_image_desc(article_link: str, file_id: str):
     await pool.execute(query, article_link, file_id)
 
 
-async def get_article_from_db(link: str) -> Optional[Article]:
+async def get_article_from_db(link: str, with_image: bool) -> Optional[Article]:
     async with pool.acquire() as conn:
         row = await conn.fetchrow("""
             SELECT * FROM articles_cache
@@ -284,7 +284,7 @@ async def get_article_from_db(link: str) -> Optional[Article]:
     if not row:
         return None
 
-    return Article.from_db(row)
+    return Article.from_db(row, with_image)
 
 
 async def article_cached(link: str) -> bool:
@@ -295,7 +295,7 @@ async def article_cached(link: str) -> bool:
         """, link) is not None
 
 
-async def get_article_with_meta(link: str) -> Optional[Tuple[Article, datetime, datetime]]:
+async def get_article_with_meta(link: str, with_image: bool) -> Optional[Tuple[Article, datetime, datetime]]:
     async with pool.acquire() as conn:
         row = await conn.fetchrow("""
             SELECT * FROM articles_cache
@@ -305,7 +305,7 @@ async def get_article_with_meta(link: str) -> Optional[Tuple[Article, datetime, 
     if not row:
         return None
 
-    article = Article.from_db(row)
+    article = Article.from_db(row, with_image)
     created_at = row["created_at"]
     updated_at = row["updated_at"]
 

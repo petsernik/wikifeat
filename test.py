@@ -22,7 +22,7 @@ async def _test_page(app: Application, lang: str, url_or_name: str, with_image: 
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=url_or_name,
         LANG_CODE=lang,
-        USE_AND_UPDATE_LAST_FEATURED_TITLE=True,
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
         WITH_IMAGE=with_image,
     )
 
@@ -135,8 +135,8 @@ async def main(app: Application):
     # ===== TEST CASES =====
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
-    await cleanup_reserved_pages()
-    # await _test_main_page(app, "ru", True)
+    # await cleanup_reserved_pages()
+    await _test_main_page(app, "ru", False)
     # await _test_page(app, 'ru', 'Голова', True)
     # ====== TEST UPDATING FEATURED ALL ======
     # for lang in TRANSLATIONS.keys():

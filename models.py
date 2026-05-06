@@ -69,7 +69,7 @@ class Article:
         }
 
     @staticmethod
-    def from_db(row: Any) -> "Article":
+    def from_db(row: Any, with_image: bool) -> "Article":
         """
         Восстановление из записи БД (asyncpg.Record).
         """
@@ -79,7 +79,7 @@ class Article:
             image_data = row["image"]
             if isinstance(image_data, str):
                 image_data = json.loads(image_data)
-            image = Image.from_dict(image_data)
+            image = Image.from_dict(image_data) if with_image else None
 
         paragraphs = row["paragraphs"]
         if isinstance(paragraphs, str):

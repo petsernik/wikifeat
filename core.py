@@ -364,7 +364,7 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
     ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
 
     if cached:
-        return await get_article_from_db(url), ctx
+        return await get_article_from_db(url, ctx.with_image), ctx
 
     response = get_request(url)
 
