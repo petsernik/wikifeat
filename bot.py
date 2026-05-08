@@ -22,6 +22,7 @@ from db import get_pool, init_db, close_db, get_random_featured_title, get_lang,
 from i18n import TKey, TRANSLATIONS, translate
 from parsers import fetch_featured_titles
 from utils import normalize_lang, get_img_buf_by_text
+from script import main as script_main
 
 # =========================
 # FSM STATE
@@ -495,6 +496,19 @@ async def reborn(update: Update, _: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Reborn OK")
 
 
+async def release(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != OWNER_ID:
+        return
+
+    await update.message.reply_text("Running release tasks...")
+
+    try:
+        await script_main(context.application)
+        await update.message.reply_text("Release finished OK")
+    except Exception as e:
+        await update.message.reply_text(f"Release failed: {e}")
+
+
 # =========================
 # MAIN
 # =========================
@@ -540,6 +554,7 @@ def main():
     app.add_handler(CommandHandler(CMD_CANCEL, cancel))
     app.add_handler(CommandHandler(CMD_UPDATE, update_cmd))
     app.add_handler(CommandHandler("reborn", reborn))
+    app.add_handler(CommandHandler("release", release))
 
     # callbacks
     app.add_handler(CallbackQueryHandler(lang_select, pattern="^lang:"))
