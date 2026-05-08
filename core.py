@@ -363,8 +363,17 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
 
     ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
 
+    last_title = ''
+    if config.USE_AND_UPDATE_LAST_FEATURED_TITLE:
+        last_title = await get_last_article(config.LANG_CODE)
+
     if cached:
-        return await get_article_from_db(url, ctx.with_image), ctx
+        article, article_ctx = await get_article_from_db(url, ctx.with_image), ctx
+
+        if article.title == last_title:
+            return None, article_ctx
+
+        return article, article_ctx
 
     response = get_request(url)
 
@@ -377,10 +386,6 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
 
     parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
-
-    last_title = ''
-    if config.USE_AND_UPDATE_LAST_FEATURED_TITLE:
-        last_title = await get_last_article(config.LANG_CODE)
 
     article, netloc, main_block = parser(soup, unquote_url(response.url), last_title)
 
