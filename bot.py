@@ -237,6 +237,7 @@ async def handle_article(
 ):
     if not title:
         await update.message.reply_text("bot error: empty title when handling article")
+        await notify(update)
         return
 
     ok, reason = await check_access(context, update.effective_user.id)
@@ -258,6 +259,7 @@ async def handle_article(
             title,
             keyboard=keyboard, ctx_req=ctx_req
         )
+        await notify(update)
         return
 
     # лимит (только если нужно)
