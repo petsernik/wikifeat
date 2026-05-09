@@ -346,9 +346,11 @@ async def get_ctx_req_by_config(config: Config, use_cache=True) -> ArticleContex
         with_image=config.WITH_IMAGE,
         cached=False,
     )
+
     url_start = get_quote_url_by_context(ctx)
     if not use_cache:
         return ArticleContextRequest(ctx, url_start, False)
+
     url_final = await get_cached_final_url(url_start)
     if not url_final or not await article_cached(url_final):
         return ArticleContextRequest(ctx, url_start, False)
@@ -368,12 +370,12 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
         last_title = await get_last_article(config.LANG_CODE)
 
     if cached:
-        article, article_ctx = await get_article_from_db(url, ctx.with_image), ctx
+        article = await get_article_from_db(url, ctx.with_image)
 
         if article.title == last_title:
-            return None, article_ctx
+            return None, ctx
 
-        return article, article_ctx
+        return article, ctx
 
     response = get_request(url)
 
