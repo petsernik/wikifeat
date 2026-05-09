@@ -361,79 +361,74 @@ def get_img_buf_by_text(text: str):
 def draw_centered_text(
         text: str,
         font_path: str = FONT_PATH,
-        image_size: int = 1500,
-        margin: int = 100,
-        max_lines: int = 5,
-        start_font_size: int = 120,
-        min_font_size: int = 20,
+        max_side: int = 1500,
+        max_ratio: float = 10,
+        margin: int = 80,
+        start_font: int = 120,
+        min_font: int = 20,
         line_spacing: int = 10,
 ) -> Optional[Image.Image]:
-    """
-    Рисует текст по центру картинки image_size x image_size.
-    Автоматически переносит текст на N строк (<= max_lines).
-    Если не влезает — уменьшает размер шрифта.
-    """
-
-    img = Image.new("RGB", (image_size, image_size), "white")
-    draw = ImageDraw.Draw(img)
-
-    max_width = image_size - 2 * margin
-    max_height = image_size - 2 * margin
-
     words = text.split()
 
-    def text_width(txt: str, _font):
-        bbox = draw.textbbox((0, 0), txt, font=_font)
-        return bbox[2] - bbox[0]
+    def wrap(font, max_w):
+        draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
 
-    def layout_lines(_font):
-        _lines = []
-        current = ""
+        def w(s: str) -> float:
+            b = draw.textbbox((0, 0), s, font=font)
+            return b[2] - b[0]
 
+        lines, cur = [], ""
         for word in words:
-            test = word if not current else current + " " + word
-            if text_width(test, _font) <= max_width:
-                current = test
+            test = word if not cur else cur + " " + word
+            if w(test) <= max_w:
+                cur = test
             else:
-                _lines.append(current)
-                current = word
+                if cur:
+                    lines.append(cur)
+                cur = word
+        if cur:
+            lines.append(cur)
 
-        if current:
-            _lines.append(current)
+        return lines, w
 
-        return _lines
-
-    font_size = start_font_size
-
-    while font_size >= min_font_size:
+    for font_size in range(start_font, min_font - 1, -2):
         font = ImageFont.truetype(font_path, font_size)
-        lines = layout_lines(font)
 
-        line_height = font.getbbox("Hg")[3]
-        total_height = len(lines) * line_height + (len(lines) - 1) * line_spacing
+        max_w_guess = max_side - 2 * margin
+        lines, _ = wrap(font, max_w_guess)
 
-        if len(lines) <= max_lines and total_height <= max_height:
+        draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+
+        line_h = font.getbbox("Hg")[3]
+
+        text_w = max(
+            draw.textbbox((0, 0), line, font=font)[2]
+            for line in lines
+        )
+        text_h = len(lines) * line_h + (len(lines) - 1) * line_spacing
+
+        w = int(min(text_w + 2 * margin, max_side))
+        h = int(min(text_h + 2 * margin, max_side))
+
+        if max(w, h) / min(w, h) <= max_ratio:
             break
-
-        font_size -= 2
     else:
-        print("Текст не помещается даже с минимальным размером шрифта")
         return None
 
-    block_width = max(text_width(line, font) for line in lines)
-    x = (image_size - block_width) // 2
-    y = (image_size - total_height) // 2
+    img = Image.new("RGB", (w, h), "white")
+    draw = ImageDraw.Draw(img)
 
-    cy = y
+    y = int((h - text_h) / 2)
+
     for line in lines:
-        lw = text_width(line, font)
+        lw = draw.textbbox((0, 0), line, font=font)[2]
         draw.text(
-            (x + (block_width - lw) // 2, cy),
+            ((w - lw) // 2, y),
             line,
-            fill="black",
             font=font,
+            fill="black",
         )
-        cy += line_height + line_spacing
+        y += line_h + line_spacing
 
     return img
 
