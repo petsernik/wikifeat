@@ -206,6 +206,19 @@ async def edit(update, context, article, caption, keyboard, media=None, media_is
 PAGE_SIZE = 8
 
 
+def get_disambig_state(context, message_id: int):
+    return context.user_data.setdefault("disambig_state", {}).setdefault(
+        message_id,
+        {}
+    )
+
+
+def set_disambig_state(context, message_id: int, **kwargs):
+    state = get_disambig_state(context, message_id)
+    state.update(kwargs)
+    return state
+
+
 def build_disambig_nav_keyboard(idx: int, total: int):
     return InlineKeyboardMarkup([
         [
@@ -255,6 +268,7 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
     # COMMON MEDIA LOGIC
     # =========================
     media, media_is_animation = None, False
+
     if article.image:
         if article.image.desc == SELF_MADE_IMAGE_CASE:
             media = get_img_buf_by_text(article.title)
@@ -273,23 +287,17 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
             ctx,
             use_only_first_paragraph=True
         )
-        context.user_data["disambig_titles"] = article.disambig_titles
-        context.user_data["disambig_root"] = {
-            "links": article.disambig_titles,
-            "page": page,
-            "caption": caption,
-            "media": media,
-            "media_is_animation": media_is_animation,
-        }
-        keyboard = build_disambig_keyboard(article.disambig_titles, page)
+
+        keyboard = build_disambig_keyboard(
+            article.disambig_titles,
+            page
+        )
     else:
         caption = get_caption(article, cfg.RULES_URL, ctx)
-        keyboard = keyboard
 
     # =========================
     # SEND MEDIA
     # =========================
-    # msg = None
     file_id = None
 
     if media:
@@ -312,7 +320,7 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
             )
             file_id = msg.photo[-1].file_id
     else:
-        await context.bot.send_message(
+        msg = await context.bot.send_message(
             chat_id,
             caption,
             parse_mode="HTML",
@@ -325,8 +333,21 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
     if media and article.image.desc != file_id:
         article.image.desc = file_id
         await update_image_desc(article.link, file_id)
-        if article.is_disambig:
-            context.user_data["disambig_root"]["media"] = file_id
+
+    # =========================
+    # DISAMBIG STATE
+    # =========================
+    if article.is_disambig:
+        set_disambig_state(
+            context,
+            msg.message_id,
+            titles=article.disambig_titles,
+            page=page,
+            index=0,
+            caption=caption,
+            media=file_id or media,
+            media_is_animation=media_is_animation,
+        )
 
 
 async def notify(update, text):
@@ -612,7 +633,12 @@ async def disambig_page(update, context):
 
     page = int(query.data.split("|")[1])
 
-    links = context.user_data.get("disambig_titles", [])
+    mid = query.message.message_id
+    state = get_disambig_state(context, mid)
+
+    links = state.get("titles", [])
+
+    state["page"] = page
 
     kb = build_disambig_keyboard(links, page)
 
@@ -624,15 +650,19 @@ async def disambig_open(update, context):
     await query.answer()
 
     idx = int(query.data.split("|")[1])
-    links = context.user_data.get("disambig_titles", [])
+
+    mid = query.message.message_id
+    state = get_disambig_state(context, mid)
+
+    links = state.get("titles", [])
 
     if not (0 <= idx < len(links)):
         return
 
-    context.user_data["disambig_index"] = idx
     page = idx // PAGE_SIZE
-    context.user_data["disambig_page"] = page
-    context.user_data["disambig_titles"] = links
+
+    state["index"] = idx
+    state["page"] = page
 
     uid = query.from_user.id
     lang_val = await get_user_lang(uid, query.from_user.language_code)
@@ -640,10 +670,14 @@ async def disambig_open(update, context):
     title = links[idx]
 
     cfg = await _get_config(query.message.chat.id, title, lang_val)
-    article, ctx = await get_article(cfg, await get_ctx_req_by_config(cfg, True))
+
+    article, ctx = await get_article(
+        cfg,
+        await get_ctx_req_by_config(cfg, True)
+    )
 
     # =========================
-    # MEDIA (1:1 как send)
+    # MEDIA
     # =========================
     media, media_is_animation = None, False
 
@@ -656,7 +690,7 @@ async def disambig_open(update, context):
             media_is_animation = article.image.is_animation
 
     # =========================
-    # CAPTION (1:1 как send)
+    # CAPTION
     # =========================
     if article.is_disambig:
         caption = get_caption(
@@ -669,12 +703,12 @@ async def disambig_open(update, context):
         caption = get_caption(article, cfg.RULES_URL, ctx)
 
     # =========================
-    # KEYBOARD (как send)
+    # KEYBOARD
     # =========================
     keyboard = build_disambig_nav_keyboard(idx, len(links))
 
     # =========================
-    # EDIT INSTEAD OF SEND
+    # EDIT
     # =========================
     await edit(
         update,
@@ -692,13 +726,18 @@ async def disambig_nav(update, context):
     await query.answer()
 
     idx = int(query.data.split("|")[1])
-    links = context.user_data.get("disambig_titles", [])
+
+    mid = query.message.message_id
+    state = get_disambig_state(context, mid)
+
+    links = state.get("titles", [])
 
     idx = max(0, min(idx, len(links) - 1))
-    context.user_data["disambig_index"] = idx
 
     page = idx // PAGE_SIZE
-    context.user_data["disambig_page"] = page
+
+    state["index"] = idx
+    state["page"] = page
 
     uid = query.from_user.id
     lang_val = await get_user_lang(uid, query.from_user.language_code)
@@ -706,9 +745,15 @@ async def disambig_nav(update, context):
     title = links[idx]
 
     cfg = await _get_config(query.message.chat.id, title, lang_val)
-    article, ctx = await get_article(cfg, await get_ctx_req_by_config(cfg, True))
 
-    # === media ====
+    article, ctx = await get_article(
+        cfg,
+        await get_ctx_req_by_config(cfg, True)
+    )
+
+    # =========================
+    # MEDIA
+    # =========================
     media, media_is_animation = None, False
 
     if article.image:
@@ -718,11 +763,19 @@ async def disambig_nav(update, context):
             media = article.image.desc
             media_is_animation = article.image.is_animation
 
-    # === caption ====
+    # =========================
+    # CAPTION
+    # =========================
     caption = get_caption(article, cfg.RULES_URL, ctx)
 
+    # =========================
+    # KEYBOARD
+    # =========================
     keyboard = build_disambig_nav_keyboard(idx, len(links))
 
+    # =========================
+    # EDIT
+    # =========================
     await edit(
         update,
         context,
@@ -741,11 +794,11 @@ async def disambig_back(update, context):
     query = update.callback_query
     await query.answer()
 
-    root = context.user_data.get("disambig_root", {})
-    links = root.get("links", [])
-    page = context.user_data.get("disambig_page", 0)
+    mid = query.message.message_id
+    state = get_disambig_state(context, mid)
 
-    context.user_data.pop("disambig_index", None)
+    links = state.get("titles", [])
+    page = state.get("page", 0)
 
     if not links:
         await query.message.edit_text("No data")
@@ -755,16 +808,18 @@ async def disambig_back(update, context):
 
     msg = query.message
 
-    caption = root.get("caption", "Choose option:")
+    caption = state.get("caption", "Choose option:")
 
     # =========================
-    # CASE 1: MESSAGE WITH MEDIA
+    # MEDIA MESSAGE
     # =========================
     if msg.photo or msg.animation or msg.video:
 
-        # ВАЖНО: нужно вернуть СТАРУЮ картинку
-        media = root.get("media")
-        media_is_animation = root.get("media_is_animation", False)
+        media = state.get("media")
+        media_is_animation = state.get(
+            "media_is_animation",
+            False
+        )
 
         if media:
             if media_is_animation:
@@ -785,7 +840,6 @@ async def disambig_back(update, context):
                 reply_markup=keyboard
             )
         else:
-            # fallback если медиа нет
             await msg.edit_caption(
                 caption=caption,
                 reply_markup=keyboard,
@@ -795,7 +849,7 @@ async def disambig_back(update, context):
         return
 
     # =========================
-    # CASE 2: TEXT MESSAGE
+    # TEXT MESSAGE
     # =========================
     await msg.edit_text(
         text=caption,
