@@ -214,7 +214,7 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
         await update_image_desc(article.link, file_id)
 
 
-async def notify(update, text=None):
+async def notify(update, text):
     if update.callback_query:
         await update.callback_query.answer(
             text=text or "",
@@ -235,49 +235,54 @@ async def handle_article(
         keyboard=None,
         use_cache=True,
 ):
-    if not title:
-        await update.message.reply_text("bot error: empty title when handling article")
-        await notify(update)
-        return
+    notify_text = None
 
-    ok, reason = await check_access(context, update.effective_user.id)
-    if not ok:
-        await notify(update, translate(lang_val, reason))
-        return
+    try:
+        if not title:
+            notify_text = "bot error: empty title when handling article"
+            return
 
-    ctx_req = await get_ctx_req_by_config(
-        await _get_config(chat_id, title, lang_val),
-        use_cache
-    )
+        ok, reason = await check_access(context, update.effective_user.id)
+        if not ok:
+            notify_text = translate(lang_val, reason)
+            return
 
-    # кеш → сразу отправляем без лимита
-    if ctx_req.cached:
+        ctx_req = await get_ctx_req_by_config(
+            await _get_config(chat_id, title, lang_val),
+            use_cache
+        )
+
+        # кеш → сразу отправляем без лимита
+        if ctx_req.cached:
+            await send(
+                context,
+                chat_id,
+                lang_val,
+                title,
+                keyboard=keyboard,
+                ctx_req=ctx_req
+            )
+            return
+
+        # лимит
+        if check_limit:
+            ok = await check_and_increment_limit(uid)
+
+            if not ok:
+                notify_text = translate(lang_val, TKey.LIMIT_EXCEEDED)
+                return
+
         await send(
             context,
             chat_id,
             lang_val,
             title,
-            keyboard=keyboard, ctx_req=ctx_req
+            keyboard=keyboard,
+            ctx_req=ctx_req
         )
-        await notify(update)
-        return
 
-    # лимит (только если нужно)
-    if check_limit:
-        ok = await check_and_increment_limit(uid)
-        if not ok:
-            await notify(update, translate(lang_val, TKey.LIMIT_EXCEEDED))
-            return
-
-    await send(
-        context,
-        chat_id,
-        lang_val,
-        title,
-        keyboard=keyboard, ctx_req=ctx_req
-    )
-
-    await notify(update)
+    finally:
+        await notify(update, notify_text)
 
 
 # =========================
