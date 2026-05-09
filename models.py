@@ -140,3 +140,64 @@ class ParseResult:
     article: Article | None
     netloc: str | None
     main_block: Tag | None
+
+
+@dataclass(slots=True)
+class DisambigLevel:
+    """
+    Один уровень дизамбиг-UI.
+    """
+    titles: list[str]
+    caption: str
+    page: int = 0
+    index: int = 0
+    media: str | None = None
+    media_is_animation: bool = False
+
+
+@dataclass(slots=True)
+class DisambigSession:
+    """
+    Модель состояния дизамбигов.
+    """
+    message_id: int
+
+    levels: list[DisambigLevel] = field(default_factory=list)
+
+    level_idx: int = 0
+    page: int = 0
+    index: int = 0
+
+    # ---------- helpers ----------
+
+    def current(self) -> DisambigLevel | None:
+        if not self.levels:
+            return None
+        if self.level_idx < 0 or self.level_idx >= len(self.levels):
+            return None
+        return self.levels[self.level_idx]
+
+    def push(self, level: DisambigLevel) -> None:
+        """
+        Вход в новый дизамбиг-уровень.
+        """
+        self.levels = self.levels[:self.level_idx + 1]
+
+        self.levels.append(level)
+        self.level_idx = len(self.levels) - 1
+        self.page = 0
+        self.index = 0
+
+    def back(self) -> bool:
+        """
+        Возврат на уровень выше.
+        """
+        if self.level_idx <= 0:
+            return False
+
+        self.level_idx -= 1
+        return True
+
+    def set_index(self, idx: int, page_size: int) -> None:
+        self.index = max(0, idx)
+        self.page = self.index // page_size

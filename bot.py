@@ -1,7 +1,7 @@
 import time
 from typing import Dict
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update, InputMediaAnimation, InputMediaPhoto
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -20,6 +20,7 @@ from core import get_article, get_caption, get_ctx_req_by_config
 from db import get_pool, init_db, close_db, get_random_featured_title, get_lang, set_lang, get_user_limit, \
     reset_user_limit, has_featured_articles, update_featured_articles_in_db, update_image_desc
 from i18n import TKey, TRANSLATIONS, translate
+from models import DisambigSession, DisambigLevel
 from parsers import fetch_featured_titles
 from script import main as script_main
 from utils import normalize_lang, get_img_buf_by_text
@@ -206,25 +207,30 @@ async def edit(update, context, article, caption, keyboard, media=None, media_is
 PAGE_SIZE = 8
 
 
-def get_disambig_state(context, message_id: int):
-    return context.user_data.setdefault("disambig_state", {}).setdefault(
+def get_session(context, message_id: int):
+    return context.user_data.setdefault("disambig_sessions", {}).setdefault(
         message_id,
-        {}
+        DisambigSession(message_id=message_id)
     )
 
 
-def set_disambig_state(context, message_id: int, **kwargs):
-    state = get_disambig_state(context, message_id)
-    state.update(kwargs)
-    return state
+def clamp_page(page: int, total: int) -> int:
+    max_page = max(0, (total - 1) // PAGE_SIZE)
+    return max(0, min(page, max_page))
 
 
 def build_disambig_nav_keyboard(idx: int, total: int):
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("⬅️", callback_data=f"nav|{idx - 1}"),
-            InlineKeyboardButton("↩️", callback_data="back"),
-            InlineKeyboardButton("➡️", callback_data=f"nav|{idx + 1}")
+            InlineKeyboardButton(
+                "⬅️",
+                callback_data=f"nav|{idx - 1}" if idx > 0 else "noop"
+            ),
+            InlineKeyboardButton("↩️", callback_data="back_nav"),
+            InlineKeyboardButton(
+                "➡️",
+                callback_data=f"nav|{idx + 1}" if idx < total - 1 else "noop"
+            )
         ]
     ])
 
@@ -238,47 +244,61 @@ def build_disambig_keyboard(links: list[str], page: int = 0):
         for i, link in enumerate(chunk)
     ]
 
-    nav = []
-
-    if page > 0:
-        nav.append(
-            InlineKeyboardButton("⬅️", callback_data=f"page|{page - 1}")
+    nav = [
+        InlineKeyboardButton(
+            "⬅️",
+            callback_data=f"page|{page - 1}" if page > 0 else "noop"
+        ),
+        InlineKeyboardButton("↩️", callback_data="back"),
+        InlineKeyboardButton(
+            "➡️",
+            callback_data=f"page|{page + 1}"
         )
-
-    if start + PAGE_SIZE < len(links):
-        nav.append(
-            InlineKeyboardButton("➡️", callback_data=f"page|{page + 1}")
-        )
-
-    if nav:
-        keyboard.append(nav)
+    ]
+    keyboard.append(nav)
 
     return InlineKeyboardMarkup(keyboard)
 
 
-async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, page=0):
+async def render_article(
+        context,
+        chat_id,
+        lang,
+        query,
+        *,
+        keyboard=None,
+        ctx_req=None,
+        page=0,
+        edit_message=None,
+):
     cfg = await _get_config(chat_id, query, lang)
+
     article, ctx = await get_article(cfg, ctx_req)
 
     if not article:
-        await context.bot.send_message(chat_id, "Error")
+        if edit_message:
+            if edit_message.photo or edit_message.animation or edit_message.video:
+                await edit_message.edit_caption("Error")
+            else:
+                await edit_message.edit_text("Error")
+        else:
+            await context.bot.send_message(chat_id, "Error")
         return
 
     # =========================
-    # COMMON MEDIA LOGIC
+    # MEDIA
     # =========================
     media, media_is_animation = None, False
 
     if article.image:
         if article.image.desc == SELF_MADE_IMAGE_CASE:
             media = get_img_buf_by_text(article.title)
-            media_is_animation = False
         else:
             media = article.image.desc
             media_is_animation = article.image.is_animation
 
     # =========================
-    # DISAMBIG / NORMAL LOGIC
+    # CAPTION
     # =========================
     if article.is_disambig:
         caption = get_caption(
@@ -287,66 +307,151 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
             ctx,
             use_only_first_paragraph=True
         )
-
-        keyboard = build_disambig_keyboard(
-            article.disambig_titles,
-            page
-        )
     else:
         caption = get_caption(article, cfg.RULES_URL, ctx)
 
-    # =========================
-    # SEND MEDIA
-    # =========================
     file_id = None
 
-    if media:
-        if media_is_animation:
-            msg = await context.bot.send_animation(
-                chat_id,
-                animation=media,
-                caption=caption,
-                parse_mode="HTML",
-                reply_markup=keyboard
+    # =========================
+    # DISAMBIG SESSION UPDATE
+    # =========================
+
+    if article.is_disambig:
+        if edit_message:
+            session = get_session(context, edit_message.message_id)
+
+            session.push(
+                DisambigLevel(
+                    titles=article.disambig_titles,
+                    caption=caption,
+                    media=media,
+                    media_is_animation=media_is_animation,
+                )
             )
-            file_id = msg.animation.file_id
-        else:
-            msg = await context.bot.send_photo(
-                chat_id,
-                photo=media,
-                caption=caption,
-                parse_mode="HTML",
-                reply_markup=keyboard
+
+            keyboard = get_disambig_keyboard_from_session(session)
+
+        if not edit_message:
+            keyboard = build_disambig_keyboard(
+                article.disambig_titles,
+                0
             )
-            file_id = msg.photo[-1].file_id
     else:
-        msg = await context.bot.send_message(
-            chat_id,
-            caption,
-            parse_mode="HTML",
-            reply_markup=keyboard
-        )
+        keyboard = keyboard
+    # =========================
+    # EDIT EXISTING MESSAGE
+    # =========================
+    if edit_message:
+
+        if media:
+
+            if media_is_animation:
+                media_obj = InputMediaAnimation(
+                    media=media,
+                    caption=caption,
+                    parse_mode="HTML"
+                )
+            else:
+                media_obj = InputMediaPhoto(
+                    media=media,
+                    caption=caption,
+                    parse_mode="HTML"
+                )
+
+            result = await edit_message.edit_media(
+                media=media_obj,
+                reply_markup=keyboard
+            )
+
+            if isinstance(result, type(edit_message)):
+
+                if result.animation:
+                    file_id = result.animation.file_id
+                elif result.photo:
+                    file_id = result.photo[-1].file_id
+
+            if not file_id:
+                file_id = media
+
+        else:
+
+            if edit_message.photo or edit_message.animation or edit_message.video:
+                await edit_message.edit_caption(
+                    caption=caption,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+            else:
+                await edit_message.edit_text(
+                    text=caption,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+
+        msg = edit_message
+
+    # =========================
+    # SEND NEW MESSAGE
+    # =========================
+    else:
+
+        if media:
+
+            if media_is_animation:
+
+                msg = await context.bot.send_animation(
+                    chat_id,
+                    animation=media,
+                    caption=caption,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+
+                file_id = msg.animation.file_id
+
+            else:
+
+                msg = await context.bot.send_photo(
+                    chat_id,
+                    photo=media,
+                    caption=caption,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+
+                file_id = msg.photo[-1].file_id
+
+        else:
+            msg = await context.bot.send_message(
+                chat_id,
+                caption,
+                parse_mode="HTML",
+                reply_markup=keyboard
+            )
 
     # =========================
     # CACHE UPDATE
     # =========================
-    if media and article.image.desc != file_id:
+    if media and article.image and article.image.desc != file_id:
         article.image.desc = file_id
+        if article.is_disambig and edit_message:
+            session = get_session(context, msg.message_id)
+            session.current().media = file_id
         await update_image_desc(article.link, file_id)
 
     # =========================
     # DISAMBIG STATE
     # =========================
-    if article.is_disambig:
-        set_disambig_state(
-            context,
-            msg.message_id,
-            titles=article.disambig_titles,
-            page=page,
-            index=0,
-            caption=caption,
-            media=file_id or media,
-            media_is_animation=media_is_animation,
+    if article.is_disambig and not edit_message:
+        session = get_session(context, msg.message_id)
+
+        session.push(
+            DisambigLevel(
+                titles=article.disambig_titles,
+                caption=caption,
+                media=file_id,
+                media_is_animation=media_is_animation,
+            )
         )
 
 
@@ -370,6 +475,8 @@ async def handle_article(
         check_limit: bool = True,
         keyboard=None,
         use_cache=True,
+        edit_message=None,
+        page=0,
 ):
     notify_text = None
 
@@ -390,13 +497,15 @@ async def handle_article(
 
         # кеш → сразу отправляем без лимита
         if ctx_req.cached:
-            await send(
+            await render_article(
                 context,
                 chat_id,
                 lang_val,
                 title,
                 keyboard=keyboard,
-                ctx_req=ctx_req
+                ctx_req=ctx_req,
+                edit_message=edit_message,
+                page=page,
             )
             return
 
@@ -408,17 +517,27 @@ async def handle_article(
                 notify_text = translate(lang_val, TKey.LIMIT_EXCEEDED)
                 return
 
-        await send(
+        await render_article(
             context,
             chat_id,
             lang_val,
             title,
             keyboard=keyboard,
-            ctx_req=ctx_req
+            ctx_req=ctx_req,
+            edit_message=edit_message,
+            page=page,
         )
 
     finally:
         await notify(update, notify_text)
+
+
+def get_disambig_keyboard_from_session(session: DisambigSession):
+    level = session.current()
+    if not level:
+        return None
+
+    return build_disambig_keyboard(level.titles, session.page)
 
 
 # =========================
@@ -631,93 +750,56 @@ async def disambig_page(update, context):
     query = update.callback_query
     await query.answer()
 
-    page = int(query.data.split("|")[1])
-
     mid = query.message.message_id
-    state = get_disambig_state(context, mid)
+    session = get_session(context, mid)
 
-    links = state.get("titles", [])
+    level = session.current()
+    if not level:
+        return
 
-    state["page"] = page
+    page = int(query.data.split("|")[1])
+    page = clamp_page(page, len(level.titles))
 
-    kb = build_disambig_keyboard(links, page)
+    session.page = page
 
-    await query.message.edit_reply_markup(reply_markup=kb)
+    keyboard = get_disambig_keyboard_from_session(session)
+
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 async def disambig_open(update, context):
     query = update.callback_query
     await query.answer()
 
-    idx = int(query.data.split("|")[1])
-
     mid = query.message.message_id
-    state = get_disambig_state(context, mid)
+    session = get_session(context, mid)
 
-    links = state.get("titles", [])
-
-    if not (0 <= idx < len(links)):
+    level = session.current()
+    if not level:
         return
 
-    page = idx // PAGE_SIZE
+    idx = int(query.data.split("|")[1])
 
-    state["index"] = idx
-    state["page"] = page
+    if not (0 <= idx < len(level.titles)):
+        return
+
+    session.set_index(idx, PAGE_SIZE)
 
     uid = query.from_user.id
     lang_val = await get_user_lang(uid, query.from_user.language_code)
 
-    title = links[idx]
-
-    cfg = await _get_config(query.message.chat.id, title, lang_val)
-
-    article, ctx = await get_article(
-        cfg,
-        await get_ctx_req_by_config(cfg, True)
-    )
-
-    # =========================
-    # MEDIA
-    # =========================
-    media, media_is_animation = None, False
-
-    if article.image:
-        if article.image.desc == SELF_MADE_IMAGE_CASE:
-            media = get_img_buf_by_text(article.title)
-            media_is_animation = False
-        else:
-            media = article.image.desc
-            media_is_animation = article.image.is_animation
-
-    # =========================
-    # CAPTION
-    # =========================
-    if article.is_disambig:
-        caption = get_caption(
-            article,
-            cfg.RULES_URL,
-            ctx,
-            use_only_first_paragraph=True
-        )
-    else:
-        caption = get_caption(article, cfg.RULES_URL, ctx)
-
-    # =========================
-    # KEYBOARD
-    # =========================
-    keyboard = build_disambig_nav_keyboard(idx, len(links))
-
-    # =========================
-    # EDIT
-    # =========================
-    await edit(
+    await handle_article(
         update,
         context,
-        article,
-        caption,
-        keyboard,
-        media,
-        media_is_animation
+        level.titles[idx],
+        lang_val,
+        uid,
+        query.message.chat.id,
+        check_limit=True,
+        use_cache=True,
+        edit_message=query.message,
+        page=session.page,
+        keyboard=build_disambig_nav_keyboard(idx, len(level.titles))
     )
 
 
@@ -725,137 +807,98 @@ async def disambig_nav(update, context):
     query = update.callback_query
     await query.answer()
 
-    idx = int(query.data.split("|")[1])
-
     mid = query.message.message_id
-    state = get_disambig_state(context, mid)
+    session = get_session(context, mid)
 
-    links = state.get("titles", [])
+    level = session.current()
+    if not level:
+        return
 
-    idx = max(0, min(idx, len(links) - 1))
+    idx = int(query.data.split("|")[1])
+    idx = max(0, min(idx, len(level.titles) - 1))
 
-    page = idx // PAGE_SIZE
-
-    state["index"] = idx
-    state["page"] = page
+    session.set_index(idx, PAGE_SIZE)
 
     uid = query.from_user.id
     lang_val = await get_user_lang(uid, query.from_user.language_code)
 
-    title = links[idx]
-
-    cfg = await _get_config(query.message.chat.id, title, lang_val)
-
-    article, ctx = await get_article(
-        cfg,
-        await get_ctx_req_by_config(cfg, True)
-    )
-
-    # =========================
-    # MEDIA
-    # =========================
-    media, media_is_animation = None, False
-
-    if article.image:
-        if article.image.desc == SELF_MADE_IMAGE_CASE:
-            media = get_img_buf_by_text(article.title)
-        else:
-            media = article.image.desc
-            media_is_animation = article.image.is_animation
-
-    # =========================
-    # CAPTION
-    # =========================
-    caption = get_caption(article, cfg.RULES_URL, ctx)
-
-    # =========================
-    # KEYBOARD
-    # =========================
-    keyboard = build_disambig_nav_keyboard(idx, len(links))
-
-    # =========================
-    # EDIT
-    # =========================
-    await edit(
+    await handle_article(
         update,
         context,
-        article,
-        caption,
-        keyboard,
-        media,
-        media_is_animation
+        level.titles[idx],
+        lang_val,
+        uid,
+        query.message.chat.id,
+        check_limit=True,
+        use_cache=True,
+        edit_message=query.message,
+        page=session.page,
+        keyboard=build_disambig_nav_keyboard(idx, len(level.titles))
     )
 
 
-from telegram import InputMediaPhoto, InputMediaAnimation
+async def disambig_back_nav(update, context):
+    await disambig_back(update, context, from_nav=True)
 
 
-async def disambig_back(update, context):
+async def disambig_back(update, context, from_nav=False):
     query = update.callback_query
     await query.answer()
 
     mid = query.message.message_id
-    state = get_disambig_state(context, mid)
+    session = get_session(context, mid)
 
-    links = state.get("titles", [])
-    page = state.get("page", 0)
-
-    if not links:
-        await query.message.edit_text("No data")
+    if not from_nav and not session.back():
         return
+    level = session.current()
 
-    keyboard = build_disambig_keyboard(links, page)
+    page = session.page
+
+    keyboard = get_disambig_keyboard_from_session(session)
+
+    caption = level.caption
+    media = level.media
+    media_is_animation = level.media_is_animation
 
     msg = query.message
 
-    caption = state.get("caption", "Choose option:")
+    if media:
 
-    # =========================
-    # MEDIA MESSAGE
-    # =========================
-    if msg.photo or msg.animation or msg.video:
-
-        media = state.get("media")
-        media_is_animation = state.get(
-            "media_is_animation",
-            False
-        )
-
-        if media:
-            if media_is_animation:
-                media_obj = InputMediaAnimation(
-                    media=media,
-                    caption=caption,
-                    parse_mode="HTML"
-                )
-            else:
-                media_obj = InputMediaPhoto(
-                    media=media,
-                    caption=caption,
-                    parse_mode="HTML"
-                )
-
-            await msg.edit_media(
-                media=media_obj,
-                reply_markup=keyboard
+        if media_is_animation:
+            media_obj = InputMediaAnimation(
+                media=media,
+                caption=caption,
+                parse_mode="HTML"
             )
         else:
-            await msg.edit_caption(
+            media_obj = InputMediaPhoto(
+                media=media,
                 caption=caption,
-                reply_markup=keyboard,
                 parse_mode="HTML"
             )
 
+        await msg.edit_media(
+            media=media_obj,
+            reply_markup=keyboard
+        )
         return
 
-    # =========================
-    # TEXT MESSAGE
-    # =========================
-    await msg.edit_text(
-        text=caption,
-        reply_markup=keyboard,
-        parse_mode="HTML"
-    )
+    if msg.photo or msg.animation or msg.video:
+        await msg.edit_caption(
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+    else:
+        await msg.edit_text(
+            text=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard
+        )
+
+
+async def noop(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.answer()
 
 
 # =========================
@@ -937,6 +980,8 @@ def main():
     app.add_handler(CallbackQueryHandler(disambig_open, pattern="^open\\|"))
     app.add_handler(CallbackQueryHandler(disambig_nav, pattern="^nav\\|"))
     app.add_handler(CallbackQueryHandler(disambig_back, pattern="^back$"))
+    app.add_handler(CallbackQueryHandler(disambig_back_nav, pattern="^back_nav$"))
+    app.add_handler(CallbackQueryHandler(noop, pattern="^noop$"))
 
     # text router
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
