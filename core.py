@@ -258,7 +258,7 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
 # =========================
 # CAPTION
 # =========================
-def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
+def get_caption(article: Article, rules_url: str, ctx: ArticleContext, use_only_first_paragraph=False) -> str:
     caption_beginning = f"<b><a href='{article.link}'>{article.title}</a></b>\n\n"
 
     caption_end = (
@@ -284,7 +284,8 @@ def get_caption(article: Article, rules_url: str, ctx: ArticleContext) -> str:
     else:
         max_text_len = 4096 - visible_length(caption_beginning) - visible_length(caption_end)
 
-    return caption_beginning + get_trimmed_text(article.paragraphs, max_text_len) + caption_end
+    paragraphs = article.paragraphs if not use_only_first_paragraph else article.paragraphs[:1]
+    return caption_beginning + get_trimmed_text(paragraphs, max_text_len) + caption_end
 
 
 # =========================
@@ -342,7 +343,7 @@ async def get_ctx_req_by_config(config: Config, use_cache=True) -> ArticleContex
 
     ctx = ArticleContext(
         lang=config.LANG_CODE,
-        url_or_name=config.WIKI_URL_OR_NAME,
+        url_or_title=config.WIKI_URL_OR_NAME,
         with_image=config.WITH_IMAGE,
         cached=False,
     )
@@ -389,7 +390,8 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
     parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
-    article, netloc, main_block = parser(soup, unquote_url(response.url), last_title)
+    parser_res = parser(soup, unquote_url(response.url), last_title)
+    article, netloc, main_block = parser_res.article, parser_res.netloc, parser_res.main_block
 
     if not article:
         return None, ctx

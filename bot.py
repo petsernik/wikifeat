@@ -171,7 +171,37 @@ async def _get_config(chat_id, query, lang) -> Config:
     )
 
 
-async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
+PAGE_SIZE = 8
+
+
+def build_disambig_keyboard(links: list[str], page: int = 0):
+    start = page * PAGE_SIZE
+    chunk = links[start:start + PAGE_SIZE]
+
+    keyboard = [
+        [InlineKeyboardButton(text=link, callback_data=f"open|{start + i}")]
+        for i, link in enumerate(chunk)
+    ]
+
+    nav = []
+
+    if page > 0:
+        nav.append(
+            InlineKeyboardButton("⬅️", callback_data=f"page|{page - 1}")
+        )
+
+    if start + PAGE_SIZE < len(links):
+        nav.append(
+            InlineKeyboardButton("➡️", callback_data=f"page|{page + 1}")
+        )
+
+    if nav:
+        keyboard.append(nav)
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, page=0):
     cfg = await _get_config(chat_id, query, lang)
     article, ctx = await get_article(cfg, ctx_req)
 
@@ -179,37 +209,71 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None):
         await context.bot.send_message(chat_id, "Error")
         return
 
-    caption = get_caption(article, cfg.RULES_URL, ctx)
+    # =========================
+    # COMMON MEDIA LOGIC
+    # =========================
+    media, media_is_animation = None, False
+    if article.image:
+        if article.image.desc == SELF_MADE_IMAGE_CASE:
+            media = get_img_buf_by_text(article.title)
+            media_is_animation = False
+        else:
+            media = article.image.desc
+            media_is_animation = article.image.is_animation
 
-    if not article.image:
-        await context.bot.send_message(chat_id, caption, parse_mode="HTML", reply_markup=keyboard)
-        return
-
-    if article.image.desc == SELF_MADE_IMAGE_CASE:
-        photo = get_img_buf_by_text(article.title)  # self-made photo
+    # =========================
+    # DISAMBIG / NORMAL LOGIC
+    # =========================
+    if article.is_disambig:
+        caption = get_caption(
+            article,
+            cfg.RULES_URL,
+            ctx,
+            use_only_first_paragraph=True
+        )
+        context.user_data["disambig_titles"] = article.disambig_titles
+        keyboard = build_disambig_keyboard(article.disambig_titles, page)
     else:
-        photo = article.image.desc  # file_id или url
+        caption = get_caption(article, cfg.RULES_URL, ctx)
+        keyboard = keyboard
 
-    if article.image.is_animation:
-        msg = await context.bot.send_animation(
+    # =========================
+    # SEND MEDIA
+    # =========================
+    # msg = None
+    file_id = None
+
+    if media:
+        if media_is_animation:
+            msg = await context.bot.send_animation(
+                chat_id,
+                animation=media,
+                caption=caption,
+                parse_mode="HTML",
+                reply_markup=keyboard
+            )
+            file_id = msg.animation.file_id
+        else:
+            msg = await context.bot.send_photo(
+                chat_id,
+                photo=media,
+                caption=caption,
+                parse_mode="HTML",
+                reply_markup=keyboard
+            )
+            file_id = msg.photo[-1].file_id
+    else:
+        await context.bot.send_message(
             chat_id,
-            animation=photo,
-            caption=caption,
+            caption,
             parse_mode="HTML",
             reply_markup=keyboard
         )
-        file_id = msg.animation.file_id
-    else:
-        msg = await context.bot.send_photo(
-            chat_id,
-            photo=photo,
-            caption=caption,
-            parse_mode="HTML",
-            reply_markup=keyboard
-        )
-        file_id = msg.photo[-1].file_id
 
-    if article.image.desc != file_id:
+    # =========================
+    # CACHE UPDATE
+    # =========================
+    if media and article.image.desc != file_id:
         article.image.desc = file_id
         await update_image_desc(article.link, file_id)
 
@@ -491,6 +555,48 @@ async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def disambig_page(update, context):
+    query = update.callback_query
+    await query.answer()
+
+    page = int(query.data.split("|")[1])
+
+    links = context.user_data.get("disambig_titles", [])
+
+    kb = build_disambig_keyboard(links, page)
+
+    await query.message.edit_reply_markup(reply_markup=kb)
+
+
+async def disambig_open(update, context):
+    query = update.callback_query
+    await query.answer()
+
+    idx = int(query.data.split("|")[1])
+
+    links = context.user_data.get("disambig_titles", [])
+
+    if 0 <= idx < len(links):
+        uid = update.effective_user.id
+
+        lang_val = await get_user_lang(uid, update.effective_user.language_code)
+        try:
+            await handle_article(
+                update,
+                context,
+                links[idx],
+                lang_val,
+                uid,
+                update.effective_chat.id,
+                check_limit=True,
+                use_cache=True,
+            )
+        except:
+            await update.message.reply_text(translate(lang_val, TKey.GET_ERROR))
+        finally:
+            clear_state(uid)
+
+
 # =========================
 # OWNER COMMANDS
 # =========================
@@ -566,6 +672,9 @@ def main():
     # callbacks
     app.add_handler(CallbackQueryHandler(lang_select, pattern="^lang:"))
     app.add_handler(CallbackQueryHandler(more_random, pattern="^more_random$"))
+
+    app.add_handler(CallbackQueryHandler(disambig_page, pattern="^page\\|"))
+    app.add_handler(CallbackQueryHandler(disambig_open, pattern="^open\\|"))
 
     # text router
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))

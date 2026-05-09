@@ -1,14 +1,13 @@
-from typing import Optional, Tuple, Callable
+from typing import Optional, Callable
 
 from bs4 import BeautifulSoup, Tag
 
 from config import User_Agent
 from filter import get_skip_prefixes
-from models import Article
+from models import Article, ParseResult
 from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url
 
-ParseResult = Tuple[Optional[Article], Optional[str], Optional[Tag]]
-NONE_RESULT: ParseResult = (None, None, None)
+NONE_RESULT: ParseResult(None, None, None)
 
 
 # =========================
@@ -46,17 +45,18 @@ def parse_default(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult
     if title == last_title:
         return NONE_RESULT
 
-    paragraphs = get_paragraphs(main_block)
-    paragraphs = [p.replace('➤', '') for p in paragraphs]
+    paragraphs_result = get_paragraphs(main_block)
 
     article = Article(
         title=title,
-        paragraphs=paragraphs,
+        paragraphs=[p.replace('➤', '') for p in paragraphs_result.paragraphs],
         link=quote_url(url),
         image=None,
+        is_disambig=paragraphs_result.is_disambig,
+        disambig_titles=paragraphs_result.titles,
     )
 
-    return article, netloc, main_block
+    return ParseResult(article, netloc, main_block)
 
 
 # =========================
@@ -97,8 +97,7 @@ def parse_featured(
     if not title or title == last_title:
         return NONE_RESULT
 
-    paragraphs = get_paragraphs(main_block)
-
+    paragraphs = get_paragraphs(main_block).paragraphs
     if clean_suffixes:
         _clean_last_paragraph(paragraphs, *clean_suffixes)
 
@@ -107,9 +106,11 @@ def parse_featured(
         paragraphs=paragraphs,
         link=get_quote_url_by_tag(netloc, link_tag),
         image=None,
+        is_disambig=False,
+        disambig_titles=[],
     )
 
-    return article, netloc, main_block
+    return ParseResult(article, netloc, main_block)
 
 
 # =========================
@@ -290,11 +291,13 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
 
         article = Article(
             title=title,
-            paragraphs=get_paragraphs(main_block),
+            paragraphs=get_paragraphs(main_block).paragraphs,
             link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
+            is_disambig=False,
+            disambig_titles=[],
         )
-        return article, netloc, main_block
+        return ParseResult(article, netloc, main_block)
 
     if path.endswith('/wiki/Заглавная_страница'):
         main_block = soup.find('div', id='main-tfa')
@@ -317,11 +320,13 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
 
         article = Article(
             title=title,
-            paragraphs=get_paragraphs(main_block),
+            paragraphs=get_paragraphs(main_block).paragraphs,
             link=get_quote_url_by_tag(netloc, link_tag),
             image=None,
+            is_disambig=False,
+            disambig_titles=[],
         )
-        return article, netloc, main_block
+        return ParseResult(article, netloc, main_block)
 
     return parse_default(soup, url, last_title)
 

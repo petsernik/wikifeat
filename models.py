@@ -1,6 +1,8 @@
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Any
+
+from bs4 import Tag
 
 from i18n import TKey, translate
 
@@ -54,6 +56,8 @@ class Article:
     paragraphs: List[str]
     link: str
     image: Optional[Image]
+    is_disambig: bool
+    disambig_titles: list[str]
 
     # ---------- DB serialization ----------
 
@@ -66,6 +70,8 @@ class Article:
             "paragraphs": json.dumps(self.paragraphs),
             "link": self.link,
             "image": json.dumps(self.image.to_dict()) if self.image else None,
+            "is_disambig": self.is_disambig,
+            "disambig_titles": json.dumps(self.disambig_titles),
         }
 
     @staticmethod
@@ -73,9 +79,10 @@ class Article:
         """
         Восстановление из записи БД (asyncpg.Record).
         """
+
         image = None
 
-        if row["image"]:
+        if row.get("image"):
             image_data = row["image"]
             if isinstance(image_data, str):
                 image_data = json.loads(image_data)
@@ -85,18 +92,28 @@ class Article:
         if isinstance(paragraphs, str):
             paragraphs = json.loads(paragraphs)
 
+        is_disambig = row.get("is_disambig", False)
+
+        disambig_titles = row.get("disambig_titles")
+        if disambig_titles is None:
+            disambig_titles = []
+        elif isinstance(disambig_titles, str):
+            disambig_titles = json.loads(disambig_titles)
+
         return Article(
             title=row["title"],
             paragraphs=paragraphs,
             link=row["link"],
             image=image,
+            is_disambig=is_disambig,
+            disambig_titles=disambig_titles,
         )
 
 
 @dataclass
 class ArticleContext:
     lang: str
-    url_or_name: str
+    url_or_title: str
     with_image: bool
     cached: bool
 
@@ -109,3 +126,17 @@ class ArticleContextRequest:
     ctx: ArticleContext
     url: str
     cached: bool
+
+
+@dataclass(slots=True)
+class ParagraphResult:
+    paragraphs: list[str]
+    is_disambig: bool = False
+    titles: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ParseResult:
+    article: Article | None
+    netloc: str | None
+    main_block: Tag | None

@@ -249,19 +249,30 @@ async def save_article_to_db(article: Article) -> None:
     async with pool.acquire() as conn:
         await conn.execute(
             """
-            INSERT INTO articles_cache (title, paragraphs, link, image)
-            VALUES ($1, $2::jsonb, $3, $4::jsonb)
+            INSERT INTO articles_cache (
+                title,
+                paragraphs,
+                link,
+                image,
+                is_disambig,
+                disambig_titles
+            )
+            VALUES ($1, $2::jsonb, $3, $4::jsonb, $5, $6::jsonb)
             ON CONFLICT (link) DO UPDATE
             SET
                 title = EXCLUDED.title,
                 paragraphs = EXCLUDED.paragraphs,
                 image = EXCLUDED.image,
+                is_disambig = EXCLUDED.is_disambig,
+                disambig_titles = EXCLUDED.disambig_titles,
                 updated_at = NOW()
             """,
             data["title"],
             data["paragraphs"],
             data["link"],
-            data["image"]
+            data["image"],
+            data["is_disambig"],
+            data["disambig_titles"],
         )
 
 

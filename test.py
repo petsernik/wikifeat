@@ -136,7 +136,7 @@ async def main(app: Application):
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
     # await cleanup_reserved_pages()
-    await _test_main_page(app, "ru", False)
+    # await _test_main_page(app, "ru", False)
     # await _test_page(app, 'ru', 'Голова', True)
     # ====== TEST UPDATING FEATURED ALL ======
     # for lang in TRANSLATIONS.keys():
@@ -144,6 +144,7 @@ async def main(app: Application):
     #         await update_featured_articles_in_db(lang, await fetch_featured_titles(lang))
     #     except Exception as exc:
     #         print(exc)
+    await delete_url('ru', 'Обмен')
 
 
 if __name__ == "__main__":

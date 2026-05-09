@@ -5,7 +5,7 @@ import string
 from datetime import datetime, UTC
 from io import BytesIO
 from typing import Optional
-from urllib.parse import urlparse, unquote, quote
+from urllib.parse import urlparse, unquote, quote, parse_qs
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -15,7 +15,7 @@ from requests import Response
 
 from config import User_Agent, FONT_PATH
 from i18n import TRANSLATIONS
-from models import ArticleContext
+from models import ArticleContext, ParagraphResult
 
 
 # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
@@ -32,15 +32,34 @@ def quote_url(url: str) -> str:
     return quote(unquote(url), safe=":/?=&")
 
 
-def get_quote_url_by_str(lang: str, url_or_name: str) -> str:
-    if url_or_name.startswith('https://'):
-        return quote_url(url_or_name)
-    name = url_or_name.replace(' ', '_')
-    return quote_url(f'https://{lang}.wikipedia.org/wiki/{name}')
+def get_quote_url_by_str(lang: str, url_or_title: str) -> str:
+    if url_or_title.startswith('https://'):
+        return quote_url(url_or_title)
+    title = url_or_title.replace(' ', '_')
+    return quote_url(f'https://{lang}.wikipedia.org/wiki/{title}')
+
+
+def get_title_by_url(url: str) -> str:
+    url = unquote_url(join_url('en.wikipedia.org', url))
+
+    if not url.startswith("http"):
+        return url.replace("_", " ")
+
+    parsed = urlparse(url)
+    path = parsed.path
+
+    if "/wiki/" in path:
+        title = path.split("/wiki/", 1)[1]
+    else:
+        title = path.lstrip("/")
+
+    title = title.split("#")[0].split("?")[0]
+
+    return title.replace("_", " ")
 
 
 def get_quote_url_by_context(ctx: ArticleContext) -> str:
-    return get_quote_url_by_str(ctx.lang, ctx.url_or_name)
+    return get_quote_url_by_str(ctx.lang, ctx.url_or_title)
 
 
 def get_quote_url_by_tag(netloc: str, tag: Tag) -> str:
@@ -79,14 +98,39 @@ def clean_select_list(soup: PageElement | Tag | NavigableString | None | int, se
     return [q for p in soup.select(selector) if (q := p.get_text().strip())]
 
 
-def get_paragraphs(soup: PageElement | Tag | NavigableString | None | int) -> list[str]:
+def get_paragraphs(
+        soup: PageElement | Tag | NavigableString | None | int
+) -> ParagraphResult:
     paragraphs = clean_select_list(soup, ':scope > * > p')
-    if len(paragraphs) > 0:
-        return paragraphs
-    paragraphs = clean_select_list(soup, ':scope > p')
-    if len(paragraphs) > 0:
-        return paragraphs
-    return clean_select_list(soup, 'p')
+
+    if not paragraphs:
+        paragraphs = clean_select_list(soup, ':scope > p')
+
+    if not paragraphs:
+        paragraphs = clean_select_list(soup, 'p')
+
+    result = ParagraphResult(paragraphs=paragraphs)
+
+    if soup and isinstance(soup, (Tag, PageElement)):
+        disambig = soup.select_one('div.ts-disambig')
+
+        if disambig:
+            result.is_disambig = True
+
+            for a in soup.select('a[rel="mw:WikiLink"]'):
+                href = a.get('href')
+
+                if not href:
+                    continue
+
+                query = parse_qs(urlparse(href).query)
+
+                if query.get('redlink') == ['1']:
+                    continue
+
+                result.titles.append(get_title_by_url(href))
+
+    return result
 
 
 def _attr_list(tag: Tag, attr: str) -> list[str]:
