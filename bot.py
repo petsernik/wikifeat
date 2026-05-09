@@ -325,6 +325,8 @@ async def send(context, chat_id, lang, query, *, keyboard=None, ctx_req=None, pa
     if media and article.image.desc != file_id:
         article.image.desc = file_id
         await update_image_desc(article.link, file_id)
+        if article.is_disambig:
+            context.user_data["disambig_root"]["media"] = file_id
 
 
 async def notify(update, text):
