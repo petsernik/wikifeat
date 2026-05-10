@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from telegram.ext import Application
 
 from config import Config
-from core import run, async_run
+from parse import run, async_run
 from i18n import TRANSLATIONS, TKey
 
 

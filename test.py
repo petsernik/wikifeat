@@ -5,7 +5,7 @@ from typing import Iterable
 from telegram.ext import Application
 
 from config import Config
-from core import run, async_run
+from parse import run, async_run
 from db import delete_url, get_pool
 from filter import get_skip_prefixes
 from i18n import TRANSLATIONS, TKey, ADDITIONAL_TRANSLATIONS

@@ -3,7 +3,7 @@
 [Go to english description](#English-description)
 
 НОВОЕ! Теперь также есть многоязычный бот для получения случайных избранных статей или статей по ссылке/заголовку:
-https://t.me/wikifeatbot. Его код хранится в файле bot.py.
+https://t.me/wikifeatbot. Его код хранится в файлах папки `bot`.
 
 Ссылка на канал с публикациями: https://t.me/wikifeat.
 
@@ -178,7 +178,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 # English description
 
 NEW! There is now also a multilanguage bot for getting random featured articles or articles by link/title:
-[https://t.me/wikifeatbot](https://t.me/wikifeatbot). You can read it's code in bot.py file.
+[https://t.me/wikifeatbot](https://t.me/wikifeatbot). You can read it's code in files from `bot` directory.
 
 My telegram channel with featured articles (at Russian) is https://t.me/wikifeat and I use a Telegram bot to
 automate publications.

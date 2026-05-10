@@ -12,6 +12,8 @@ SELF_MADE_IMAGE_CASE = "If this appears in an exception, generate the image manu
 CHANNEL_USERNAME = "@wikifeat"
 User_Agent = 'wikifeat/0.52 (https://github.com/petsernik/wikifeat)'
 
+PAGE_SIZE = 8
+
 # ==== LIMITS ====
 DAILY_TOTAL_LIMIT = 4900
 DAILY_USER_LIMIT = 100
@@ -48,3 +50,14 @@ class Config:
     WIKI_URL_OR_NAME: str
     USE_AND_UPDATE_LAST_FEATURED_TITLE: bool
     WITH_IMAGE: bool
+
+
+async def get_config(chat_id, query, lang) -> Config:
+    return Config(
+        TELEGRAM_CHANNELS=[chat_id],
+        RULES_URL="https://t.me/wikifeat/4",
+        WIKI_URL_OR_NAME=query,
+        LANG_CODE=lang,
+        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
+        WITH_IMAGE=True,
+    )
