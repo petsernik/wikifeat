@@ -2,16 +2,38 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.handlers.callbacks import get_user_lang
+from bot.handlers.registry import command
 from bot.keyboards.common import get_more_keyboard
 from bot.keyboards.lang import get_lang_keyboard
 from bot.services.article import handle_article
-from bot.state.user_state import STATE_GET, set_state, STATE_UPDATE, clear_state
-from config import DAILY_USER_LIMIT
-from db import get_lang, set_lang, get_user_limit, get_random_featured_title
+from bot.state.user_state import (
+    STATE_GET,
+    STATE_UPDATE,
+    set_state,
+    clear_state,
+)
+from config import (
+    DAILY_USER_LIMIT,
+    CMD_ABOUT,
+    CMD_STATUS,
+    CMD_LIMIT,
+    CMD_LANG,
+    CMD_RANDOM,
+    CMD_GET,
+    CMD_CANCEL,
+    CMD_UPDATE,
+)
+from db import (
+    get_lang,
+    set_lang,
+    get_user_limit,
+    get_random_featured_title,
+)
 from i18n import translate, TKey, TRANSLATIONS
 from utils import normalize_lang
 
 
+@command("start")
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     tg_lang = update.effective_user.language_code
@@ -27,6 +49,7 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@command(CMD_ABOUT)
 async def about(update: Update, _: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     tg_lang = update.effective_user.language_code
@@ -38,6 +61,7 @@ async def about(update: Update, _: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@command(CMD_STATUS)
 async def status(update: Update, _: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     tg_lang = update.effective_user.language_code
@@ -49,6 +73,7 @@ async def status(update: Update, _: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@command(CMD_LIMIT)
 async def limit(update: Update, _: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
@@ -56,10 +81,15 @@ async def limit(update: Update, _: ContextTypes.DEFAULT_TYPE):
     lang = await get_user_lang(user_id, update.effective_user.language_code)
 
     await update.message.reply_text(
-        translate(lang, TKey.LIMIT_REMAINING, count=DAILY_USER_LIMIT - used)
+        translate(
+            lang,
+            TKey.LIMIT_REMAINING,
+            count=DAILY_USER_LIMIT - used
+        )
     )
 
 
+@command(CMD_LANG)
 async def cmd_lang(update: Update, _: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     lang_code = update.effective_user.language_code
@@ -67,10 +97,16 @@ async def cmd_lang(update: Update, _: ContextTypes.DEFAULT_TYPE):
     lang_val = await get_user_lang(uid, lang_code)
 
     await update.message.reply_text(
-        translate(lang_val, TKey.AVAILABLE_LANGS, values=", ".join(sorted(TRANSLATIONS.keys()))),
+        translate(
+            lang_val,
+            TKey.AVAILABLE_LANGS,
+            values=", ".join(sorted(TRANSLATIONS.keys()))
+        ),
         reply_markup=get_lang_keyboard()
     )
 
+
+@command(CMD_RANDOM)
 async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     lang_val = await get_user_lang(uid, update.effective_user.language_code)
@@ -88,9 +124,11 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard=get_more_keyboard(),
     )
 
+
 # =========================
 # GET FLOW (FSM)
 # =========================
+@command(CMD_GET)
 async def get_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     lang_val = await get_user_lang(uid, update.effective_user.language_code)
@@ -98,14 +136,19 @@ async def get_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
     used = await get_user_limit(uid)
 
     if used >= DAILY_USER_LIMIT:
-        await update.message.reply_text(translate(lang_val, TKey.LIMIT_EXCEEDED))
+        await update.message.reply_text(
+            translate(lang_val, TKey.LIMIT_EXCEEDED)
+        )
         return
 
     set_state(uid, STATE_GET)
 
-    await update.message.reply_text(translate(lang_val, TKey.GET_PROMPT))
+    await update.message.reply_text(
+        translate(lang_val, TKey.GET_PROMPT)
+    )
 
 
+@command(CMD_UPDATE)
 async def update_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     lang_val = await get_user_lang(uid, update.effective_user.language_code)
@@ -113,17 +156,25 @@ async def update_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE):
     used = await get_user_limit(uid)
 
     if used >= DAILY_USER_LIMIT:
-        await update.message.reply_text(translate(lang_val, TKey.LIMIT_EXCEEDED))
+        await update.message.reply_text(
+            translate(lang_val, TKey.LIMIT_EXCEEDED)
+        )
         return
 
     set_state(uid, STATE_UPDATE)
 
-    await update.message.reply_text(translate(lang_val, TKey.GET_PROMPT))
+    await update.message.reply_text(
+        translate(lang_val, TKey.GET_PROMPT)
+    )
 
+
+@command(CMD_CANCEL)
 async def cancel(update: Update, _: ContextTypes.DEFAULT_TYPE):
     clear_state(update.effective_user.id)
 
     uid = update.effective_user.id
     lang_val = await get_user_lang(uid, update.effective_user.language_code)
 
-    await update.message.reply_text(translate(lang_val, TKey.CANCEL_OK))
+    await update.message.reply_text(
+        translate(lang_val, TKey.CANCEL_OK)
+    )
