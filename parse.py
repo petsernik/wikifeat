@@ -360,9 +360,13 @@ async def get_ctx_req_by_config(config: Config, use_cache=True) -> ArticleContex
     return ArticleContextRequest(ctx, url_final, True)
 
 
-async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> tuple[Article | None, ArticleContext]:
+async def get_article(
+        config: Config,
+        *,
+        ctx_req: ArticleContextRequest = None,
+) -> tuple[Article | None, ArticleContext]:
     if not ctx_req:
-        ctx_req = await get_ctx_req_by_config(config)
+        ctx_req = await get_ctx_req_by_config(config, use_cache=config.USE_CACHE_FOR_GETTING_CONTEXT_REQ)
 
     ctx, url, cached = ctx_req.ctx, ctx_req.url, ctx_req.cached
 
@@ -408,7 +412,7 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
     is_article_original = await is_article(ctx.lang, url)
     is_article_final = await is_article(ctx.lang, url_final)
 
-    if is_article_final:
+    if is_article_final and config.SAVE_ARTICLE_TO_DB:
         await save_article_to_db(article)
         if is_article_original:
             await set_cached_final_url(url, url_final)
@@ -416,6 +420,7 @@ async def get_article(config: Config, ctx_req: ArticleContextRequest = None) -> 
 
     if config.USE_AND_UPDATE_LAST_FEATURED_TITLE:
         await update_featured_articles_in_db(ctx.lang, {article.title})
+
     return article, ctx
 
 

@@ -7,6 +7,7 @@ import aiohttp
 from config import User_Agent
 from db import get_skip_prefixes_from_db, save_skip_prefixes_to_db
 from i18n import ADDITIONAL_TRANSLATIONS, TKey
+from utils import unquote_url
 
 # =========================
 # CACHE (ONLY ONE)
@@ -132,6 +133,7 @@ async def is_valid_title(lang: str, title: str) -> bool:
 
 
 async def is_article(lang: str, url: str) -> bool:
+    url = unquote_url(url)
     path = urlparse(url).path
     if "/wiki/" not in path:
         return False

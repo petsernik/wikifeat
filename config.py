@@ -48,8 +48,10 @@ class Config:
     RULES_URL: str
     LANG_CODE: str
     WIKI_URL_OR_NAME: str
-    USE_AND_UPDATE_LAST_FEATURED_TITLE: bool
-    WITH_IMAGE: bool
+    WITH_IMAGE: bool = True
+    USE_AND_UPDATE_LAST_FEATURED_TITLE: bool = False
+    USE_CACHE_FOR_GETTING_CONTEXT_REQ: bool = True
+    SAVE_ARTICLE_TO_DB: bool = True
 
 
 async def get_config(chat_id, query, lang) -> Config:
@@ -58,6 +60,4 @@ async def get_config(chat_id, query, lang) -> Config:
         RULES_URL="https://t.me/wikifeat/4",
         WIKI_URL_OR_NAME=query,
         LANG_CODE=lang,
-        USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
-        WITH_IMAGE=True,
     )

@@ -22,7 +22,7 @@ async def render_article(
 ):
     cfg = await get_config(chat_id, query, lang)
 
-    article, ctx = await get_article(cfg, ctx_req)
+    article, ctx = await get_article(cfg, ctx_req=ctx_req)
 
     if not article:
         if edit_message:

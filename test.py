@@ -24,6 +24,7 @@ async def _test_page(app: Application, lang: str, url_or_name: str, with_image: 
         LANG_CODE=lang,
         USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
         WITH_IMAGE=with_image,
+        SAVE_ARTICLE_TO_DB=True,
     )
 
     await run(ctx, cfg)
@@ -144,7 +145,7 @@ async def main(app: Application):
     #         await update_featured_articles_in_db(lang, await fetch_featured_titles(lang))
     #     except Exception as exc:
     #         print(exc)
-    await delete_url('ru', 'Обмен')
+    await delete_url('ru', 'Смерть Нерона (картина)')
 
 
 if __name__ == "__main__":
