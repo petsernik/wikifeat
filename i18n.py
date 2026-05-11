@@ -42,6 +42,7 @@ class TKey(str, Enum):
     GET_PROMPT = 'download_prompt'
     GET_ERROR = 'download_error'
     CANCEL_OK = 'cancel_ok'
+    DISAMBIG_END = 'disambig_end'
 
 
 # ISO 639-1
@@ -357,6 +358,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Отправьте точное название статьи (регистр важен) или ссылку на неё.',
         TKey.GET_ERROR: 'Не удалось найти или получить статью.',
         TKey.CANCEL_OK: 'Действие отменено.',
+        TKey.DISAMBIG_END: 'Больше вариантов нет.',
     },
 
     'en': {
@@ -381,6 +383,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Send exact article title (case-sensitive) or a link.',
         TKey.GET_ERROR: 'Failed to find or get the article.',
         TKey.CANCEL_OK: 'Action cancelled.',
+        TKey.DISAMBIG_END: 'No more options.',
     },
 
     'de': {
@@ -405,6 +408,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Exakten Artikelnamen (Groß-/Kleinschreibung beachten) oder Link senden.',
         TKey.GET_ERROR: 'Artikel konnte nicht gefunden oder erhalten werden.',
         TKey.CANCEL_OK: 'Aktion abgebrochen.',
+        TKey.DISAMBIG_END: 'Keine weiteren Optionen.',
     },
 
     'fr': {
@@ -429,6 +433,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Envoyez le titre exact de l’article ou un lien.',
         TKey.GET_ERROR: 'Impossible de trouver ou d’obtenir l’article.',
         TKey.CANCEL_OK: 'Action annulée.',
+        TKey.DISAMBIG_END: 'Plus d\'options disponibles.',
     },
 
     'es': {
@@ -453,6 +458,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Envía el título exacto del artículo o un enlace.',
         TKey.GET_ERROR: 'No se pudo encontrar u obtener el artículo.',
         TKey.CANCEL_OK: 'Acción cancelada.',
+        TKey.DISAMBIG_END: 'No hay más opciones.',
     },
 
     'it': {
@@ -477,6 +483,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Invia il titolo esatto dell’articolo o un link.',
         TKey.GET_ERROR: 'Impossibile trovare o ottenere l’articolo.',
         TKey.CANCEL_OK: 'Azione annullata.',
+        TKey.DISAMBIG_END: 'Nessuna altra opzione.',
     },
 
     'pt': {
@@ -501,6 +508,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Envie o título exato do artigo ou um link.',
         TKey.GET_ERROR: 'Não foi possível encontrar ou obter o artigo.',
         TKey.CANCEL_OK: 'Ação cancelada.',
+        TKey.DISAMBIG_END: 'Sem mais opções.',
     },
 
     'pl': {
@@ -525,6 +533,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Wyślij dokładny tytuł artykułu lub link.',
         TKey.GET_ERROR: 'Nie udało się znaleźć lub uzyskać artykułu.',
         TKey.CANCEL_OK: 'Anulowano.',
+        TKey.DISAMBIG_END: 'Brak kolejnych opcji.',
     },
 
     'be': {
@@ -549,6 +558,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Дашліце дакладную назву артыкула або спасылку.',
         TKey.GET_ERROR: 'Не ўдалося знайсці або атрымаць артыкул.',
         TKey.CANCEL_OK: 'Дзеянне адменена.',
+        TKey.DISAMBIG_END: 'Больш варыянтаў няма.',
     },
 
     'kk': {
@@ -573,6 +583,7 @@ BOT_TRANSLATIONS = {
         TKey.GET_PROMPT: 'Мақаланың нақты атауын немесе сілтемесін жіберіңіз.',
         TKey.GET_ERROR: 'Мақаланы табу немесе алу мүмкін болмады.',
         TKey.CANCEL_OK: 'Әрекет тоқтатылды.',
+        TKey.DISAMBIG_END: 'Басқа нұсқалар жоқ.',
     },
 }
 

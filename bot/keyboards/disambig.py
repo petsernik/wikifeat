@@ -7,6 +7,8 @@ def build_disambig_keyboard(links: list[str], page: int = 0):
     start = page * PAGE_SIZE
     chunk = links[start:start + PAGE_SIZE]
 
+    max_page = max(0, (len(links) - 1) // PAGE_SIZE)
+
     keyboard = [
         [InlineKeyboardButton(text=link, callback_data=f"open|{start + i}")]
         for i, link in enumerate(chunk)
@@ -15,13 +17,13 @@ def build_disambig_keyboard(links: list[str], page: int = 0):
     nav = [
         InlineKeyboardButton(
             "⬅️",
-            callback_data=f"page|{page - 1}" if page > 0 else "noop"
+            callback_data="page|prev"
         ),
         InlineKeyboardButton("↩️", callback_data="back"),
         InlineKeyboardButton(
             "➡️",
-            callback_data=f"page|{page + 1}"
-        )
+            callback_data="page|next"
+        ),
     ]
     keyboard.append(nav)
 
@@ -33,12 +35,12 @@ def build_disambig_nav_keyboard(idx: int, total: int):
         [
             InlineKeyboardButton(
                 "⬅️",
-                callback_data=f"nav|{idx - 1}" if idx > 0 else "noop"
+                callback_data="nav|prev"
             ),
             InlineKeyboardButton("↩️", callback_data="back_nav"),
             InlineKeyboardButton(
                 "➡️",
-                callback_data=f"nav|{idx + 1}" if idx < total - 1 else "noop"
-            )
+                callback_data="nav|next"
+            ),
         ]
     ])

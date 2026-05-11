@@ -1,5 +1,4 @@
 from bot.keyboards.disambig import build_disambig_keyboard
-from config import PAGE_SIZE
 from models import DisambigSession
 
 
@@ -9,10 +8,6 @@ def get_session(context, message_id: int):
         DisambigSession(message_id=message_id)
     )
 
-
-def clamp_page(page: int, total: int) -> int:
-    max_page = max(0, (total - 1) // PAGE_SIZE)
-    return max(0, min(page, max_page))
 
 def get_disambig_keyboard_from_session(session: DisambigSession):
     level = session.current()

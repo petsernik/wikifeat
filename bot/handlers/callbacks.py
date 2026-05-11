@@ -1,13 +1,17 @@
-from telegram import Update, InputMediaAnimation, InputMediaPhoto
+from typing import Optional
+
+from telegram import Update, InputMediaAnimation, InputMediaPhoto, CallbackQuery
 from telegram.ext import ContextTypes
 
 from bot.handlers.registry import callback
 from bot.keyboards.common import get_more_keyboard
 from bot.keyboards.disambig import build_disambig_nav_keyboard
 from bot.services.article import handle_article
-from bot.services.disambig import get_session, get_disambig_keyboard_from_session, clamp_page, PAGE_SIZE
+from bot.services.disambig import get_session, get_disambig_keyboard_from_session
+from bot.services.render import notify
 from db import get_lang, set_lang, get_random_featured_title
 from i18n import translate, TKey
+from models import DisambigSession
 from utils import normalize_lang
 
 
@@ -16,6 +20,40 @@ async def get_user_lang(user_id: int, tg_lang: str | None):
     if lang:
         return lang
     return await set_user_lang(user_id, tg_lang)
+
+
+async def update_message(query, session: DisambigSession):
+    level = session.current()
+    if not level:
+        return
+    keyboard = get_disambig_keyboard_from_session(session)
+    msg = query.message
+    if level.media:
+        if level.media_is_animation:
+            media_obj = InputMediaAnimation(
+                media=level.media,
+                caption=level.caption,
+                parse_mode="HTML",
+            )
+        else:
+            media_obj = InputMediaPhoto(
+                media=level.media,
+                caption=level.caption,
+                parse_mode="HTML",
+            )
+        await msg.edit_media(media=media_obj, reply_markup=keyboard)
+    elif msg.photo or msg.animation or msg.video:
+        await msg.edit_caption(
+            caption=level.caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+    else:
+        await msg.edit_text(
+            text=level.caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
 
 
 async def set_user_lang(user_id: int, lang: str) -> str:
@@ -49,10 +87,7 @@ async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     uid = query.from_user.id
 
-    lang_val = await get_user_lang(
-        uid,
-        query.from_user.language_code
-    )
+    lang_val = await get_user_lang(uid, query.from_user.language_code)
 
     title = await get_random_featured_title(lang_val)
 
@@ -72,28 +107,18 @@ async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def disambig_page(update, context):
     query = update.callback_query
 
-    await query.answer()
-
     mid = query.message.message_id
-
     session = get_session(context, mid)
 
-    level = session.current()
+    direction = query.data.split("|")[1]  # "prev" or "next"
 
-    if not level:
+    if not session.shift_page(direction):
+        uid = query.from_user.id
+        lang_val = await get_user_lang(uid, query.from_user.language_code)
+        await notify(update, translate(lang_val, TKey.DISAMBIG_END))
         return
 
-    page = int(query.data.split("|")[1])
-
-    page = clamp_page(page, len(level.titles))
-
-    session.page = page
-
-    keyboard = get_disambig_keyboard_from_session(session)
-
-    await query.message.edit_reply_markup(
-        reply_markup=keyboard
-    )
+    await update_message(query, session)
 
 
 @callback("^open\\|")
@@ -103,11 +128,9 @@ async def disambig_open(update, context):
     await query.answer()
 
     mid = query.message.message_id
-
     session = get_session(context, mid)
 
     level = session.current()
-
     if not level:
         return
 
@@ -116,14 +139,10 @@ async def disambig_open(update, context):
     if not (0 <= idx < len(level.titles)):
         return
 
-    session.set_index(idx, PAGE_SIZE)
+    session.set_index(idx)
 
     uid = query.from_user.id
-
-    lang_val = await get_user_lang(
-        uid,
-        query.from_user.language_code
-    )
+    lang_val = await get_user_lang(uid, query.from_user.language_code)
 
     await handle_article(
         update,
@@ -136,10 +155,7 @@ async def disambig_open(update, context):
         use_cache=True,
         edit_message=query.message,
         page=session.page,
-        keyboard=build_disambig_nav_keyboard(
-            idx,
-            len(level.titles)
-        )
+        keyboard=build_disambig_nav_keyboard(idx, len(level.titles)),
     )
 
 
@@ -150,26 +166,30 @@ async def disambig_nav(update, context):
     await query.answer()
 
     mid = query.message.message_id
-
     session = get_session(context, mid)
 
-    level = session.current()
+    direction = query.data.split("|")[1]  # "prev" or "next"
 
+    ok = session.shift(direction)
+
+    if not ok:
+        # Граница уровня — возвращаемся к списку родителя
+        if not session.back():
+            uid = query.from_user.id
+            lang_val = await get_user_lang(uid, query.from_user.language_code)
+            await notify(update, translate(lang_val, TKey.DISAMBIG_END))
+            return
+        await update_message(query, session)
+        return
+
+    level = session.current()
     if not level:
         return
 
-    idx = int(query.data.split("|")[1])
-
-    idx = max(0, min(idx, len(level.titles) - 1))
-
-    session.set_index(idx, PAGE_SIZE)
+    idx = session.index
 
     uid = query.from_user.id
-
-    lang_val = await get_user_lang(
-        uid,
-        query.from_user.language_code
-    )
+    lang_val = await get_user_lang(uid, query.from_user.language_code)
 
     await handle_article(
         update,
@@ -182,15 +202,8 @@ async def disambig_nav(update, context):
         use_cache=True,
         edit_message=query.message,
         page=session.page,
-        keyboard=build_disambig_nav_keyboard(
-            idx,
-            len(level.titles)
-        )
+        keyboard=build_disambig_nav_keyboard(idx, len(level.titles)),
     )
-
-
-async def disambig_back_nav(update, context):
-    await disambig_back(update, context, from_nav=True)
 
 
 @callback("^back$")
@@ -200,7 +213,6 @@ async def disambig_back(update, context, from_nav=False):
     await query.answer()
 
     mid = query.message.message_id
-
     session = get_session(context, mid)
 
     if not from_nav and not session.back():
@@ -210,45 +222,36 @@ async def disambig_back(update, context, from_nav=False):
 
     keyboard = get_disambig_keyboard_from_session(session)
 
-    caption = level.caption
-    media = level.media
-    media_is_animation = level.media_is_animation
-
     msg = query.message
 
-    if media:
-
-        if media_is_animation:
+    if level.media:
+        if level.media_is_animation:
             media_obj = InputMediaAnimation(
-                media=media,
-                caption=caption,
-                parse_mode="HTML"
+                media=level.media,
+                caption=level.caption,
+                parse_mode="HTML",
             )
         else:
             media_obj = InputMediaPhoto(
-                media=media,
-                caption=caption,
-                parse_mode="HTML"
+                media=level.media,
+                caption=level.caption,
+                parse_mode="HTML",
             )
 
-        await msg.edit_media(
-            media=media_obj,
-            reply_markup=keyboard
-        )
-
+        await msg.edit_media(media=media_obj, reply_markup=keyboard)
         return
 
     if msg.photo or msg.animation or msg.video:
         await msg.edit_caption(
-            caption=caption,
+            caption=level.caption,
             parse_mode="HTML",
-            reply_markup=keyboard
+            reply_markup=keyboard,
         )
     else:
         await msg.edit_text(
-            text=caption,
+            text=level.caption,
             parse_mode="HTML",
-            reply_markup=keyboard
+            reply_markup=keyboard,
         )
 
 

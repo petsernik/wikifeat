@@ -4,6 +4,7 @@ from typing import List, Optional, Any
 
 from bs4 import Tag
 
+from config import PAGE_SIZE
 from i18n import TKey, translate
 
 
@@ -173,9 +174,29 @@ class DisambigSession:
     def current(self) -> DisambigLevel | None:
         if not self.levels:
             return None
+
         if self.level_idx < 0 or self.level_idx >= len(self.levels):
             return None
-        return self.levels[self.level_idx]
+
+        level = self.levels[self.level_idx]
+
+        # sync session state with current level
+        self.index = level.index
+        self.page = level.page
+
+        return level
+
+    def _sync_current(self) -> None:
+        """
+        Синхронизирует session.page/index
+        с текущим уровнем.
+        """
+        level = self.current()
+        if not level:
+            return
+
+        self.index = level.index
+        self.page = level.page
 
     def push(self, level: DisambigLevel) -> None:
         """
@@ -185,8 +206,8 @@ class DisambigSession:
 
         self.levels.append(level)
         self.level_idx = len(self.levels) - 1
-        self.page = 0
-        self.index = 0
+
+        self._sync_current()
 
     def back(self) -> bool:
         """
@@ -196,8 +217,98 @@ class DisambigSession:
             return False
 
         self.level_idx -= 1
+
+        self._sync_current()
         return True
 
-    def set_index(self, idx: int, page_size: int) -> None:
-        self.index = max(0, idx)
-        self.page = self.index // page_size
+    def set_index(self, idx: int) -> None:
+        level = self.current()
+        if not level:
+            return
+
+        level.index = max(0, idx)
+        level.page = level.index // PAGE_SIZE
+
+        self._sync_current()
+
+    def shift(self, direction: str, cnt=1) -> bool:
+        if direction == "prev":
+            return self.left_shift(cnt)
+        else:
+            return self.right_shift(cnt)
+
+    def left_shift(self, cnt=1) -> bool:
+        """Сдвиг на cnt элементов влево в пределах текущего уровня."""
+        level = self.current()
+        if not level:
+            return False
+
+        if level.index >= cnt:
+            level.index -= cnt
+            level.page = level.index // PAGE_SIZE
+            self._sync_current()
+            return True
+
+        return False
+
+    def right_shift(self, cnt=1) -> bool:
+        """Сдвиг на cnt элементов вправо в пределах текущего уровня."""
+        level = self.current()
+        if not level:
+            return False
+
+        if level.index < len(level.titles) - cnt:
+            level.index += cnt
+            level.page = level.index // PAGE_SIZE
+            self._sync_current()
+            return True
+
+        return False
+
+    def shift_page(self, direction: str) -> bool:
+        if direction == "prev":
+            return self.prev_page()
+        else:
+            return self.next_page()
+
+    def prev_page(self) -> bool:
+        """
+        Переход на предыдущую страницу.
+
+        Если вышли за границы текущего уровня —
+        поднимаемся выше.
+        """
+        level = self.current()
+        if not level:
+            return False
+
+        if level.page > 0:
+            level.page -= 1
+            level.index = level.page * PAGE_SIZE
+
+            self._sync_current()
+            return True
+
+        return self.back()
+
+    def next_page(self) -> bool:
+        """
+        Переход на следующую страницу.
+
+        Если вышли за границы текущего уровня —
+        поднимаемся выше.
+        """
+        level = self.current()
+        if not level:
+            return False
+
+        max_page = (len(level.titles) - 1) // PAGE_SIZE
+
+        if level.page < max_page:
+            level.page += 1
+            level.index = level.page * PAGE_SIZE
+
+            self._sync_current()
+            return True
+
+        return self.back()
