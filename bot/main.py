@@ -1,9 +1,13 @@
+import pkgutil
+from importlib import import_module
+
 from telegram.ext import (
     Application,
     MessageHandler,
     filters,
 )
 
+import bot.handlers
 from bot.handlers.registry import COMMAND_HANDLERS, CALLBACK_HANDLERS
 from bot.handlers.text import handle_text
 from config import TELEGRAM_BOT_TOKEN
@@ -12,11 +16,20 @@ from i18n import TRANSLATIONS
 from parsers import fetch_featured_titles
 
 
+def load_handlers():
+    for module in pkgutil.iter_modules(bot.handlers.__path__):
+        if module.name in {"registry", "text"}:
+            continue
+
+        import_module(f"bot.handlers.{module.name}")
+
+
 def register_handlers(app):
-    for handler in (
-            *COMMAND_HANDLERS,
-            *CALLBACK_HANDLERS,
-    ):
+    # импортируем модули -> декораторы срабатывают
+    load_handlers()
+
+    # регистрируем handlers
+    for handler in (*COMMAND_HANDLERS, *CALLBACK_HANDLERS):
         app.add_handler(handler)
 
     # text router
