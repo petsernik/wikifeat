@@ -20,8 +20,10 @@ async def handle_article(
         use_cache=True,
         edit_message=None,
         page=0,
+        reading=False,
 ):
     notify_text = None
+    ok, ctx_req = True, None
 
     try:
         if not title:
@@ -40,16 +42,6 @@ async def handle_article(
 
         # кеш → сразу отправляем без лимита
         if ctx_req.cached:
-            await render_article(
-                context,
-                chat_id,
-                lang_val,
-                title,
-                keyboard=keyboard,
-                ctx_req=ctx_req,
-                edit_message=edit_message,
-                page=page,
-            )
             return
 
         # лимит
@@ -60,16 +52,18 @@ async def handle_article(
                 notify_text = translate(lang_val, TKey.LIMIT_EXCEEDED)
                 return
 
-        await render_article(
-            context,
-            chat_id,
-            lang_val,
-            title,
-            keyboard=keyboard,
-            ctx_req=ctx_req,
-            edit_message=edit_message,
-            page=page,
-        )
-
     finally:
+        if ok and ctx_req:
+            await render_article(
+                context,
+                chat_id,
+                lang_val,
+                title,
+                keyboard=keyboard,
+                ctx_req=ctx_req,
+                edit_message=edit_message,
+                page=page,
+                reading=reading,
+            )
+
         await notify(update, notify_text)

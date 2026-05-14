@@ -258,7 +258,26 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
 # =========================
 # CAPTION
 # =========================
-def get_caption(article: Article, rules_url: str, ctx: ArticleContext, use_only_first_paragraph=False) -> str:
+def get_caption(
+        article: Article,
+        rules_url: str,
+        ctx: ArticleContext,
+        *,
+        use_only_first_paragraph=False,
+        without_article_link=False,
+        with_attribution=True,
+) -> str:
+    paragraphs = article.paragraphs if not use_only_first_paragraph else article.paragraphs[:1]
+    caption_end = ""
+
+    if without_article_link:
+        # NOTE: CC BY-SA need you to add attribution somewhere (and many others licences too)
+        max_text_len = 1024 if article.image else 4096
+        if with_attribution:
+            caption_end = f"<a href='{rules_url}'>{ctx.t(TKey.TEXT_ALL_PAGES_LICENSE)}</a>\n"
+            max_text_len -= visible_length(caption_end)
+        return get_trimmed_text(paragraphs, max_text_len) + caption_end
+
     caption_beginning = f"<b><a href='{article.link}'>{article.title}</a></b>\n\n"
 
     caption_end = (
@@ -284,7 +303,6 @@ def get_caption(article: Article, rules_url: str, ctx: ArticleContext, use_only_
     else:
         max_text_len = 4096 - visible_length(caption_beginning) - visible_length(caption_end)
 
-    paragraphs = article.paragraphs if not use_only_first_paragraph else article.paragraphs[:1]
     return caption_beginning + get_trimmed_text(paragraphs, max_text_len) + caption_end
 
 

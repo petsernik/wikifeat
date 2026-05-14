@@ -7,6 +7,7 @@ from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_G
 class TKey(str, Enum):
     READ_ARTICLE = 'read_article'
     TEXT_LICENSE = 'text_license'
+    TEXT_ALL_PAGES_LICENSE = 'text_all_pages_license'
 
     IMAGE_LICENSE_SINGLE = 'image_license_single'
     IMAGE_LICENSE_MULTIPLE = 'image_license_multiple'
@@ -44,12 +45,17 @@ class TKey(str, Enum):
     CANCEL_OK = 'cancel_ok'
     DISAMBIG_END = 'disambig_end'
 
+    # Reading mode
+    READ_ARTICLE_HERE = 'read_article_here'
+    BACK_TO_ARTICLE = 'back_to_article'
+
 
 # ISO 639-1
 TRANSLATIONS = {
     'ru': {
         TKey.READ_ARTICLE: 'Читать статью',
         TKey.TEXT_LICENSE: 'Лицензия на текст: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Лицензия на текст, представленный на этой и последующих страницах: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Лицензия на изображение: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Лицензии на изображение: {licenses}',
@@ -68,11 +74,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Избранная статья не изменилась',
         TKey.NEW_ARTICLE_SELECTED: 'Избрана новая статья: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Читать статью здесь',
+        TKey.BACK_TO_ARTICLE: 'Назад к статье',
     },
 
     'en': {
         TKey.READ_ARTICLE: 'Read article',
         TKey.TEXT_LICENSE: 'Text license: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Text license for this and subsequent pages: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Image license: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Image licenses: {licenses}',
@@ -91,11 +101,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Featured article has not changed',
         TKey.NEW_ARTICLE_SELECTED: 'New featured article selected: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Read article here',
+        TKey.BACK_TO_ARTICLE: 'Back to article',
     },
 
     'fr': {
         TKey.READ_ARTICLE: 'Lire l’article',
         TKey.TEXT_LICENSE: 'Licence du texte : CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Licence du texte sur cette page et les suivantes : CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Licence de l’image : {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Licences des images : {licenses}',
@@ -114,11 +128,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: "L'article vedette n'a pas changé",
         TKey.NEW_ARTICLE_SELECTED: 'Nouvel article vedette sélectionné : {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Lire l’article ici',
+        TKey.BACK_TO_ARTICLE: 'Retour à l’article',
     },
 
     'de': {
         TKey.READ_ARTICLE: 'Artikel lesen',
         TKey.TEXT_LICENSE: 'Textlizenz: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Textlizenz für diese und folgende Seiten: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Bildlizenz: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Bildlizenzen: {licenses}',
@@ -137,11 +155,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Ausgewählter Artikel hat sich nicht geändert',
         TKey.NEW_ARTICLE_SELECTED: 'Neuer ausgewählter Artikel: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Artikel hier lesen',
+        TKey.BACK_TO_ARTICLE: 'Zurück zum Artikel',
     },
 
     'es': {
         TKey.READ_ARTICLE: 'Leer artículo',
         TKey.TEXT_LICENSE: 'Licencia del texto: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Licencia del texto de esta y las siguientes páginas: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Licencia de imagen: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Licencias de imagen: {licenses}',
@@ -160,11 +182,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'El artículo destacado no ha cambiado',
         TKey.NEW_ARTICLE_SELECTED: 'Nuevo artículo destacado seleccionado: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Leer artículo aquí',
+        TKey.BACK_TO_ARTICLE: 'Volver al artículo',
     },
 
     'it': {
         TKey.READ_ARTICLE: 'Leggi articolo',
         TKey.TEXT_LICENSE: 'Licenza del testo: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Licenza del testo di questa e delle pagine successive: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Licenza immagine: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Licenze immagini: {licenses}',
@@ -183,11 +209,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'L’articolo in evidenza non è cambiato',
         TKey.NEW_ARTICLE_SELECTED: 'Nuovo articolo in evidenza selezionato: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Leggi articolo qui',
+        TKey.BACK_TO_ARTICLE: 'Torna all’articolo',
     },
 
     'pt': {
         TKey.READ_ARTICLE: 'Ler artigo',
         TKey.TEXT_LICENSE: 'Licença do texto: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Licença do texto desta e das páginas seguintes: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Licença da imagem: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Licenças das imagens: {licenses}',
@@ -206,11 +236,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'O artigo em destaque não mudou',
         TKey.NEW_ARTICLE_SELECTED: 'Novo artigo em destaque selecionado: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Ler artigo aqui',
+        TKey.BACK_TO_ARTICLE: 'Voltar ao artigo',
     },
 
     'pl': {
         TKey.READ_ARTICLE: 'Czytaj artykuł',
         TKey.TEXT_LICENSE: 'Licencja tekstu: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Licencja tekstu na tej i kolejnych stronach: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Licencja obrazu: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Licencje obrazów: {licenses}',
@@ -229,11 +263,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Wyróżniony artykuł nie zmienił się',
         TKey.NEW_ARTICLE_SELECTED: 'Wybrano nowy wyróżniony artykuł: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Czytaj artykuł tutaj',
+        TKey.BACK_TO_ARTICLE: 'Powrót do artykułu',
     },
 
     'be': {
         TKey.READ_ARTICLE: 'Чытаць артыкул',
         TKey.TEXT_LICENSE: 'Ліцэнзія тэксту: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Ліцэнзія тэксту на гэтай і наступных старонках: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Ліцэнзія выявы: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Ліцэнзіі выяў: {licenses}',
@@ -252,11 +290,15 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Выбраны артыкул не змяніўся',
         TKey.NEW_ARTICLE_SELECTED: 'Абраны новы артыкул: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Чытаць артыкул тут',
+        TKey.BACK_TO_ARTICLE: 'Назад да артыкула',
     },
 
     'kk': {
         TKey.READ_ARTICLE: 'Мақаланы оқу',
         TKey.TEXT_LICENSE: 'Мәтін лицензиясы: CC BY-SA',
+        TKey.TEXT_ALL_PAGES_LICENSE: 'Осы және келесі беттердегі мәтін лицензиясы: CC BY-SA',
 
         TKey.IMAGE_LICENSE_SINGLE: 'Сурет лицензиясы: {license}',
         TKey.IMAGE_LICENSE_MULTIPLE: 'Сурет лицензиялары: {licenses}',
@@ -275,6 +317,9 @@ TRANSLATIONS = {
 
         TKey.ARTICLE_NOT_CHANGED: 'Таңдалған мақала өзгерген жоқ',
         TKey.NEW_ARTICLE_SELECTED: 'Жаңа таңдалған мақала: {title}',
+
+        TKey.READ_ARTICLE_HERE: 'Мақаланы осында оқу',
+        TKey.BACK_TO_ARTICLE: 'Мақалаға қайту',
     },
 }
 

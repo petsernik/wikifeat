@@ -1,6 +1,7 @@
-from telegram import InputMediaPhoto, InputMediaAnimation
+from telegram import InputMediaPhoto, InputMediaAnimation, InlineKeyboardMarkup
 
 from bot.keyboards.disambig import build_disambig_keyboard
+from bot.keyboards.reading import build_article_keyboard_with_reading_button, build_reading_keyboard
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
 from config import SELF_MADE_IMAGE_CASE, get_config
 from db import update_image_desc
@@ -17,8 +18,10 @@ async def render_article(
         *,
         keyboard=None,
         ctx_req=None,
-        page=0,
         edit_message=None,
+        page=0,
+        reading=False,
+        disable_web_page_preview=True,
 ):
     cfg = await get_config(chat_id, query, lang)
 
@@ -33,6 +36,11 @@ async def render_article(
         else:
             await context.bot.send_message(chat_id, "Error")
         return
+
+    total_pages = len(article.paragraphs)
+    if reading:
+        article.image = None
+        article.paragraphs = [article.paragraphs[page]]
 
     # =========================
     # MEDIA
@@ -49,15 +57,14 @@ async def render_article(
     # =========================
     # CAPTION
     # =========================
-    if article.is_disambig:
-        caption = get_caption(
-            article,
-            cfg.RULES_URL,
-            ctx,
-            use_only_first_paragraph=True
-        )
-    else:
-        caption = get_caption(article, cfg.RULES_URL, ctx)
+    caption = get_caption(
+        article,
+        cfg.RULES_URL,
+        ctx,
+        use_only_first_paragraph=True,
+        without_article_link=reading,
+        with_attribution=page == 0,
+    )
 
     file_id = None
 
@@ -85,8 +92,32 @@ async def render_article(
                 article.disambig_titles,
                 0
             )
+    elif reading:
+        keyboard = build_reading_keyboard(
+            lang=lang,
+            title=article.title,
+            current_page=page,
+            total_pages=total_pages,
+        )
     else:
-        keyboard = keyboard
+        # Для обычных статей добавляем кнопку "Читать статью здесь"
+        reading_button_keyboard = build_article_keyboard_with_reading_button(lang, article.title)
+
+        if keyboard is None:
+            keyboard = reading_button_keyboard
+        else:
+            # Комбинируем существующую клавиатуру с кнопкой "Читать статью здесь"
+            # Создаем новую клавиатуру, где сначала идет кнопка "Читать статью здесь",
+            # а затем оригинальные кнопки
+
+            # Получаем кнопки из обеих клавиатур
+            reading_buttons = reading_button_keyboard.inline_keyboard
+            original_buttons = keyboard.inline_keyboard if keyboard else []
+
+            # Объединяем кнопки
+            combined_buttons = reading_buttons + original_buttons
+
+            keyboard = InlineKeyboardMarkup(combined_buttons)
     # =========================
     # EDIT EXISTING MESSAGE
     # =========================
@@ -134,7 +165,8 @@ async def render_article(
                 await edit_message.edit_text(
                     text=caption,
                     parse_mode="HTML",
-                    reply_markup=keyboard
+                    reply_markup=keyboard,
+                    disable_web_page_preview=disable_web_page_preview,
                 )
 
         msg = edit_message
@@ -175,7 +207,8 @@ async def render_article(
                 chat_id,
                 caption,
                 parse_mode="HTML",
-                reply_markup=keyboard
+                reply_markup=keyboard,
+                disable_web_page_preview=disable_web_page_preview,
             )
 
     # =========================

@@ -1,6 +1,4 @@
-from typing import Optional
-
-from telegram import Update, InputMediaAnimation, InputMediaPhoto, CallbackQuery
+from telegram import Update, InputMediaAnimation, InputMediaPhoto
 from telegram.ext import ContextTypes
 
 from bot.handlers.registry import callback
