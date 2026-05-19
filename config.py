@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import List
 
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
+TELEGRAM_BOT_TEST_TOKEN = os.environ.get('WIKIFEATTESTTOKEN')
 OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
