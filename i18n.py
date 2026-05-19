@@ -49,6 +49,8 @@ class TKey(str, Enum):
     READ_ARTICLE_HERE = 'read_article_here'
     BACK_TO_ARTICLE = 'back_to_article'
 
+    UNEXPECTED_ERROR = 'unexpected_error'
+
 
 # ISO 639-1
 TRANSLATIONS = {

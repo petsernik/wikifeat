@@ -161,8 +161,6 @@ async def disambig_open(update, context):
 async def disambig_nav(update, context):
     query = update.callback_query
 
-    await query.answer()
-
     mid = query.message.message_id
     session = get_session(context, mid)
 
@@ -182,6 +180,7 @@ async def disambig_nav(update, context):
 
     level = session.current()
     if not level:
+        await query.answer()
         return
 
     idx = session.index
