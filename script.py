@@ -3,8 +3,8 @@ from types import SimpleNamespace
 from telegram.ext import Application
 
 from config import Config
-from parse import run, async_run
 from i18n import TRANSLATIONS, TKey
+from parse import run, async_run
 
 
 # =========================

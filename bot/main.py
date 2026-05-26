@@ -8,7 +8,7 @@ from telegram.ext import (
 
 from bot.handlers.registry import get_handlers
 from bot.handlers.text import handle_text
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_TEST_TOKEN
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_TEST_TOKEN, DB_NAME, DB_TEST_NAME
 from db import init_db, close_db, has_featured_articles, update_featured_articles_in_db
 from i18n import TRANSLATIONS
 from parsers import fetch_featured_titles
@@ -27,9 +27,11 @@ def register_handlers(app):
 # MAIN
 # =========================
 def main():
+    is_test = "--test" in sys.argv
+
     token = (
         TELEGRAM_BOT_TEST_TOKEN
-        if "--test" in sys.argv
+        if is_test
         else TELEGRAM_BOT_TOKEN
     )
 
@@ -39,7 +41,7 @@ def main():
     # DB INIT
     # =========================
     async def post_init(_: Application):
-        await init_db()
+        await init_db(DB_TEST_NAME if is_test else DB_NAME)
 
         for lang in TRANSLATIONS.keys():
             try:

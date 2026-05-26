@@ -36,6 +36,7 @@ CMD_UPDATE = "update"
 DB_USER = 'postgres'
 DB_PASSWORD = os.environ.get('POSTGRES_DB_PASSWORD')
 DB_NAME = 'wikifeat'
+DB_TEST_NAME = 'wikifeattest'
 DB_HOST = '127.0.0.1'
 DB_MIN_SIZE = 1
 DB_MAX_SIZE = 10

@@ -1,4 +1,5 @@
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from bot.services.access import check_and_increment_limit, check_access
@@ -54,16 +55,37 @@ async def handle_article(
 
     finally:
         if ok and ctx_req:
-            await render_article(
-                context,
-                chat_id,
-                lang_val,
-                title,
-                keyboard=keyboard,
-                ctx_req=ctx_req,
-                edit_message=edit_message,
-                page=page,
-                reading=reading,
-            )
+            try:
+                await render_article(
+                    context,
+                    chat_id,
+                    lang_val,
+                    title,
+                    keyboard=keyboard,
+                    ctx_req=ctx_req,
+                    edit_message=edit_message,
+                    page=page,
+                    reading=reading,
+                )
+            except BadRequest as exc:
+                # Проверяем, что ошибка вызвана именно невалидными данными кнопки
+                if "Button_data_invalid" in str(exc):
+                    print(f"Ошибка перехвачена: {exc}, попытка исправить удалением reading_button")
+
+                    await render_article(
+                        context,
+                        chat_id,
+                        lang_val,
+                        title,
+                        keyboard=keyboard,
+                        ctx_req=ctx_req,
+                        edit_message=edit_message,
+                        page=page,
+                        reading=reading,
+                        add_reading_button=False,
+                    )
+                else:
+                    # Если BadRequest вызван чем-то другим, пробрасываем ошибку дальше
+                    raise exc
 
         await notify(update, notify_text)

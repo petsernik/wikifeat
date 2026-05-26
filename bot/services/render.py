@@ -22,6 +22,7 @@ async def render_article(
         page=0,
         reading=False,
         disable_web_page_preview=True,
+        add_reading_button=True,
 ):
     cfg = await get_config(chat_id, query, lang)
 
@@ -101,7 +102,9 @@ async def render_article(
         )
     else:
         # Для обычных статей добавляем кнопку "Читать статью здесь"
-        reading_button_keyboard = build_article_keyboard_with_reading_button(lang, article.title)
+        reading_button_keyboard = (
+            build_article_keyboard_with_reading_button(lang, article.title) if add_reading_button else None
+        )
 
         if keyboard is None:
             keyboard = reading_button_keyboard
@@ -111,8 +114,8 @@ async def render_article(
             # а затем оригинальные кнопки
 
             # Получаем кнопки из обеих клавиатур
-            reading_buttons = reading_button_keyboard.inline_keyboard
-            original_buttons = keyboard.inline_keyboard if keyboard else []
+            reading_buttons = reading_button_keyboard.inline_keyboard if add_reading_button else InlineKeyboardMarkup([]).inline_keyboard
+            original_buttons = keyboard.inline_keyboard if keyboard else InlineKeyboardMarkup([]).inline_keyboard
 
             # Объединяем кнопки
             combined_buttons = reading_buttons + original_buttons

@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from telegram.ext import ContextTypes, Application
 
-from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE
+from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME, TELEGRAM_BOT_TEST_TOKEN
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from filter import is_article
@@ -464,10 +464,16 @@ async def run(context: ContextTypes.DEFAULT_TYPE, config: Config) -> bool:
 # =========================
 # ENTRYPOINT
 # =========================
-async def runner(async_main_for_bot):
-    await init_db()
+async def runner(async_main_for_bot, is_test: bool):
+    await init_db(DB_TEST_NAME if is_test else DB_NAME)
 
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    token = (
+        TELEGRAM_BOT_TEST_TOKEN
+        if is_test
+        else TELEGRAM_BOT_TOKEN
+    )
+
+    app = Application.builder().token(token).build()
 
     try:
         await app.initialize()
@@ -481,5 +487,5 @@ async def runner(async_main_for_bot):
         await close_db()
 
 
-def async_run(async_main_for_bot):
-    asyncio.run(runner(async_main_for_bot))
+def async_run(async_main_for_bot, is_test: bool = False):
+    asyncio.run(runner(async_main_for_bot, is_test))

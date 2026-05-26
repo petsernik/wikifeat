@@ -20,7 +20,7 @@ from utils import get_quote_url_by_str
 pool: asyncpg.Pool | None = None
 
 
-async def init_db():
+async def init_db(db_name: str):
     """
     Инициализация подключения к PostgreSQL и загрузка схемы.
     """
@@ -32,7 +32,7 @@ async def init_db():
     pool = await asyncpg.create_pool(
         user=DB_USER,
         password=DB_PASSWORD,
-        database=DB_NAME,
+        database=db_name,
         host=DB_HOST,
         min_size=DB_MIN_SIZE,
         max_size=DB_MAX_SIZE
