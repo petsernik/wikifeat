@@ -35,7 +35,7 @@ def main():
         else TELEGRAM_BOT_TOKEN
     )
 
-    app = Application.builder().token(token).build()
+    app = Application.builder().token(token).arbitrary_callback_data(True).build()
 
     # =========================
     # DB INIT
