@@ -347,8 +347,23 @@ def html_to_text(html_code: str) -> str:
 def update_links(netloc: str, html_code: str) -> str:
     soup = BeautifulSoup(html_code, 'html.parser')
 
+    langs = set(TRANSLATIONS.keys())
+
     for a in soup.find_all('a', href=True):
-        a['href'] = quote_url(join_url(netloc, a['href']))
+        href = join_url(netloc, a['href'])
+
+        # https://en.wikipedia.org/wiki/ru:Статья
+        # -> https://ru.wikipedia.org/wiki/Статья
+        if href.startswith('https://en.wikipedia.org/wiki/'):
+            title = href.removeprefix('https://en.wikipedia.org/wiki/')
+
+            for lang in langs:
+                prefix = f'{lang}:'
+                if title.startswith(prefix):
+                    href = f'https://{lang}.wikipedia.org/wiki/{title[len(prefix):]}'
+                    break
+
+        a['href'] = quote_url(href)
 
     return str(soup)
 
