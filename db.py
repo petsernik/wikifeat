@@ -8,7 +8,6 @@ import asyncpg
 from config import (
     DB_USER,
     DB_PASSWORD,
-    DB_NAME,
     DB_HOST,
     DB_MIN_SIZE,
     DB_MAX_SIZE,
@@ -60,6 +59,25 @@ def get_pool() -> asyncpg.Pool:
     if pool is None:
         raise RuntimeError("Database is not initialized. Call init_db() first.")
     return pool
+
+
+pool_backup: asyncpg.Pool | None = None
+
+
+async def get_backup_pool() -> asyncpg.Pool:
+    global pool_backup
+
+    if pool_backup is None:
+        pool_backup = await asyncpg.create_pool(
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database="wikifeatbackup",
+            host=DB_HOST,
+            min_size=DB_MIN_SIZE,
+            max_size=DB_MAX_SIZE,
+        )
+
+    return pool_backup
 
 
 async def close_db():
@@ -446,3 +464,69 @@ async def delete_url(lang: str, url_or_name: str):
                     lang,
                     title
                 )
+
+
+async def insert_from_backup(table: str, conflict_columns: list[str]):
+    backup_pool = await get_backup_pool()
+
+    async with pool.acquire() as dst_conn, \
+            backup_pool.acquire() as src_conn:
+
+        # --- destination schema ONLY ---
+        dst_columns = await dst_conn.fetch("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = $1
+            ORDER BY ordinal_position
+        """, table)
+
+        columns = []
+        for c in dst_columns:
+            name = c["column_name"]
+
+            if name == "id":
+                continue
+
+            columns.append(name)
+
+        cols_sql = ", ".join(f'"{c}"' for c in columns)
+
+        rows = await src_conn.fetch(
+            f'SELECT {cols_sql} FROM "{table}"'
+        )
+
+        if not rows:
+            return 0
+
+        conflict_sql = ", ".join(f'"{c}"' for c in conflict_columns)
+
+        placeholders = ", ".join(
+            f"${i}"
+            for i in range(1, len(columns) + 1)
+        )
+
+        query = f"""
+            INSERT INTO "{table}" ({cols_sql})
+            VALUES ({placeholders})
+            ON CONFLICT ({conflict_sql}) DO NOTHING
+        """
+
+        values = [
+            tuple(row[col] for col in columns)
+            for row in rows
+        ]
+
+        await dst_conn.executemany(query, values)
+
+        # Если сбился счётчик:
+        #
+        # Явно вычисляем имя последовательности на основе переданного имени таблицы
+        # seq_name = f"{table}_id_seq"
+        #
+        # # Обновляем счетчик в базе данных
+        # await dst_conn.execute(f"""
+        #             SELECT setval('{seq_name}', COALESCE(MAX(id), 1)) FROM "{table}";
+        #         """)
+
+        return len(values)

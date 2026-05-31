@@ -5,7 +5,7 @@ from typing import Iterable
 from telegram.ext import Application
 
 from config import Config
-from db import delete_url, get_pool
+from db import delete_url, get_pool, insert_from_backup
 from filter import get_skip_prefixes
 from i18n import TRANSLATIONS, TKey, ADDITIONAL_TRANSLATIONS
 from parse import run, async_run
@@ -145,8 +145,10 @@ async def main(app: Application):
     #         await update_featured_articles_in_db(lang, await fetch_featured_titles(lang))
     #     except Exception as exc:
     #         print(exc)
-    await delete_url('ru', 'Смерть Нерона (картина)')
+    # await delete_url('ru', 'Смерть Нерона (картина)')
+
+    await insert_from_backup('articles_cache', ['link'])
 
 
 if __name__ == "__main__":
-    async_run(main, True)
+    async_run(main, False)
