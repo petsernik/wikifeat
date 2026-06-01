@@ -236,33 +236,6 @@ def parse_pl(soup, url, last_title):
     )
 
 
-def parse_be(soup, url, last_title):
-    return parse_featured(
-        soup,
-        url,
-        last_title,
-        path_suffixes=('/wiki/Галоўная_старонка',),
-        get_main_block=lambda s: s.find('div', id='main-page-featured-article'),
-        get_link_tag=lambda b: b.find(
-            'a',
-            string=lambda s: s and s.strip().replace('\xa0', ' ') == 'далей…'
-        ),
-        lang="be",
-    )
-
-
-def parse_kk(soup, url, last_title):
-    return parse_featured(
-        soup,
-        url,
-        last_title,
-        path_suffixes=('/wiki/Басты_бет',),
-        get_main_block=lambda s: s.find('div', id='main-tfa'),
-        get_link_tag=lambda b: b.find('a', href=True),
-        lang="kk",
-    )
-
-
 # =========================
 # RU (оставлен как есть — сложная логика)
 # =========================
@@ -343,8 +316,6 @@ LANG_PARSERS = {
     'it': parse_it,
     'pt': parse_pt,
     'pl': parse_pl,
-    'be': parse_be,
-    'kk': parse_kk,
 }
 
 from typing import Dict
@@ -419,23 +390,6 @@ def extract_de(soup: BeautifulSoup, skip_prefixes: tuple[str, ...]) -> set[str]:
     return titles
 
 
-def extract_be(soup: BeautifulSoup, skip_prefixes: tuple[str, ...]) -> set[str]:
-    root = soup.find("div", class_="mw-content-ltr mw-parser-output")
-    if not root:
-        raise RuntimeError("root container not found")
-
-    titles = set()
-
-    for li in root.find_all("li"):
-        titles |= extract_titles(
-            li,
-            skip_prefixes=skip_prefixes,
-            wiki_prefix="be.wikipedia.org"
-        )
-
-    return titles
-
-
 # =========================
 # CONFIG
 # =========================
@@ -472,14 +426,6 @@ LANG_FINDER_CONFIG: Dict[str, Dict] = {
     "pl": {
         "url": "https://pl.wikipedia.org/wiki/Wikipedia:Artykuły_na_Medal",
         "finder": lambda soup: soup.find("div", class_="mw-content-ltr mw-parser-output"),
-    },
-    "be": {
-        "url": "https://be.wikipedia.org/wiki/Вікіпедыя:Выдатныя_артыкулы",
-        "special": extract_be,
-    },
-    "kk": {
-        "url": "https://kk.wikipedia.org/wiki/Уикипедия:Таңдаулы_мақалалар",
-        "finder": lambda soup: soup.find("table", id="mwKQ"),
     },
 }
 

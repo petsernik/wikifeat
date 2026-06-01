@@ -275,60 +275,6 @@ TRANSLATIONS = {
         TKey.READ_ARTICLE_HERE: 'Czytaj artykuł tutaj',
         TKey.BACK_TO_ARTICLE: 'Powrót do artykułu',
     },
-
-    'be': {
-        TKey.READ_ARTICLE: 'Чытаць артыкул',
-        TKey.TEXT_LICENSE: 'Ліцэнзія тэксту: CC BY-SA',
-        TKey.TEXT_ALL_PAGES_LICENSE: 'Ліцэнзія тэксту на гэтай і наступных старонках: CC BY-SA',
-
-        TKey.IMAGE_LICENSE_SINGLE: 'Ліцэнзія выявы: {license}',
-        TKey.IMAGE_LICENSE_MULTIPLE: 'Ліцэнзіі выяў: {licenses}',
-
-        TKey.AUTHOR_SINGLE: 'аўтар: {author}',
-        TKey.AUTHOR_MULTIPLE: 'аўтары: {author}',
-        TKey.AUTHOR_UNKNOWN: 'аўтар невядомы',
-
-        TKey.SOURCE_SINGLE: 'крыніца: {source}',
-        TKey.SOURCE_MULTIPLE: 'крыніцы: {source}',
-
-        TKey.FAIR_USE: 'Добрасумленнае выкарыстанне',
-        TKey.PUBLIC_DOMAIN: 'Грамадскі набытак',
-
-        TKey.FONTS_AUTHOR: 'аўтар шрыфту: {author}',
-
-        TKey.ARTICLE_NOT_CHANGED: 'Выбраны артыкул не змяніўся',
-        TKey.NEW_ARTICLE_SELECTED: 'Абраны новы артыкул: {title}',
-
-        TKey.READ_ARTICLE_HERE: 'Чытаць артыкул тут',
-        TKey.BACK_TO_ARTICLE: 'Назад да артыкула',
-    },
-
-    'kk': {
-        TKey.READ_ARTICLE: 'Мақаланы оқу',
-        TKey.TEXT_LICENSE: 'Мәтін лицензиясы: CC BY-SA',
-        TKey.TEXT_ALL_PAGES_LICENSE: 'Осы және келесі беттердегі мәтін лицензиясы: CC BY-SA',
-
-        TKey.IMAGE_LICENSE_SINGLE: 'Сурет лицензиясы: {license}',
-        TKey.IMAGE_LICENSE_MULTIPLE: 'Сурет лицензиялары: {licenses}',
-
-        TKey.AUTHOR_SINGLE: 'автор: {author}',
-        TKey.AUTHOR_MULTIPLE: 'авторлар: {author}',
-        TKey.AUTHOR_UNKNOWN: 'авторы белгісіз',
-
-        TKey.SOURCE_SINGLE: 'дереккөз: {source}',
-        TKey.SOURCE_MULTIPLE: 'дереккөздер: {source}',
-
-        TKey.FAIR_USE: 'Әділ пайдалану',
-        TKey.PUBLIC_DOMAIN: 'Қоғамдық игілік',
-
-        TKey.FONTS_AUTHOR: 'қаріп авторы: {author}',
-
-        TKey.ARTICLE_NOT_CHANGED: 'Таңдалған мақала өзгерген жоқ',
-        TKey.NEW_ARTICLE_SELECTED: 'Жаңа таңдалған мақала: {title}',
-
-        TKey.READ_ARTICLE_HERE: 'Мақаланы осында оқу',
-        TKey.BACK_TO_ARTICLE: 'Мақалаға қайту',
-    },
 }
 
 # Categories from https://www.wikidata.org/wiki/Q4387444, THANKS :)
@@ -372,16 +318,6 @@ ADDITIONAL_TRANSLATIONS = {
         TKey.MAIN_PAGE: 'Wikipedia:Strona główna',
         TKey.TODAY_TEMPLATE: '',
         TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Kategoria:Artykuły na Medal',
-    },
-    'be': {
-        TKey.MAIN_PAGE: 'Галоўная старонка',
-        TKey.TODAY_TEMPLATE: '',
-        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Катэгорыя:Вікіпедыя:Выдатныя артыкулы паводле алфавіта',
-    },
-    'kk': {
-        TKey.MAIN_PAGE: 'Басты бет',
-        TKey.TODAY_TEMPLATE: '',
-        TKey.RANDOM_FEATURED_PAGE: 'Special:RandomInCategory/Санат:Уикипедия:Алфавит бойынша таңдаулы мақалалар',
     },
 }
 
@@ -588,56 +524,6 @@ BOT_TRANSLATIONS = {
         TKey.CANCEL_OK: 'Anulowano.',
         TKey.DISAMBIG_END: 'Brak kolejnych opcji.',
     },
-
-    'be': {
-        TKey.ABOUT: (
-            f"Даступныя каманды:\n"
-            f"/{CMD_STATUS} — праверыць статус\n"
-            f"/{CMD_RANDOM} — выпадковы абраны артыкул\n"
-            f"/{CMD_GET} — атрымаць артыкул па спасылцы або загалоўку\n"
-            f"/{CMD_CANCEL} — скасаваць дзеянне\n"
-            f"/{CMD_LIMIT} — дзённы ліміт (абнаўляецца штодня ў 00:00 UTC)\n"
-            f"/{CMD_LANG} — выбраць мову (choose language)\n"
-            f"/{CMD_ABOUT} — пра бота\n"
-            f"Таксама можна проста даслаць тэкст — бот адправіць артыкул у адказ (такія ж паводзіны пасля /{CMD_GET}). Можна даслаць назву або спасылку."
-        ),
-        TKey.SPAM_BLOCK: 'Занадта частыя запыты.',
-        TKey.LIMIT_REMAINING: 'Засталося запытаў: {count}',
-        TKey.LIMIT_EXCEEDED: 'Дзённы ліміт вычарпаны.',
-        TKey.NEED_SUBSCRIPTION: 'Для доступу трэба падпісацца на @wikifeat.',
-        TKey.STATUS_OK: 'ok',
-        TKey.LANG_CHANGED: 'Мова зменена: {value}',
-        TKey.AVAILABLE_LANGS: 'Даступныя мовы: {values}',
-        TKey.GET_PROMPT: 'Дашліце дакладную назву артыкула або спасылку.',
-        TKey.GET_ERROR: 'Не ўдалося знайсці або атрымаць артыкул.',
-        TKey.CANCEL_OK: 'Дзеянне адменена.',
-        TKey.DISAMBIG_END: 'Больш варыянтаў няма.',
-    },
-
-    'kk': {
-        TKey.ABOUT: (
-            f"Қолжетімді командалар:\n"
-            f"/{CMD_STATUS} — статусты тексеру\n"
-            f"/{CMD_RANDOM} — кездейсоқ таңдаулы мақала\n"
-            f"/{CMD_GET} — сілтеме немесе атауы бойынша мақала алу\n"
-            f"/{CMD_CANCEL} — болдырмау\n"
-            f"/{CMD_LIMIT} — күндік лимит (күн сайын 00:00 UTC уақытта жаңартылады)\n"
-            f"/{CMD_LANG} — тілді таңдау (choose language)\n"
-            f"/{CMD_ABOUT} — бот туралы\n"
-            f"Сондай-ақ мәтінді жай жіберуге болады — бот жауап ретінде мақала жібереді (дәл сондай әрекет /{CMD_GET} кейін де болады). Атауды немесе сілтемені жіберуге болады."
-        ),
-        TKey.SPAM_BLOCK: 'Тым көп сұраным.',
-        TKey.LIMIT_REMAINING: 'Қалған сұранымдар: {count}',
-        TKey.LIMIT_EXCEEDED: 'Күндік лимит бітті.',
-        TKey.NEED_SUBSCRIPTION: 'Қол жеткізу үшін @wikifeat-қа жазылыңыз.',
-        TKey.STATUS_OK: 'ok',
-        TKey.LANG_CHANGED: 'Тіл өзгертілді: {value}',
-        TKey.AVAILABLE_LANGS: 'Қолжетімді тілдер: {values}',
-        TKey.GET_PROMPT: 'Мақаланың нақты атауын немесе сілтемесін жіберіңіз.',
-        TKey.GET_ERROR: 'Мақаланы табу немесе алу мүмкін болмады.',
-        TKey.CANCEL_OK: 'Әрекет тоқтатылды.',
-        TKey.DISAMBIG_END: 'Басқа нұсқалар жоқ.',
-    },
 }
 
 for lang, data in BOT_TRANSLATIONS.items():
@@ -693,14 +579,6 @@ PROCESSING_TRANSLATIONS = {
         TKey.PROCESSING_REQUEST: 'Przetwarzanie żądania...',
         TKey.PROCESSING_ERROR: 'Wystąpił błąd podczas przetwarzania żądania.',
     },
-    'be': {
-        TKey.PROCESSING_REQUEST: 'Запыт апрацоўваецца...',
-        TKey.PROCESSING_ERROR: 'Падчас апрацоўкі запыту адбылася памылка.',
-    },
-    'kk': {
-        TKey.PROCESSING_REQUEST: 'Сұрау өңделуде...',
-        TKey.PROCESSING_ERROR: 'Сұрауды өңдеу кезінде қате орын алды.',
-    },
 }
 
 for lang, data in PROCESSING_TRANSLATIONS.items():
@@ -731,12 +609,6 @@ TRY_AGAIN_TRANSLATIONS = {
     'pl': {
         TKey.TRY_AGAIN_THIS_PAGE: 'Spróbuj ponownie',
     },
-    'be': {
-        TKey.TRY_AGAIN_THIS_PAGE: 'Паспрабаваць яшчэ раз',
-    },
-    'kk': {
-        TKey.TRY_AGAIN_THIS_PAGE: 'Қайтадан көру',
-    },
 }
 
 for lang, data in TRY_AGAIN_TRANSLATIONS.items():
@@ -765,12 +637,6 @@ WIKIMEDIA_COMMONS_TITLE_TRANSLATIONS = {
         TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
     },
     'pl': {
-        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
-    },
-    'be': {
-        TKey.WIKIMEDIA_COMMONS_TITLE: 'Вікісховішча',
-    },
-    'kk': {
         TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
     },
 }

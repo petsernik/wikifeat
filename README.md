@@ -83,14 +83,16 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 5. Создайте переменную окружения с названием ```WIKIFEATTOKEN``` и токеном доступа к своему телеграм-боту в качестве
    значения (важно хранить данный токен в тайне от всех других!). После этого может понадобиться перезагрузка
    консоли или даже устройства.
-5. В файле ```script.py``` заполните поля:
+6. В файле ```script.py``` заполните поля:
     * TELEGRAM_CHANNELS: буквенные(для публичных) или цифровые(для приватных) ID каналов или чатов, в которые Ваш
       телеграм-бот добавлен в качестве администратора;
     * RULES_URL: ссылка на правила данного телеграм-канала, у меня
       [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/) на любой опубликованный ботом текст, потому что такова
       лицензия текста на Википедии;
     * LANG_CODE: код языка по стандарту [ISO 639-1](https://ru.wikipedia.org/wiki/Список_кодов_ISO_639-1)
-      (ru, en, и т.д.)
+      (ru, en, и т.д.), во избежание сложности поддержки кода и различных
+      способов парсинга автор проекта готов поддерживать только те языки,
+      на которых уже написано хотя бы 500 избранных статей.
     * WIKI_URL: здесь можно указать "Шаблон:Текущая избранная статья"
       или "Wikipedia:Today's featured article", в целом несложно добавить поддержку шаблона на
       произвольном языке, главное правильно отделить блок с избранной статьёй от всего остального. Также можно указать:
@@ -100,10 +102,10 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
           например, через режим инкогнито);
         * на данный момент поддерживаются такие значения заглавной страницы:
           "Заглавная страница, Main Page, Wikipédia:Accueil principal, Wikipedia:Hauptseite, Wikipedia:Portada, Pagina
-          principale, Wikipédia:Página_principal, Wikipedia:Strona główna, Галоўная старонка, Басты бет".
-        * вместо записи вручную можно сразу использовать TRANSLATIONS[lang_code][x] из файла i18n.py, где x это
+          principale, Wikipédia:Página_principal, Wikipedia:Strona główna".
+        * вместо записи вручную можно сразу использовать TRANSLATIONS\[lang_code\]\[x\] из файла i18n.py, где x это
           TKey.MAIN_PAGE или TKey.TODAY_TEMPLATE или TKey.RANDOM_FEATURED_PAGE.
-        * случайную избранную страницу, указав TRANSLATIONS[lang_code][TKey.RANDOM_FEATURED_PAGE].
+        * случайную избранную страницу, указав TRANSLATIONS\[lang_code\]\[TKey.RANDOM_FEATURED_PAGE\].
         * произвольную страницу для единичного теста, например, "У омута" (статью можно указывать на любом языке);
         * ссылку можно ввести полноценно, например, https://ru.wikipedia.org/wiki/Заглавная_страница
           или https://ru.wikipedia.org/wiki/У_омута; также поддерживаются и правильно
@@ -111,7 +113,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
           https://web.archive.org/web/20211122/https://ru.wikipedia.org/wiki/Заглавная_страница и Вы получите статью
           избранную (примерно) 22 ноября 2021.
     * остальные параметры можно не менять.
-6. Запустите:
+7. Запустите:
     ```bash
     python script.py
     ```
@@ -255,14 +257,15 @@ Assuming your GitHub username is `NickName` and you forked the project:
    called `POSTGRES_DB_PASSWORD` containing the password for this user (keep it secret!).
 5. Create an environment variable `WIKIFEATTOKEN` with your Telegram bot token (keep it secret!). After that you
    may need to reboot the shell or the OS.
-5. Fill in the fields in `script.py`:
+6. Fill in the fields in `script.py`:
     * `TELEGRAM_CHANNELS`: letters (for public) or numbers (for private) IDs of channels or chats in which your
       Telegram bot is added as an administrator;
     * `RULES_URL`: link to your channel’s rules. Don't forget about
       [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/), matching Wikipedia text licensing.
     * `LANG_CODE`: language code according to
       the [ISO 639-1 standard](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
-      (ru, en, etc.);
+      (ru, en, etc.). To avoid the complexity of code maintenance and various parsing methods, the project author 
+      is ready to support only those languages in which at least 500 selected articles have already been written;
     * `WIKI_URL`: you can specify
       "Шаблон:Текущая избранная статья" or "Wikipedia:Today's featured article".
       In general, it is not difficult to add support for templates in any language —
@@ -274,10 +277,10 @@ Assuming your GitHub username is `NickName` and you forked the project:
           mode);
         * currently supported values for the main page are: "Заглавная страница, Main Page, Wikipédia:Accueil principal,
           Wikipedia:Hauptseite, Wikipedia:Portada, Pagina principale, Wikipédia:Página_principal, Wikipedia:Strona
-          główna, Галоўная старонка, Басты бет".
-        * you can use TRANSLATIONS[lang_code][x], where x is TKey.MAIN_PAGE or TKey.TODAY_TEMPLATE or
+          główna".
+        * you can use TRANSLATIONS\[lang_code\]\[x\], where x is TKey.MAIN_PAGE or TKey.TODAY_TEMPLATE or
           TKey.RANDOM_FEATURED_PAGE from the i18n.py file instead of specifying it manually;
-        * a random featured article with using TRANSLATIONS[lang_code][TKey.RANDOM_FEATURED_PAGE];
+        * a random featured article with using TRANSLATIONS\[lang_code\]\[TKey.RANDOM_FEATURED_PAGE\];
         * an arbitrary page for a single test, for example "Anthony Roll" (the article can be specified in any
           language);
         * a full URL, for example https://en.wikipedia.org/wiki/Main_Page or
@@ -286,7 +289,7 @@ Assuming your GitHub username is `NickName` and you forked the project:
           http://web.archive.org/web/20110317042632/http://en.wikipedia.org/wiki/Main_Page
           will return the article featured (approximately) on that date;
     * other parameters can be left unchanged.
-6. Run it:
+7. Run it:
     ```bash
     python script.py
     ```
