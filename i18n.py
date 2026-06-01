@@ -237,7 +237,7 @@ TRANSLATIONS = {
         TKey.SOURCE_SINGLE: 'fonte: {source}',
         TKey.SOURCE_MULTIPLE: 'fontes: {source}',
 
-        TKey.FAIR_USE: 'Uso justo',
+        TKey.FAIR_USE: 'Conteúdo restrito',
         TKey.PUBLIC_DOMAIN: 'Domínio público',
 
         TKey.FONTS_AUTHOR: 'autor da fonte: {author}',
