@@ -13,7 +13,7 @@ from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE, DB_TEST_NAM
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from filter import is_article
-from i18n import TKey, is_unknown_author
+from i18n import TKey, is_unknown_author, translate
 from models import Article, Image, ArticleContext, ArticleContextRequest
 from parsers import LANG_PARSERS
 from utils import (
@@ -55,6 +55,10 @@ def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optio
 # IMAGE BY LINK
 # =========================
 def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Image]:
+    if (image_page_url.endswith(":Commons-logo.svg")
+            and ctx.url_or_title != ctx.t(TKey.WIKIMEDIA_COMMONS_TITLE)):
+        return None
+
     netloc = urlparse(image_page_url).netloc
     response = get_request(image_page_url)
 

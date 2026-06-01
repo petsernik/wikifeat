@@ -55,6 +55,8 @@ class TKey(str, Enum):
     PROCESSING_REQUEST = 'processing_request'
     PROCESSING_ERROR = 'processing_error'
 
+    WIKIMEDIA_COMMONS_TITLE = 'wikimedia_commons_title'
+
 
 # ISO 639-1
 TRANSLATIONS = {
@@ -738,4 +740,40 @@ TRY_AGAIN_TRANSLATIONS = {
 }
 
 for lang, data in TRY_AGAIN_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)
+
+WIKIMEDIA_COMMONS_TITLE_TRANSLATIONS = {
+    'ru': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Викисклад',
+    },
+    'en': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'de': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'fr': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'es': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'it': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'pt': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'pl': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+    'be': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Вікісховішча',
+    },
+    'kk': {
+        TKey.WIKIMEDIA_COMMONS_TITLE: 'Wikimedia Commons',
+    },
+}
+
+for lang, data in WIKIMEDIA_COMMONS_TITLE_TRANSLATIONS.items():
     TRANSLATIONS.setdefault(lang, {}).update(data)
