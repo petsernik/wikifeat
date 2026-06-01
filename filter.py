@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from config import User_Agent
+from constants import User_Agent
 from db import get_skip_prefixes_from_db, save_skip_prefixes_to_db
 from i18n import ADDITIONAL_TRANSLATIONS, TKey
 from utils import unquote_url

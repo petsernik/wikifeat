@@ -2,7 +2,7 @@ import time
 
 from telegram.ext import ContextTypes
 
-from config import SPAM_INTERVAL, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, CHANNEL_USERNAME
+from constants import SPAM_INTERVAL, DAILY_TOTAL_LIMIT, DAILY_USER_LIMIT, CHANNEL_USERNAME
 from db import get_pool
 from i18n import TKey
 

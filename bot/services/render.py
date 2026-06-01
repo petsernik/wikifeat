@@ -3,9 +3,9 @@ from telegram import InputMediaPhoto, InputMediaAnimation, InlineKeyboardMarkup
 from bot.keyboards.disambig import build_disambig_keyboard
 from bot.keyboards.reading import build_article_keyboard_with_reading_button, build_reading_keyboard
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
-from config import SELF_MADE_IMAGE_CASE, get_config
+from constants import SELF_MADE_IMAGE_CASE
 from db import update_image_desc
-from models import DisambigLevel
+from models import DisambigLevel, get_config
 from parse import get_caption, get_article
 from utils import get_img_buf_by_text
 

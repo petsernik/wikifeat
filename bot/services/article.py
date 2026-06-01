@@ -4,8 +4,8 @@ from telegram.ext import ContextTypes
 
 from bot.services.access import check_and_increment_limit, check_access
 from bot.services.render import render_article, notify
-from config import get_config
 from i18n import translate, TKey
+from models import get_config
 from parse import get_ctx_req_by_config
 
 

@@ -13,7 +13,7 @@ from bs4 import Tag, BeautifulSoup
 from bs4.element import PageElement, NavigableString
 from requests import Response
 
-from config import User_Agent, FONT_PATH
+from constants import User_Agent, FONT_PATH
 from i18n import TRANSLATIONS
 from models import ArticleContext, ParagraphResult
 

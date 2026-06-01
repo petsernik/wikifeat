@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 import asyncpg
 
-from config import (
+from constants import (
     DB_USER,
     DB_PASSWORD,
     DB_HOST,

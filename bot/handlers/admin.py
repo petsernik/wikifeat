@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.handlers.registry import command
-from config import OWNER_ID
+from constants import OWNER_ID
 from db import reset_user_limit
 from script import main as script_main
 

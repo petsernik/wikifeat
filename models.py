@@ -1,11 +1,43 @@
 import json
+import re
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Any
 
 from bs4 import Tag
 
-from config import PAGE_SIZE
-from i18n import TKey, translate
+from constants import PAGE_SIZE
+from i18n import TKey, translate, TRANSLATIONS
+
+
+@dataclass
+class Config:
+    TELEGRAM_CHANNELS: List[str]
+    RULES_URL: str
+    LANG_CODE: str
+    WIKI_URL_OR_NAME: str
+    WITH_IMAGE: bool = True
+    USE_AND_UPDATE_LAST_FEATURED_TITLE: bool = False
+    USE_CACHE_FOR_GETTING_CONTEXT_REQ: bool = True
+    SAVE_ARTICLE_TO_DB: bool = True
+
+
+async def get_config(chat_id, query, lang) -> Config:
+    langs = "|".join(map(re.escape, sorted(TRANSLATIONS.keys())))
+
+    m = re.search(
+        rf"\b({langs})\.wikipedia\.org\b",
+        query,
+        re.IGNORECASE,
+    )
+    if m:
+        lang = m.group(1).lower()
+
+    return Config(
+        TELEGRAM_CHANNELS=[chat_id],
+        RULES_URL="https://t.me/wikifeat/4",
+        WIKI_URL_OR_NAME=query,
+        LANG_CODE=lang,
+    )
 
 
 @dataclass

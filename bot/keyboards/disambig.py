@@ -1,6 +1,6 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import PAGE_SIZE
+from constants import PAGE_SIZE
 
 
 def build_disambig_keyboard(links: list[str], page: int = 0):

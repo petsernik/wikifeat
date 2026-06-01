@@ -4,10 +4,10 @@ from typing import Iterable
 
 from telegram.ext import Application
 
-from config import Config
 from db import delete_url, get_pool, insert_from_backup
 from filter import get_skip_prefixes
 from i18n import TRANSLATIONS, TKey, ADDITIONAL_TRANSLATIONS
+from models import Config
 from parse import run, async_run
 
 

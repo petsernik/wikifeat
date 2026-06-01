@@ -8,7 +8,7 @@ from telegram.ext import (
 
 from bot.handlers.registry import get_handlers
 from bot.handlers.text import handle_text
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_TEST_TOKEN, DB_NAME, DB_TEST_NAME
+from constants import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_TEST_TOKEN, DB_NAME, DB_TEST_NAME
 from db import init_db, close_db, has_featured_articles, update_featured_articles_in_db
 from i18n import TRANSLATIONS
 from parsers import fetch_featured_titles

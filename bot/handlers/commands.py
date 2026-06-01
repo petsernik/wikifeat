@@ -15,7 +15,7 @@ from bot.state.user_state import (
     set_state,
     clear_state,
 )
-from config import (
+from constants import (
     DAILY_USER_LIMIT,
     CMD_ABOUT,
     CMD_STATUS,

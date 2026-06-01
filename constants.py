@@ -1,6 +1,4 @@
 import os
-from dataclasses import dataclass
-from typing import List
 
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TELEGRAM_BOT_TEST_TOKEN = os.environ.get('WIKIFEATTESTTOKEN')
@@ -42,24 +40,3 @@ DB_MIN_SIZE = 1
 DB_MAX_SIZE = 10
 
 INIT_SQL_PATH = os.path.join(DIR_PATH, 'schema.sql')
-
-
-@dataclass
-class Config:
-    TELEGRAM_CHANNELS: List[str]
-    RULES_URL: str
-    LANG_CODE: str
-    WIKI_URL_OR_NAME: str
-    WITH_IMAGE: bool = True
-    USE_AND_UPDATE_LAST_FEATURED_TITLE: bool = False
-    USE_CACHE_FOR_GETTING_CONTEXT_REQ: bool = True
-    SAVE_ARTICLE_TO_DB: bool = True
-
-
-async def get_config(chat_id, query, lang) -> Config:
-    return Config(
-        TELEGRAM_CHANNELS=[chat_id],
-        RULES_URL="https://t.me/wikifeat/4",
-        WIKI_URL_OR_NAME=query,
-        LANG_CODE=lang,
-    )

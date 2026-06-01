@@ -1,7 +1,7 @@
 import re
 from enum import Enum
 
-from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_GET, CMD_CANCEL
+from constants import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_GET, CMD_CANCEL
 
 
 class TKey(str, Enum):
