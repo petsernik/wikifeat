@@ -205,7 +205,7 @@ async def disambig_open(update, context):
         use_cache=True,
         edit_message=query.message,
         page=session.page,
-        keyboard=build_disambig_nav_keyboard(idx, len(level.titles)),
+        keyboard=build_disambig_nav_keyboard(),
     )
 
 
@@ -251,7 +251,7 @@ async def disambig_nav(update, context):
         use_cache=True,
         edit_message=query.message,
         page=session.page,
-        keyboard=build_disambig_nav_keyboard(idx, len(level.titles)),
+        keyboard=build_disambig_nav_keyboard(),
     )
 
 

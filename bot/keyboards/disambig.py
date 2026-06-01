@@ -30,7 +30,7 @@ def build_disambig_keyboard(links: list[str], page: int = 0):
     return InlineKeyboardMarkup(keyboard)
 
 
-def build_disambig_nav_keyboard(idx: int, total: int):
+def build_disambig_nav_keyboard():
     return InlineKeyboardMarkup([
         [
             InlineKeyboardButton(
