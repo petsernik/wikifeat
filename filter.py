@@ -135,7 +135,7 @@ async def is_valid_title(lang: str, title: str) -> bool:
 async def is_article(lang: str, url: str) -> bool:
     url = unquote_url(url)
     path = urlparse(url).path
-    if "/wiki/" not in path:
+    if not path.startswith(f'https://{lang}.wikipedia.org/wiki/'):
         return False
 
     title = path.split("/wiki/")[-1]
