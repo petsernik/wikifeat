@@ -13,7 +13,7 @@ from config import Config, TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE, DB_TEST_NAM
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from filter import is_article
-from i18n import TKey, is_unknown_author, translate
+from i18n import TKey, is_unknown_author
 from models import Article, Image, ArticleContext, ArticleContextRequest
 from parsers import LANG_PARSERS
 from utils import (
