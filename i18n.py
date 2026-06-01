@@ -5,6 +5,7 @@ from config import CMD_LANG, CMD_STATUS, CMD_RANDOM, CMD_LIMIT, CMD_ABOUT, CMD_G
 
 
 class TKey(str, Enum):
+    TRY_AGAIN_THIS_PAGE = 'try_again_this_page'
     READ_ARTICLE = 'read_article'
     TEXT_LICENSE = 'text_license'
     TEXT_ALL_PAGES_LICENSE = 'text_all_pages_license'
@@ -50,6 +51,9 @@ class TKey(str, Enum):
     BACK_TO_ARTICLE = 'back_to_article'
 
     UNEXPECTED_ERROR = 'unexpected_error'
+
+    PROCESSING_REQUEST = 'processing_request'
+    PROCESSING_ERROR = 'processing_error'
 
 
 # ISO 639-1
@@ -652,3 +656,86 @@ _UNKNOWN_AUTHOR_PATTERN = re.compile(
 
 def is_unknown_author(text: str) -> bool:
     return bool(_UNKNOWN_AUTHOR_PATTERN.search(text))
+
+
+PROCESSING_TRANSLATIONS = {
+    'ru': {
+        TKey.PROCESSING_REQUEST: 'Запрос обрабатывается...',
+        TKey.PROCESSING_ERROR: 'Во время обработки запроса произошла ошибка.',
+    },
+    'en': {
+        TKey.PROCESSING_REQUEST: 'Processing request...',
+        TKey.PROCESSING_ERROR: 'An error occurred while processing the request.',
+    },
+    'de': {
+        TKey.PROCESSING_REQUEST: 'Anfrage wird bearbeitet...',
+        TKey.PROCESSING_ERROR: 'Bei der Verarbeitung der Anfrage ist ein Fehler aufgetreten.',
+    },
+    'fr': {
+        TKey.PROCESSING_REQUEST: 'Traitement de la requête...',
+        TKey.PROCESSING_ERROR: 'Une erreur est survenue lors du traitement de la requête.',
+    },
+    'es': {
+        TKey.PROCESSING_REQUEST: 'Procesando solicitud...',
+        TKey.PROCESSING_ERROR: 'Se produjo un error al procesar la solicitud.',
+    },
+    'it': {
+        TKey.PROCESSING_REQUEST: 'Elaborazione della richiesta...',
+        TKey.PROCESSING_ERROR: 'Si è verificato un errore durante l\'elaborazione della richiesta.',
+    },
+    'pt': {
+        TKey.PROCESSING_REQUEST: 'Processando solicitação...',
+        TKey.PROCESSING_ERROR: 'Ocorreu um erro ao processar a solicitação.',
+    },
+    'pl': {
+        TKey.PROCESSING_REQUEST: 'Przetwarzanie żądania...',
+        TKey.PROCESSING_ERROR: 'Wystąpił błąd podczas przetwarzania żądania.',
+    },
+    'be': {
+        TKey.PROCESSING_REQUEST: 'Запыт апрацоўваецца...',
+        TKey.PROCESSING_ERROR: 'Падчас апрацоўкі запыту адбылася памылка.',
+    },
+    'kk': {
+        TKey.PROCESSING_REQUEST: 'Сұрау өңделуде...',
+        TKey.PROCESSING_ERROR: 'Сұрауды өңдеу кезінде қате орын алды.',
+    },
+}
+
+for lang, data in PROCESSING_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)
+
+TRY_AGAIN_TRANSLATIONS = {
+    'ru': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Попробовать ещё раз',
+    },
+    'en': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Try again',
+    },
+    'de': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Erneut versuchen',
+    },
+    'fr': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Réessayer',
+    },
+    'es': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Intentar de nuevo',
+    },
+    'it': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Riprova',
+    },
+    'pt': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Tentar novamente',
+    },
+    'pl': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Spróbuj ponownie',
+    },
+    'be': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Паспрабаваць яшчэ раз',
+    },
+    'kk': {
+        TKey.TRY_AGAIN_THIS_PAGE: 'Қайтадан көру',
+    },
+}
+
+for lang, data in TRY_AGAIN_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)

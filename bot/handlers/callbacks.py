@@ -1,8 +1,11 @@
+import asyncio
+
 from telegram import Update, InputMediaAnimation, InputMediaPhoto
 from telegram.ext import ContextTypes
 
 from bot.handlers.registry import callback
-from bot.keyboards.common import get_more_keyboard
+from bot.handlers.workers import processing_message_worker
+from bot.keyboards.common import get_more_random_keyboard, get_retry_keyboard
 from bot.keyboards.disambig import build_disambig_nav_keyboard
 from bot.services.article import handle_article
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
@@ -89,16 +92,65 @@ async def more_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     title = await get_random_featured_title(lang_val)
 
-    await handle_article(
-        update,
-        context,
-        title,
-        lang_val,
-        uid,
-        query.message.chat.id,
-        check_limit=True,
-        keyboard=get_more_keyboard(),
+    finished_ok = asyncio.Event()
+    finished_bad = asyncio.Event()
+    processing_message_task = asyncio.create_task(
+        processing_message_worker(
+            update,
+            lang_val,
+            title,
+            finished_ok,
+            finished_bad,
+            keyboard=get_retry_keyboard(lang_val, title, "random"),
+        )
     )
+
+    try:
+        await handle_article(
+            update,
+            context,
+            title,
+            lang_val,
+            uid,
+            query.message.chat.id,
+            check_limit=True,
+            keyboard=get_more_random_keyboard(),
+        )
+        finished_ok.set()
+    except Exception:
+        finished_bad.set()
+    finally:
+        await processing_message_task
+
+
+@callback("^try_again\\|")
+async def try_again_this_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+
+    _, request_type, title = query.data.split("|", 2)
+
+    uid = query.from_user.id
+    lang_val = await get_user_lang(uid, query.from_user.language_code)
+
+    if request_type == "random":
+        keyboard = get_more_random_keyboard()
+    else:
+        keyboard = None
+
+    try:
+        await handle_article(
+            update,
+            context,
+            title,
+            lang_val,
+            uid,
+            query.message.chat.id,
+            check_limit=True,
+            keyboard=keyboard,
+        )
+        await update.effective_message.delete()
+    except Exception:
+        await notify(update, translate(lang_val, TKey.PROCESSING_ERROR))
 
 
 @callback("^page\\|")
@@ -260,3 +312,8 @@ async def disambig_back_nav_callback(update, context):
 @callback("^noop$")
 async def noop(update: Update, _: ContextTypes.DEFAULT_TYPE):
     await update.callback_query.answer()
+
+
+@callback("^delete$")
+async def delete(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    await update.effective_message.delete()

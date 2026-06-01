@@ -35,7 +35,15 @@ def main():
         else TELEGRAM_BOT_TOKEN
     )
 
-    app = Application.builder().token(token).arbitrary_callback_data(True).build()
+    app = (Application.builder()
+           .token(token)
+           .arbitrary_callback_data(True)
+           .connection_pool_size(20)
+           .connect_timeout(30)
+           .read_timeout(30)
+           .write_timeout(30)
+           .pool_timeout(30)
+           .build())
 
     # =========================
     # DB INIT

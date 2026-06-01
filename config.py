@@ -11,7 +11,7 @@ FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")
 SELF_MADE_IMAGE_CASE = "If this appears in an exception, generate the image manually for this case."
 
 CHANNEL_USERNAME = "@wikifeat"
-User_Agent = 'wikifeat/0.52 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.53 (https://github.com/petsernik/wikifeat)'
 
 PAGE_SIZE = 8
 
