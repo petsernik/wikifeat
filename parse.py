@@ -21,7 +21,7 @@ from utils import (
     get_quote_url_by_context,
     get_quote_url_by_tag,
     clean_soup,
-    remove_brackets,
+    remove_brackets_except_letters_only_case,
     visible_length,
     extract_attrs_info,
     html_to_text,
@@ -231,7 +231,7 @@ def get_trimmed_text(paragraphs: list[str], max_length: int) -> str:
     total_length, text = 0, ''
 
     for paragraph in paragraphs:
-        paragraph = remove_brackets(paragraph)
+        paragraph = remove_brackets_except_letters_only_case(paragraph)
         paragraph_length = len(paragraph) + 2
 
         text += paragraph

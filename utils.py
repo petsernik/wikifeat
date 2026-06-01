@@ -311,19 +311,45 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
     return '; '.join(results) if results else None
 
 
-def remove_brackets(text: str) -> str:
-    """Убирает из текста примечания, написанные в квадратных скобках"""
+def remove_brackets_except_letters_only_case(text: str) -> str:
+    """Удаляет [...] если внутри есть цифры или вложенные скобки."""
     res = []
+
     depth = 0
+    buf = []
+    remove_current = False
+
     for ch in text:
         if ch == "[":
+            if depth == 0:
+                buf = ["["]
+                remove_current = False
+            else:
+                remove_current = True
+                buf.append(ch)
+
             depth += 1
+
         elif ch == "]":
             if depth > 0:
                 depth -= 1
-        else:
-            if depth == 0:
+                buf.append(ch)
+
+                if depth == 0:
+                    if not remove_current:
+                        res.extend(buf)
+            else:
                 res.append(ch)
+
+        elif depth > 0:
+            if ch.isdigit():
+                remove_current = True
+
+            buf.append(ch)
+
+        else:
+            res.append(ch)
+
     return " ".join("".join(res).split())
 
 
