@@ -1,3 +1,4 @@
+import asyncio
 import sys
 
 from telegram.ext import (
@@ -5,6 +6,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram.request import HTTPXRequest
 
 from bot.handlers.registry import get_handlers
 from bot.handlers.text import handle_text
@@ -23,6 +25,16 @@ def register_handlers(app):
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
 
+class LimitedHTTPXRequest(HTTPXRequest):
+    def __init__(self, *args, max_concurrent, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sem = asyncio.Semaphore(max_concurrent)
+
+    async def do_request(self, *args, **kwargs):
+        async with self._sem:
+            return await super().do_request(*args, **kwargs)
+
+
 # =========================
 # MAIN
 # =========================
@@ -35,14 +47,29 @@ def main():
         else TELEGRAM_BOT_TOKEN
     )
 
+    request = LimitedHTTPXRequest(
+        connection_pool_size=100,
+        pool_timeout=30,
+        read_timeout=30,
+        write_timeout=30,
+        connect_timeout=30,
+        max_concurrent=40,
+    )
+
+    get_updates_request = LimitedHTTPXRequest(
+        connection_pool_size=10,
+        pool_timeout=30,
+        read_timeout=30,
+        write_timeout=30,
+        connect_timeout=30,
+        max_concurrent=2,
+    )
+
     app = (Application.builder()
            .token(token)
            .arbitrary_callback_data(True)
-           .connection_pool_size(20)
-           .connect_timeout(30)
-           .read_timeout(30)
-           .write_timeout(30)
-           .pool_timeout(30)
+           .request(request)
+           .get_updates_request(get_updates_request)
            .build())
 
     # =========================

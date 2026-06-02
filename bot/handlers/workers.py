@@ -28,7 +28,7 @@ async def processing_message_worker(update, lang_val, title, finished_ok: asynci
         )
 
         while not (finished_ok.is_set() or finished_bad.is_set()):
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(5)
 
             idx = (idx + 1) % len(icons)
 
