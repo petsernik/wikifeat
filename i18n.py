@@ -537,7 +537,8 @@ def translate(language: str, key: TKey, **kwargs) -> str:
 
 
 _UNKNOWN_AUTHOR_PATTERN = re.compile(
-    r"(неизвест|аноним|не указан|unknown|anonym|unbekannt|inconnu|desconocid|sconosciut|desconhecid|nieznan|невядом|белгісіз)",
+    r"(неизвест|аноним|не указан|unknown|anonym|unbekannt|inconnu|desconocid|sconosciut|desconhecid|nieznan|невядом|белгісіз"
+    r"|dont know|don't know)",
     re.IGNORECASE
 )
 
