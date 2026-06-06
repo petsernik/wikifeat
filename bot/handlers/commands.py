@@ -115,14 +115,14 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang_val = await get_user_lang(uid, update.effective_user.language_code)
     title = await get_random_featured_title(lang_val)
 
-    finished_ok = asyncio.Event()
+    finished = asyncio.Event()
     finished_bad = asyncio.Event()
     processing_message_task = asyncio.create_task(
         processing_message_worker(
             update,
             lang_val,
             title,
-            finished_ok,
+            finished,
             finished_bad,
             keyboard=get_retry_keyboard(lang_val, title, "random"),
         )
@@ -139,10 +139,10 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
             check_limit=True,
             keyboard=get_more_random_keyboard(),
         )
-        finished_ok.set()
     except Exception:
         finished_bad.set()
     finally:
+        finished.set()
         await processing_message_task
 
 
