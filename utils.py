@@ -29,7 +29,7 @@ def unquote_url(url: str) -> str:
 
 
 def quote_url(url: str) -> str:
-    return quote(unquote(url), safe=":/?=&")
+    return quote(unquote(url), safe=":/")
 
 
 def get_quote_url_by_str(lang: str, url_or_title: str) -> str:
