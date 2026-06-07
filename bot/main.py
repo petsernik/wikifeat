@@ -1,6 +1,7 @@
 import asyncio
 import sys
 
+from telegram.error import TimedOut, NetworkError
 from telegram.ext import (
     Application,
     MessageHandler,
@@ -32,7 +33,22 @@ class LimitedHTTPXRequest(HTTPXRequest):
 
     async def do_request(self, *args, **kwargs):
         async with self._sem:
-            return await super().do_request(*args, **kwargs)
+            for delay in (1, 2, 5):
+                try:
+                    return await asyncio.wait_for(
+                        super().do_request(*args, **kwargs),
+                        timeout=15
+                    )
+
+                except (TimedOut, NetworkError) as exc:
+                    last_exc = exc
+                    await asyncio.sleep(delay)
+
+                except asyncio.TimeoutError:
+                    last_exc = TimeoutError("HTTP request stuck")
+                    await asyncio.sleep(delay)
+
+            raise last_exc
 
 
 # =========================
@@ -49,10 +65,10 @@ def main():
 
     request = LimitedHTTPXRequest(
         connection_pool_size=100,
-        pool_timeout=30,
-        read_timeout=30,
-        write_timeout=30,
-        connect_timeout=30,
+        read_timeout=10,
+        write_timeout=10,
+        connect_timeout=10,
+        pool_timeout=5,
         max_concurrent=40,
     )
 

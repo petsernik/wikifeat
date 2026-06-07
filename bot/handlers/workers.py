@@ -1,7 +1,7 @@
 import asyncio
 
 from telegram import InlineKeyboardMarkup
-from telegram.error import BadRequest
+from telegram.error import BadRequest, RetryAfter, TimedOut, NetworkError
 
 from i18n import translate, TKey
 
@@ -64,3 +64,12 @@ async def processing_message_worker(
 
     except asyncio.CancelledError:
         pass
+
+    except RetryAfter as e:
+        print(f"RetryAfter in processing_message_worker: {e}")
+
+    except (TimedOut, NetworkError) as e:
+        print(f"Telegram network error in processing_message_worker: {e}")
+
+    except Exception as e:
+        print(f"Unexpected error in processing_message_worker: {e}")

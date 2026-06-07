@@ -143,7 +143,13 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
         finished_bad.set()
     finally:
         finished.set()
-        await processing_message_task
+        try:
+            await asyncio.wait_for(
+                processing_message_task,
+                timeout=2,
+            )
+        except asyncio.TimeoutError:
+            processing_message_task.cancel()
 
 
 # =========================
