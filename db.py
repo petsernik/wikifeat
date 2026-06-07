@@ -466,7 +466,12 @@ async def delete_url(lang: str, url_or_name: str):
                 )
 
 
-async def insert_from_backup(table: str, conflict_columns: list[str]):
+async def insert_from_backup(
+        table: str,
+        conflict_columns: list[str],
+        *,
+        use_created_at: bool = False,
+):
     backup_pool = await get_backup_pool()
 
     async with pool.acquire() as dst_conn, \
@@ -506,11 +511,31 @@ async def insert_from_backup(table: str, conflict_columns: list[str]):
             for i in range(1, len(columns) + 1)
         )
 
-        query = f"""
-            INSERT INTO "{table}" ({cols_sql})
-            VALUES ({placeholders})
-            ON CONFLICT ({conflict_sql}) DO NOTHING
-        """
+        if use_created_at:
+            update_columns = [
+                c for c in columns
+                if c not in conflict_columns
+            ]
+
+            set_sql = ", ".join(
+                f'"{c}" = EXCLUDED."{c}"'
+                for c in update_columns
+            )
+
+            query = f"""
+                INSERT INTO "{table}" ({cols_sql})
+                VALUES ({placeholders})
+                ON CONFLICT ({conflict_sql})
+                DO UPDATE
+                SET {set_sql}
+                WHERE EXCLUDED.created_at > "{table}".created_at
+            """
+        else:
+            query = f"""
+                INSERT INTO "{table}" ({cols_sql})
+                VALUES ({placeholders})
+                ON CONFLICT ({conflict_sql}) DO NOTHING
+            """
 
         values = [
             tuple(row[col] for col in columns)
@@ -519,12 +544,11 @@ async def insert_from_backup(table: str, conflict_columns: list[str]):
 
         await dst_conn.executemany(query, values)
 
-        # Если сбился счётчик:
-        #
-        # Явно вычисляем имя последовательности на основе переданного имени таблицы
+        # # Если сбился счётчик:
+        # # #
+        # # # Явно вычисляем имя последовательности на основе переданного имени таблицы
         # seq_name = f"{table}_id_seq"
-        #
-        # # Обновляем счетчик в базе данных
+        # # # Обновляем счетчик в базе данных
         # await dst_conn.execute(f"""
         #             SELECT setval('{seq_name}', COALESCE(MAX(id), 1)) FROM "{table}";
         #         """)
