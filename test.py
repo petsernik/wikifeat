@@ -137,7 +137,7 @@ async def main(app: Application):
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
     # await cleanup_reserved_pages()
-    # await _test_main_page(app, "ru", False)
+    await _test_main_page(app, "fr", True)
     # await _test_page(app, 'ru', 'Голова', True)
     # ====== TEST UPDATING FEATURED ALL ======
     # for lang in TRANSLATIONS.keys():
@@ -147,8 +147,8 @@ async def main(app: Application):
     #         print(exc)
     # await delete_url('ru', 'Смерть Нерона (картина)')
 
-    await insert_from_backup('articles_cache', ['link'], use_created_at=True)
+    # await insert_from_backup('articles_cache', ['link'], use_created_at=True)
 
 
 if __name__ == "__main__":
-    async_run(main, False)
+    async_run(main, True)

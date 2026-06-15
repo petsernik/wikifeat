@@ -1,11 +1,15 @@
+import asyncio
 import json
 import re
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Any
 
 from bs4 import Tag
+from telegram.error import TimedOut, NetworkError
+from telegram.ext import Application
+from telegram.request import HTTPXRequest
 
-from constants import PAGE_SIZE
+from constants import PAGE_SIZE, TELEGRAM_BOT_TEST_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_PROXY
 from i18n import TKey, translate, TRANSLATIONS
 
 
@@ -344,3 +348,65 @@ class DisambigSession:
             return True
 
         return self.back()
+
+
+class LimitedHTTPXRequest(HTTPXRequest):
+    def __init__(self, *args, max_concurrent, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sem = asyncio.Semaphore(max_concurrent)
+
+    async def do_request(self, *args, **kwargs):
+        async with self._sem:
+            for delay in (1, 2, 5):
+                try:
+                    return await asyncio.wait_for(
+                        super().do_request(*args, **kwargs),
+                        timeout=15
+                    )
+
+                except (TimedOut, NetworkError) as exc:
+                    last_exc = exc
+                    await asyncio.sleep(delay)
+
+                except asyncio.TimeoutError:
+                    last_exc = TimeoutError("HTTP request stuck")
+                    await asyncio.sleep(delay)
+
+            raise last_exc
+
+
+def get_app(is_test: bool = False) -> Application:
+    token = (
+        TELEGRAM_BOT_TEST_TOKEN
+        if is_test
+        else TELEGRAM_BOT_TOKEN
+    )
+
+    request = LimitedHTTPXRequest(
+        connection_pool_size=100,
+        read_timeout=10,
+        write_timeout=10,
+        connect_timeout=10,
+        pool_timeout=5,
+        max_concurrent=40,
+        proxy=TELEGRAM_PROXY,
+    )
+
+    get_updates_request = LimitedHTTPXRequest(
+        connection_pool_size=10,
+        pool_timeout=30,
+        read_timeout=30,
+        write_timeout=30,
+        connect_timeout=30,
+        max_concurrent=2,
+        proxy=TELEGRAM_PROXY,
+    )
+
+    app = (Application.builder()
+           .token(token)
+           .arbitrary_callback_data(True)
+           .request(request)
+           .get_updates_request(get_updates_request)
+           .build())
+
+    return app

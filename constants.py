@@ -2,6 +2,7 @@ import os
 
 TELEGRAM_BOT_TOKEN = os.environ.get('WIKIFEATTOKEN')
 TELEGRAM_BOT_TEST_TOKEN = os.environ.get('WIKIFEATTESTTOKEN')
+TELEGRAM_PROXY = os.environ.get('TELEGRAM_PROXY')
 OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -9,7 +10,7 @@ FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")
 SELF_MADE_IMAGE_CASE = "If this appears in an exception, generate the image manually for this case."
 
 CHANNEL_USERNAME = "@wikifeat"
-User_Agent = 'wikifeat/0.53 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.54 (https://github.com/petsernik/wikifeat)'
 
 PAGE_SIZE = 8
 

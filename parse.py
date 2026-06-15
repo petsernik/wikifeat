@@ -7,14 +7,14 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from telegram.ext import ContextTypes, Application
+from telegram.ext import ContextTypes
 
-from constants import TELEGRAM_BOT_TOKEN, SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME, TELEGRAM_BOT_TEST_TOKEN
+from constants import SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from filter import is_article
 from i18n import TKey, is_unknown_author
-from models import Article, Image, ArticleContext, ArticleContextRequest, Config
+from models import Article, Image, ArticleContext, ArticleContextRequest, Config, get_app
 from parsers import LANG_PARSERS
 from utils import (
     get_request,
@@ -31,7 +31,8 @@ from utils import (
     ends_with_one_char_abbr,
     unquote_url,
     has_link,
-    quote_url, get_img_buf_by_text,
+    quote_url,
+    get_img_buf_by_text,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -471,13 +472,7 @@ async def run(context: ContextTypes.DEFAULT_TYPE, config: Config) -> bool:
 async def runner(async_main_for_bot, is_test: bool):
     await init_db(DB_TEST_NAME if is_test else DB_NAME)
 
-    token = (
-        TELEGRAM_BOT_TEST_TOKEN
-        if is_test
-        else TELEGRAM_BOT_TOKEN
-    )
-
-    app = Application.builder().token(token).build()
+    app = get_app(is_test)
 
     try:
         await app.initialize()
