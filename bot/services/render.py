@@ -3,8 +3,9 @@ from telegram import InputMediaPhoto, InputMediaAnimation, InlineKeyboardMarkup
 from bot.keyboards.disambig import build_disambig_keyboard
 from bot.keyboards.reading import build_article_keyboard_with_reading_button, build_reading_keyboard
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
-from constants import SELF_MADE_IMAGE_CASE
+from constants import SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE
 from db import update_image_desc
+from i18n import TKey
 from models import DisambigLevel, get_config
 from parse import get_caption, get_article
 from utils import get_img_buf_by_text
@@ -51,6 +52,9 @@ async def render_article(
     if article.image:
         if article.image.desc == SELF_MADE_IMAGE_CASE:
             media = get_img_buf_by_text(article.title)
+        elif article.image.desc == NAZI_IMAGE_CASE:
+            media = get_img_buf_by_text(article.title)
+            article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
         else:
             media = article.image.desc
             media_is_animation = article.image.is_animation

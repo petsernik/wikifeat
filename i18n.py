@@ -56,6 +56,7 @@ class TKey(str, Enum):
     PROCESSING_ERROR = 'processing_error'
 
     WIKIMEDIA_COMMONS_TITLE = 'wikimedia_commons_title'
+    NAZI_REJECT_TEXT = 'nazi_reject_text'
 
 
 # ISO 639-1
@@ -643,4 +644,67 @@ WIKIMEDIA_COMMONS_TITLE_TRANSLATIONS = {
 }
 
 for lang, data in WIKIMEDIA_COMMONS_TITLE_TRANSLATIONS.items():
+    TRANSLATIONS.setdefault(lang, {}).update(data)
+
+NAZI_REJECT_TRANSLATIONS = {
+    'ru': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Данная публикация носит исключительно историко-просветительский характер, '
+            'направлена на осуждение преступлений нацизма и не преследует целей '
+            'пропаганды или оправдания экстремистской идеологии.'
+        ),
+    },
+    'en': {
+        TKey.NAZI_REJECT_TEXT: (
+            'This publication is intended solely for historical and educational purposes, '
+            'aims to condemn the crimes of Nazism, and does not seek to promote or justify '
+            'extremist ideology.'
+        ),
+    },
+    'de': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Diese Veröffentlichung dient ausschließlich historischen und '
+            'bildungsbezogenen Zwecken, soll die Verbrechen des Nationalsozialismus '
+            'verurteilen und verfolgt nicht das Ziel, extremistische Ideologien zu '
+            'verbreiten oder zu rechtfertigen.'
+        ),
+    },
+    'fr': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Cette publication a un caractère exclusivement historique et éducatif, '
+            'vise à condamner les crimes du nazisme et n’a pas pour but de promouvoir '
+            'ou de justifier une idéologie extrémiste.'
+        ),
+    },
+    'es': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Esta publicación tiene un carácter exclusivamente histórico y educativo, '
+            'está destinada a condenar los crímenes del nazismo y no persigue fines '
+            'de propaganda ni de justificación de ideologías extremistas.'
+        ),
+    },
+    'it': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Questa pubblicazione ha esclusivamente finalità storiche ed educative, '
+            'mira a condannare i crimini del nazismo e non intende promuovere né '
+            'giustificare ideologie estremiste.'
+        ),
+    },
+    'pt': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Esta publicação tem caráter exclusivamente histórico e educativo, '
+            'destina-se a condenar os crimes do nazismo e não tem como objetivo '
+            'promover ou justificar ideologias extremistas.'
+        ),
+    },
+    'pl': {
+        TKey.NAZI_REJECT_TEXT: (
+            'Publikacja ta ma wyłącznie charakter historyczny i edukacyjny, '
+            'służy potępieniu zbrodni nazizmu i nie ma na celu propagowania ani '
+            'usprawiedliwiania ideologii ekstremistycznych.'
+        ),
+    },
+}
+
+for lang, data in NAZI_REJECT_TRANSLATIONS.items():
     TRANSLATIONS.setdefault(lang, {}).update(data)

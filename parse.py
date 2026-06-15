@@ -2,14 +2,13 @@ import asyncio
 import io
 import re
 import sys
-from typing import Optional
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from telegram.ext import ContextTypes
 
-from constants import SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME
+from constants import SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME, NAZI_IMAGE_CASE
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
 from filter import is_article
@@ -43,10 +42,10 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 # =========================
 # IMAGE BY TAG
 # =========================
-def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optional[Image]:
+def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Image:
     img_tag = main_block.select_one('a[href] img')
     if not img_tag:
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     image_page_url = get_quote_url_by_tag(netloc, img_tag)
     return get_image_by_link(image_page_url, ctx)
@@ -55,16 +54,16 @@ def get_image_by_tag(netloc: str, main_block: Tag, ctx: ArticleContext) -> Optio
 # =========================
 # IMAGE BY LINK
 # =========================
-def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Image]:
+def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Image:
     if (image_page_url.endswith(":Commons-logo.svg")
             and ctx.url_or_title != ctx.t(TKey.WIKIMEDIA_COMMONS_TITLE)):
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     netloc = urlparse(image_page_url).netloc
     response = get_request(image_page_url)
 
     if response.status_code in (404, 429):
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
     if response.status_code != 200:
         raise Exception(
             f'Unexpected response code when get image page: {response.status_code}\n'
@@ -72,6 +71,11 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
         )
 
     image_soup = BeautifulSoup(response.text, 'html.parser')
+
+    # nazi image case
+    nazi_img = image_soup.find('img', alt='Nazi symbol')
+    if nazi_img:
+        return pre_image_by_text(ctx, NAZI_IMAGE_CASE)
 
     image_url = None
     width_max, height_max = 2000, 2000
@@ -94,7 +98,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
             image_url = get_quote_url_by_tag(netloc, file_link_tag)
 
     if not image_url:
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     raw_licenses = {
         re.sub(r'\s+', ' ', tag.get_text(strip=True))
@@ -102,13 +106,13 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
     }
 
     if not raw_licenses:
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     fair_use_keywords = {ctx.t(TKey.FAIR_USE), "Fair use"}
     if ctx.lang == 'fr':
         fair_use_keywords.add("marque déposée")
     if not raw_licenses.isdisjoint(fair_use_keywords):
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     replacements = {
         "CC BY-SA 4.0": "CC BY-SA",
@@ -139,7 +143,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
         lst[1] = lst[1][:-1] + 'if_/'
         req = get_request('https://'.join(lst))
         if req.status_code != 200:
-            return None
+            return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
         image_url = req.url
 
     image_author_html = extract_attrs_info(
@@ -168,7 +172,7 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
     )
 
     if not source_html:
-        return None
+        return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     unknown = False
 
@@ -215,9 +219,9 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Optional[Imag
 # =========================
 # IMAGE BY TEXT
 # =========================
-def empty_self_made_image(ctx: ArticleContext) -> Image:
+def pre_image_by_text(ctx: ArticleContext, desc: str) -> Image:
     return Image(
-        desc=SELF_MADE_IMAGE_CASE,
+        desc=desc,
         licenses=['CC0'],
         page_url='https://typodermicfonts.com/public-domain/',
         author_html=ctx.t(TKey.FONTS_AUTHOR, author='Ray Larabie'),
@@ -316,6 +320,9 @@ def get_caption(
 # =========================
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
+    if article.image.desc == NAZI_IMAGE_CASE:
+        article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
+
     caption = get_caption(article, rules_url, ctx)
 
     for target in targets:
@@ -327,15 +334,15 @@ async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, 
             )
             continue
 
-        if article.image.desc == SELF_MADE_IMAGE_CASE:
-            photo = get_img_buf_by_text(article.title)  # self-made photo
+        if article.image.desc in (SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE):
+            media = get_img_buf_by_text(article.title)  # self-made media
         else:
-            photo = article.image.desc  # file_id или URL
+            media = article.image.desc  # file_id или URL
 
         if article.image.is_animation:
             msg = await context.bot.send_animation(
                 chat_id=target,
-                animation=photo,
+                animation=media,
                 caption=caption,
                 parse_mode='HTML'
             )
@@ -343,7 +350,7 @@ async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, 
         else:
             msg = await context.bot.send_photo(
                 chat_id=target,
-                photo=photo,
+                photo=media,
                 caption=caption,
                 parse_mode='HTML'
             )
@@ -424,10 +431,7 @@ async def get_article(
         return None, ctx
 
     if ctx.with_image:
-        article.image = (
-                get_image_by_tag(netloc, main_block, ctx)
-                or empty_self_made_image(ctx)
-        )
+        article.image = get_image_by_tag(netloc, main_block, ctx)
 
     article.link = quote_url(article.link)
     url_final = article.link

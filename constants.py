@@ -7,10 +7,12 @@ OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")
+NAZI_IMAGE_CASE = \
+    "I condemn nazi ideology. If this appears in an exception, generate the image manually for this case."
 SELF_MADE_IMAGE_CASE = "If this appears in an exception, generate the image manually for this case."
 
 CHANNEL_USERNAME = "@wikifeat"
-User_Agent = 'wikifeat/0.54 (https://github.com/petsernik/wikifeat)'
+User_Agent = 'wikifeat/0.55 (https://github.com/petsernik/wikifeat)'
 
 PAGE_SIZE = 8
 
