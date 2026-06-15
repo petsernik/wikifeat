@@ -127,6 +127,9 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 Данный скрипт может использоваться даже на обычном компьютере и перезапускаться автоматически даже после перезагрузки
 устройства, далее описывается как это сделать.
 
+**Заметка**: скрипт для автозапуска временно скрывает ваши локальные изменения в репозитории (на время выполнения скрипта), 
+но затем возвращает их обратно, в этот момент лучше не редактировать код или отключить временно автозапуск.
+
 ### Windows
 
 Откройте планировщик задач (Win + R > taskschd.msc), нажмите "Создать задачу...", напишите название задачи, добавьте
@@ -139,7 +142,8 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 ### Linux / macOS
 
 Для автоматизации работы можно использовать **cron** — стандартный планировщик задач в UNIX-системах.  
-Рекомендуется использовать вспомогательный скрипт `script.sh`, который обновляет проект и запускает бота в фоне.
+Рекомендуется использовать вспомогательный скрипт `script.sh`, который обновляет проект и кратковременно 
+запускает бота в фоне.
 
 1. Убедитесь, что проект работает вручную:
    ```bash
@@ -304,6 +308,9 @@ yet necessary.
 This script can run on an ordinary computer and be restarted automatically even after a device reboot.
 Below are instructions for each system.
 
+**Note**: script for autorun temporarily stashes your local repository changes while it runs and restores them afterward. 
+To avoid conflicts, do not edit the code during this process, or temporarily disable autorun.
+
 ### Windows
 
 Open Task Scheduler (Win + R → `taskschd.msc`), click **"Create Task…"**, give it a name, add a trigger (for example:  
@@ -318,7 +325,7 @@ Review all **conditions** and **settings** to ensure the task runs reliably.
 ### Linux / macOS
 
 For automation, use **cron**, the standard UNIX task scheduler. It is recommended to use the helper script `script.sh`
-which updates the project and runs the bot in the background.
+which updates the project and briefly runs the bot in the background.
 
 1. Make sure the project works manually:
     ```bash
