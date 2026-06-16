@@ -320,7 +320,7 @@ def get_caption(
 # =========================
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
-    if article.image.desc == NAZI_IMAGE_CASE:
+    if article.image and article.image.desc == NAZI_IMAGE_CASE:
         article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
 
     caption = get_caption(article, rules_url, ctx)

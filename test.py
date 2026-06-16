@@ -137,8 +137,8 @@ async def main(app: Application):
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
     # await cleanup_reserved_pages()
-    await _test_main_page(app, "fr", True)
-    # await _test_page(app, 'ru', 'Голова', True)
+    # await _test_main_page(app, "fr", True)
+    await _test_page(app, 'ru', 'Мария Монтес', False)
     # ====== TEST UPDATING FEATURED ALL ======
     # for lang in TRANSLATIONS.keys():
     #     try:
