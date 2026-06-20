@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import time
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Any
 
@@ -353,16 +354,23 @@ class DisambigSession:
 class LimitedHTTPXRequest(HTTPXRequest):
     def __init__(self, *args, max_concurrent, **kwargs):
         super().__init__(*args, **kwargs)
+
         self._sem = asyncio.Semaphore(max_concurrent)
+
+        self.last_success = time.monotonic()
 
     async def do_request(self, *args, **kwargs):
         async with self._sem:
             for delay in (1, 2, 5):
                 try:
-                    return await asyncio.wait_for(
+                    result = await asyncio.wait_for(
                         super().do_request(*args, **kwargs),
                         timeout=15
                     )
+
+                    self.last_success = time.monotonic()
+
+                    return result
 
                 except (TimedOut, NetworkError) as exc:
                     last_exc = exc
@@ -402,11 +410,16 @@ def get_app(is_test: bool = False) -> Application:
         proxy=TELEGRAM_PROXY,
     )
 
-    app = (Application.builder()
-           .token(token)
-           .arbitrary_callback_data(True)
-           .request(request)
-           .get_updates_request(get_updates_request)
-           .build())
+    app = (
+        Application.builder()
+        .token(token)
+        .arbitrary_callback_data(True)
+        .request(request)
+        .get_updates_request(get_updates_request)
+        .build()
+    )
+
+    app.bot_data["bot_request"] = request
+    app.bot_data["polling_request"] = get_updates_request
 
     return app
