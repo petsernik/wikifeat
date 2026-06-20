@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 import sys
 import time
@@ -106,7 +107,8 @@ def main():
     async def post_init(_: Application):
         await init_db(DB_TEST_NAME if is_test else DB_NAME)
 
-        app.create_task(watchdog(app))
+        task = asyncio.create_task(watchdog(app))
+        app.bot_data["watchdog_task"] = task
 
         for lang in TRANSLATIONS.keys():
             try:
@@ -125,6 +127,19 @@ def main():
 
     async def post_shutdown(_: Application):
         await close_db()
+
+        task = app.bot_data.get("watchdog_task")
+
+        if task:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        req = app.bot_data["bot_request"]
+        poll = app.bot_data["polling_request"]
+
+        await req.shutdown()
+        await poll.shutdown()
 
     app.post_init = post_init
     app.post_shutdown = post_shutdown

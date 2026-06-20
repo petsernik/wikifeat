@@ -419,7 +419,10 @@ def get_app(is_test: bool = False) -> Application:
         .build()
     )
 
-    app.bot_data["bot_request"] = request
-    app.bot_data["polling_request"] = get_updates_request
+    app.bot_data.update({
+        "bot_request": request,
+        "polling_request": get_updates_request,
+        "watchdog_task": None,
+    })
 
     return app
