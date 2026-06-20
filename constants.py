@@ -5,9 +5,9 @@ TELEGRAM_BOT_TEST_TOKEN = os.environ.get('WIKIFEATTESTTOKEN')
 TELEGRAM_PROXY = os.environ.get('TELEGRAM_PROXY')
 OWNER_ID = int(os.getenv("TELEGRAM_ID_OWNER", "0"))
 
-WATCHDOG_SLEEP_TIME = 45
-RESTART_COOLDOWN = 90
-DEAD_TIMEOUT = 45
+WATCHDOG_SLEEP_TIME = 45.0
+RESTART_COOLDOWN = 90.0
+DEAD_TIMEOUT = 45.0
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(DIR_PATH, "Renju.otf")

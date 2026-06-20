@@ -47,7 +47,7 @@ async def reset_http_layer(app: Application):
 
 
 async def watchdog(app: Application):
-    last_restart = 0
+    last_restart = 0.0
 
     while True:
         await asyncio.sleep(WATCHDOG_SLEEP_TIME)
@@ -60,18 +60,14 @@ async def watchdog(app: Application):
         bot_dead = now - request.last_success > DEAD_TIMEOUT
         polling_dead = now - polling_request.last_success > DEAD_TIMEOUT
 
-        if not (bot_dead or polling_dead):
+        if not (bot_dead and polling_dead):
             continue
 
         # 🔒 анти-спам рестартов
         if now - last_restart < RESTART_COOLDOWN:
             continue
 
-        logger.warning(
-            "watchdog triggered: bot_dead=%s polling_dead=%s",
-            bot_dead,
-            polling_dead,
-        )
+        logger.warning("watchdog triggered: bot_dead and polling_dead")
 
         try:
             await reset_http_layer(app)
