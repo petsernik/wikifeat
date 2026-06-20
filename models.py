@@ -9,6 +9,8 @@ from bs4 import Tag
 from telegram.error import TimedOut, NetworkError
 from telegram.ext import Application
 from telegram.request import HTTPXRequest
+from httpx import ConnectError
+from httpcore import ConnectError as CoreConnectError
 
 from constants import PAGE_SIZE, TELEGRAM_BOT_TEST_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_PROXY
 from i18n import TKey, translate, TRANSLATIONS
@@ -351,6 +353,12 @@ class DisambigSession:
         return self.back()
 
 
+class LimitedHTTPStuckError(Exception):
+    def __init__(self, cause: Exception):
+        self.cause = cause
+        super().__init__(f"HTTP stuck due to {type(cause).__name__}")
+
+
 class LimitedHTTPXRequest(HTTPXRequest):
     def __init__(self, *args, max_concurrent, **kwargs):
         super().__init__(*args, **kwargs)
@@ -372,15 +380,11 @@ class LimitedHTTPXRequest(HTTPXRequest):
 
                     return result
 
-                except (TimedOut, NetworkError) as exc:
+                except (TimedOut, NetworkError, ConnectError, CoreConnectError, asyncio.TimeoutError) as exc:
                     last_exc = exc
                     await asyncio.sleep(delay)
 
-                except asyncio.TimeoutError:
-                    last_exc = TimeoutError("HTTP request stuck")
-                    await asyncio.sleep(delay)
-
-            raise last_exc
+            raise LimitedHTTPStuckError(last_exc)
 
 
 def get_app(is_test: bool = False) -> Application:
