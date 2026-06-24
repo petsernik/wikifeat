@@ -402,35 +402,38 @@ def update_links(netloc: str, html_code: str) -> str:
     return str(soup)
 
 
+URL_RE = re.compile(r'https://[^\s<>"\']+')
+
+
 def replace_links_with_numbers(html_code: str) -> str:
-    """Заменяет ссылки в тексте (но не в тегах) на числа"""
+    """Заменяет ссылки в тексте (но не внутри HTML-тегов) на [1], [2], ..."""
     counter = 0
     links_map = {}
-    depth = 0
-    prefix = 'https://'
-    parts = []
-    stop_chars = string.whitespace + '"()[]{}<>,!'
 
-    prev, i = 0, 0
-    while i < len(html_code):
-        if html_code[i] == "<":
-            depth += 1
-        elif html_code[i] == ">":
-            depth -= 1
-        if depth == 0 and html_code.startswith(prefix, i):
-            parts.append(html_code[prev:i])
-            end = i + len(prefix)
-            while end < len(html_code) and html_code[end] not in stop_chars:
-                end += 1
-            link = html_code[i:end]
-            if link not in links_map:
-                counter += 1
-                links_map[link] = f'[{counter}]'
-            parts.append(links_map[link])
-            prev, i = end, end
-        else:
-            i += 1
-    parts.append(html_code[prev:])
+    def replace_url(match: re.Match[str]) -> str:
+        nonlocal counter
+
+        url = match.group(0)
+
+        # Пунктуация после ссылки относится к тексту, а не к URL
+        trailing = ''
+        while url and url[-1] in '.,!?;:':
+            trailing = url[-1] + trailing
+            url = url[:-1]
+
+        if url not in links_map:
+            counter += 1
+            links_map[url] = f'[{counter}]'
+
+        return links_map[url] + trailing
+
+    # Разбиваем на HTML-теги и текст между ними
+    parts = re.split(r'(<[^>]*>)', html_code)
+
+    # Обрабатываем только текстовые части
+    for i in range(0, len(parts), 2):
+        parts[i] = URL_RE.sub(replace_url, parts[i])
+
     return ''.join(parts)
 
 
