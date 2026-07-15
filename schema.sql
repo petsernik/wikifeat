@@ -75,3 +75,10 @@ CREATE TABLE IF NOT EXISTS skip_prefixes (
     prefixes TEXT NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS process_heartbeat (
+    process TEXT PRIMARY KEY,
+    pid INTEGER NOT NULL,
+    pid_created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);

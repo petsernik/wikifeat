@@ -3,7 +3,9 @@ import contextlib
 import logging
 import sys
 import time
+from datetime import datetime
 
+import psutil
 from telegram.ext import (
     Application,
     MessageHandler,
@@ -12,13 +14,19 @@ from telegram.ext import (
 
 from bot.handlers.registry import get_handlers
 from bot.handlers.text import handle_text
-from constants import DB_NAME, DB_TEST_NAME, WATCHDOG_SLEEP_TIME, DEAD_TIMEOUT, RESTART_COOLDOWN
-from db import init_db, close_db, has_featured_articles, update_featured_articles_in_db
+from constants import DB_NAME, DB_TEST_NAME, WATCHDOG_SLEEP_TIME, DEAD_TIMEOUT, RESTART_COOLDOWN, BOT_PROCESS_NAME
+from db import init_db, close_db, has_featured_articles, update_featured_articles_in_db, update_process_heartbeat, \
+    delete_process_heartbeat
 from i18n import TRANSLATIONS
 from models import get_app
 from parsers import fetch_featured_titles
 
 logger = logging.getLogger(__name__)
+
+_process = psutil.Process()
+
+PID = _process.pid
+PID_CREATED = datetime.fromtimestamp(_process.create_time())
 
 
 async def safe_call(coro, timeout, name):
@@ -74,10 +82,25 @@ async def watchdog(app: Application):
 
             last_restart = time.monotonic()
 
-            logger.warning("[WATCHDOG] watchdog: HTTP layer reset successful")
+            logger.warning("[WATCHDOG] HTTP layer reset successful")
 
         except Exception:
-            logger.exception("watchdog failed completely")
+            logger.exception("[WATCHDOG] HTTP layer reset failed")
+
+
+async def heartbeat():
+    while True:
+        try:
+            await update_process_heartbeat(
+                BOT_PROCESS_NAME,
+                PID,
+                PID_CREATED,
+            )
+
+        except Exception:
+            logger.exception("heartbeat failed")
+
+        await asyncio.sleep(20)
 
 
 def register_handlers(app):
@@ -102,6 +125,10 @@ def main():
 
         await init_db(DB_TEST_NAME if is_test else DB_NAME)
         logger.info("[INIT] database initialized")
+
+        heartbeat_task = asyncio.create_task(heartbeat())
+        app.bot_data["heartbeat_task"] = heartbeat_task
+        logger.info("[INIT] heartbeat task started")
 
         task = asyncio.create_task(watchdog(app))
         app.bot_data["watchdog_task"] = task
@@ -134,6 +161,19 @@ def main():
 
         await close_db()
         logger.info("[SHUTDOWN] database closed")
+
+        task = app.bot_data.get("heartbeat_task")
+
+        if task:
+            logger.info("[SHUTDOWN] cancelling heartbeat task")
+            task.cancel()
+
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+            await delete_process_heartbeat(BOT_PROCESS_NAME)
+
+            logger.info("[SHUTDOWN] heartbeat stopped")
 
         task = app.bot_data.get("watchdog_task")
 

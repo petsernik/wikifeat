@@ -1,12 +1,15 @@
+import asyncio
 import copy
 import html
+import logging
+import os
 import re
-import string
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timezone
 from io import BytesIO
 from typing import Optional
 from urllib.parse import urlparse, unquote, quote, parse_qs
 
+import psutil
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from bs4 import Tag, BeautifulSoup
@@ -570,3 +573,86 @@ def normalize_lang(code: str | None):
         return "en"
     base = code.lower().split("-")[0]
     return base if base in TRANSLATIONS.keys() else "en"
+
+
+def process_exists(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+logger = logging.getLogger(__name__)
+
+
+async def terminate_process(
+        pid: int,
+        expected_created_at: datetime,
+        timeout: float = 5.0,
+) -> bool:
+    """
+    Завершает процесс только если:
+      1) PID существует;
+      2) время создания совпадает.
+
+    Возвращает True если процесс завершён
+    либо уже отсутствует.
+    """
+
+    try:
+        proc = psutil.Process(pid)
+
+    except psutil.NoSuchProcess:
+        logger.info("Process %s already exited", pid)
+        return True
+
+    # psutil возвращает timestamp в секундах
+    actual_created = datetime.fromtimestamp(
+        proc.create_time(),
+        tz=timezone.utc,
+    )
+
+    # защита от переиспользованного PID
+    if abs((actual_created - expected_created_at).total_seconds()) > 1:
+        logger.warning(
+            "PID %s belongs to another process "
+            "(expected=%s actual=%s)",
+            pid,
+            expected_created_at,
+            actual_created,
+        )
+        return False
+
+    logger.info("Terminating process %s", pid)
+
+    proc.terminate()
+
+    try:
+        await asyncio.to_thread(proc.wait, timeout)
+
+        logger.info("Process %s terminated", pid)
+        return True
+
+    except psutil.TimeoutExpired:
+
+        logger.warning(
+            "Process %s did not terminate, killing...",
+            pid,
+        )
+
+        proc.kill()
+
+        try:
+            await asyncio.to_thread(proc.wait, 3)
+
+            logger.info("Process %s killed", pid)
+            return True
+
+        except psutil.TimeoutExpired:
+
+            logger.error(
+                "Unable to kill process %s",
+                pid,
+            )
+            return False

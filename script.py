@@ -1,16 +1,26 @@
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 
 from telegram.ext import Application
 
+from constants import BOT_PROCESS_NAME, ENSURE_BOT_RUNNING
+from db import get_process_heartbeat, delete_process_heartbeat
 from i18n import TRANSLATIONS, TKey
 from models import Config
 from parse import run, async_run
+from utils import terminate_process
 
 
 # =========================
 # MAIN LOGIC
 # =========================
 async def main(app: Application):
+    if ENSURE_BOT_RUNNING:
+        await ensure_bot_running()
+
     lang = "ru"
 
     ctx = SimpleNamespace(bot=app.bot)
@@ -48,6 +58,46 @@ async def main(app: Application):
     )
 
     await run(ctx, cfg_text)
+
+
+def start_bot():
+    subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "bot.main",
+        ],
+        creationflags=(
+            subprocess.CREATE_NEW_PROCESS_GROUP
+            if os.name == "nt"
+            else 0
+        ),
+    )
+
+
+async def ensure_bot_running():
+    hb = await get_process_heartbeat(BOT_PROCESS_NAME)
+    if hb is None:
+        start_bot()
+        return
+
+    pid, created_at, updated_at = hb
+
+    now = datetime.now(timezone.utc)
+
+    if now - updated_at < timedelta(minutes=1):
+        return
+
+    print("Bot heartbeat expired, bot will restart")
+
+    await terminate_process(
+        pid,
+        created_at,
+    )
+
+    await delete_process_heartbeat(BOT_PROCESS_NAME)
+
+    start_bot()
 
 
 if __name__ == "__main__":

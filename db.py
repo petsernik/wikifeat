@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple
 
@@ -554,3 +555,67 @@ async def insert_from_backup(
         #         """)
 
         return len(values)
+
+
+# =========================
+# PROCESS HEARTBEAT
+# =========================
+
+async def update_process_heartbeat(
+        process: str,
+        pid: int,
+        pid_created_at: datetime,
+):
+    await pool.execute(
+        """
+        INSERT INTO process_heartbeat(
+            process,
+            pid,
+            pid_created_at,
+            updated_at
+        )
+        VALUES($1,$2,$3,NOW())
+
+        ON CONFLICT(process)
+        DO UPDATE
+        SET
+            pid = EXCLUDED.pid,
+            pid_created_at = EXCLUDED.pid_created_at,
+            updated_at = EXCLUDED.updated_at
+        """,
+        process,
+        pid,
+        pid_created_at,
+    )
+
+
+async def get_process_heartbeat(
+        process: str,
+) -> tuple[int, datetime, datetime] | None:
+    row = await pool.fetchrow(
+        """
+        SELECT
+            pid,
+            pid_created_at,
+            updated_at
+        FROM process_heartbeat
+        WHERE process = $1
+        """,
+        process,
+    )
+
+    if row is None:
+        return None
+
+    return (
+        row["pid"],
+        row["pid_created_at"],
+        row["updated_at"],
+    )
+
+
+async def delete_process_heartbeat(process: str):
+    await pool.execute("""
+        DELETE FROM process_heartbeat
+        WHERE process = $1
+    """, process)
