@@ -159,9 +159,6 @@ def main():
     async def post_shutdown(_: Application):
         logger.info("[SHUTDOWN] starting application shutdown")
 
-        await close_db()
-        logger.info("[SHUTDOWN] database closed")
-
         task = app.bot_data.get("heartbeat_task")
 
         if task:
@@ -193,6 +190,9 @@ def main():
 
         await req.shutdown()
         await poll.shutdown()
+
+        await close_db()
+        logger.info("[SHUTDOWN] database closed")
 
         logger.info("[SHUTDOWN] completed successfully")
 
