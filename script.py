@@ -61,17 +61,25 @@ async def main(app: Application):
 
 
 def start_bot():
+    creation_flags = 0
+
+    if os.name == "nt":
+        creation_flags = (
+            subprocess.CREATE_NO_WINDOW
+            | subprocess.CREATE_NEW_PROCESS_GROUP
+        )
+
     subprocess.Popen(
         [
             sys.executable,
             "-m",
             "bot.main",
         ],
-        creationflags=(
-            subprocess.CREATE_NEW_PROCESS_GROUP
-            if os.name == "nt"
-            else 0
-        ),
+        creationflags=creation_flags,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
     )
 
 
@@ -85,7 +93,7 @@ async def ensure_bot_running():
 
     now = datetime.now(timezone.utc)
 
-    if now - updated_at < timedelta(minutes=1):
+    if now - updated_at < timedelta(seconds=45):
         return
 
     print("Bot heartbeat expired, bot will restart")
