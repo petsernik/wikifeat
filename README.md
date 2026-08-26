@@ -26,10 +26,16 @@ https://t.me/wikifeatbot. Его код хранится в файлах пап�
 - `beautifulsoup4` — MIT License
 - `bs4` — MIT License
 - `aiohttp` — Apache 2.0 License
+- `httpx` — BSD 3-Clause License
+- `httpcore` — BSD 3-Clause License
+- `psutil` — BSD 3-Clause License
 
 Технологии:
 
 - `PostgreSQL` — PostgreSQL License
+
+Полные тексты лицензий доступны в репозиториях соответствующих библиотек и
+на официальных сайтах используемого программного обеспечения.
 
 Полные тексты лицензий доступны в репозиториях соответствующих библиотек и
 на официальных сайтах используемого программного обеспечения.
@@ -208,6 +214,9 @@ Libraries:
 - `beautifulsoup4` — MIT License
 - `bs4` — MIT License
 - `aiohttp` — Apache 2.0 License
+- `httpx` — BSD 3-Clause License
+- `httpcore` — BSD 3-Clause License
+- `psutil` — BSD 3-Clause License
 
 Technologies:
 
