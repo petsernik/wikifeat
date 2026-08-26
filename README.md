@@ -122,8 +122,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
     ```
 
 После этого в Вашем канале должен появиться пост в соответствии с выбранной ссылкой. Название заголовка опубликованной
-статьи сохраняется в файл, чтобы не публиковать одно и то же подряд при повторном запуске. Конечно можно было бы
-использовать базу данных вместо файла, но для моих нужд в этом пока нет необходимости.
+статьи сохраняется в базу данных `wikifeat`, чтобы не публиковать одно и то же подряд при повторном запуске скрипта.
 
 ## Автоматизация запусков
 
@@ -305,9 +304,8 @@ Assuming your GitHub username is `NickName` and you forked the project:
     ```
 
 After this, a post with article corresponding to the selected link should appear in your channel.
-The title of this article is saved in a file .txt to prevent the same post from being published repeatedly when the
-script is run again. Of course, it would be possible to use database instead of a file, but for my needs this is not
-yet necessary.
+The title of this article is saved in the database `wikikifeat` to prevent the same post from being published repeatedly when the
+script is run again.
 
 ## Automation
 
