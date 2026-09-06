@@ -6,9 +6,21 @@ from bot.services.disambig import get_session, get_disambig_keyboard_from_sessio
 from constants import SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE
 from db import update_image_desc
 from i18n import TKey
-from models import DisambigLevel, get_config
+from models import DisambigLevel, get_config, Article
 from parse import get_caption, get_article
 from utils import get_img_buf_by_text
+
+
+def is_nazi_case(article: Article) -> bool:
+    if article.image and article.image.desc == NAZI_IMAGE_CASE:
+        return True
+
+    text = " ".join(article.paragraphs).lower()
+
+    return any(
+        word in text
+        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fasci")
+    )
 
 
 async def render_article(
@@ -44,17 +56,17 @@ async def render_article(
         article.image = None
         article.paragraphs = [article.paragraphs[page]]
 
+    if is_nazi_case(article):
+        article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
+
     # =========================
     # MEDIA
     # =========================
     media, media_is_animation = None, False
 
     if article.image:
-        if article.image.desc == SELF_MADE_IMAGE_CASE:
+        if article.image.desc == SELF_MADE_IMAGE_CASE or article.image.desc == NAZI_IMAGE_CASE:
             media = get_img_buf_by_text(article.title)
-        elif article.image.desc == NAZI_IMAGE_CASE:
-            media = get_img_buf_by_text(article.title)
-            article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
         else:
             media = article.image.desc
             media_is_animation = article.image.is_animation
@@ -76,7 +88,6 @@ async def render_article(
     # =========================
     # DISAMBIG SESSION UPDATE
     # =========================
-
     if article.is_disambig:
         if edit_message:
             session = get_session(context, edit_message.message_id)
@@ -118,7 +129,8 @@ async def render_article(
             # а затем оригинальные кнопки
 
             # Получаем кнопки из обеих клавиатур
-            reading_buttons = reading_button_keyboard.inline_keyboard if add_reading_button else InlineKeyboardMarkup([]).inline_keyboard
+            reading_buttons = reading_button_keyboard.inline_keyboard if add_reading_button else InlineKeyboardMarkup(
+                []).inline_keyboard
             original_buttons = keyboard.inline_keyboard if keyboard else InlineKeyboardMarkup([]).inline_keyboard
 
             # Объединяем кнопки

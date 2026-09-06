@@ -318,9 +318,21 @@ def get_caption(
 # =========================
 # SEND TO TARGETS (ASYNC)
 # =========================
+def is_nazi_case(article: Article) -> bool:
+    if article.image and article.image.desc == NAZI_IMAGE_CASE:
+        return True
+
+    text = " ".join(article.paragraphs).lower()
+
+    return any(
+        word in text
+        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fasci")
+    )
+
+
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
-    if article.image and article.image.desc == NAZI_IMAGE_CASE:
+    if is_nazi_case(article):
         article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
 
     caption = get_caption(article, rules_url, ctx)
