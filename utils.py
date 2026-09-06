@@ -158,7 +158,7 @@ def is_hidden(tag: Tag) -> bool:
         return True
 
     # role
-    if {"note", "presentation"} & set(_attr_list(tag, "role")):
+    if {"note"} & set(_attr_list(tag, "role")):
         return True
 
     # классы
