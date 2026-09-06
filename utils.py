@@ -662,7 +662,7 @@ def is_nazi_case(article: Article) -> bool:
     if article.image and article.image.desc == NAZI_IMAGE_CASE:
         return True
 
-    text = " ".join(article.paragraphs).lower()
+    text = " ".join(article.paragraphs[:5]).lower()
 
     return any(
         word in text
