@@ -6,21 +6,9 @@ from bot.services.disambig import get_session, get_disambig_keyboard_from_sessio
 from constants import SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE
 from db import update_image_desc
 from i18n import TKey
-from models import DisambigLevel, get_config, Article
+from models import DisambigLevel, get_config
 from parse import get_caption, get_article
-from utils import get_img_buf_by_text
-
-
-def is_nazi_case(article: Article) -> bool:
-    if article.image and article.image.desc == NAZI_IMAGE_CASE:
-        return True
-
-    text = " ".join(article.paragraphs).lower()
-
-    return any(
-        word in text
-        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fasci")
-    )
+from utils import get_img_buf_by_text, is_nazi_case
 
 
 async def render_article(

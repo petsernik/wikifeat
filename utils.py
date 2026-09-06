@@ -16,9 +16,9 @@ from bs4 import Tag, BeautifulSoup
 from bs4.element import PageElement, NavigableString
 from requests import Response
 
-from constants import User_Agent, FONT_PATH
+from constants import User_Agent, FONT_PATH, NAZI_IMAGE_CASE
 from i18n import TRANSLATIONS
-from models import ArticleContext, ParagraphResult
+from models import ArticleContext, ParagraphResult, Article
 
 
 # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
@@ -656,3 +656,15 @@ async def terminate_process(
                 pid,
             )
             return False
+
+
+def is_nazi_case(article: Article) -> bool:
+    if article.image and article.image.desc == NAZI_IMAGE_CASE:
+        return True
+
+    text = " ".join(article.paragraphs).lower()
+
+    return any(
+        word in text
+        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fascis")
+    )

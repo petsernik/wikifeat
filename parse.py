@@ -32,6 +32,7 @@ from utils import (
     has_link,
     quote_url,
     get_img_buf_by_text,
+    is_nazi_case,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -318,18 +319,6 @@ def get_caption(
 # =========================
 # SEND TO TARGETS (ASYNC)
 # =========================
-def is_nazi_case(article: Article) -> bool:
-    if article.image and article.image.desc == NAZI_IMAGE_CASE:
-        return True
-
-    text = " ".join(article.paragraphs).lower()
-
-    return any(
-        word in text
-        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fasci")
-    )
-
-
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
     if is_nazi_case(article):
