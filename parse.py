@@ -98,7 +98,8 @@ def get_image_by_link(image_page_url: str, ctx: ArticleContext) -> Image:
         if file_link_tag and file_link_tag.has_attr('href'):
             image_url = get_quote_url_by_tag(netloc, file_link_tag)
 
-    if not image_url:
+    if not image_url or image_url.startswith('https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/'
+                                             'OOjs_UI_icon_edit-ltr-progressive.svg/'):
         return pre_image_by_text(ctx, SELF_MADE_IMAGE_CASE)
 
     raw_licenses = {
