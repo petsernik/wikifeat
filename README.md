@@ -82,7 +82,7 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
    User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
 4. Создайте локальную таблицу ```wikifeat``` для пользователя ```postgres``` и переменную окружения с названием
-   ```POSTGRES_DB_PASSWORD``` с паролем для этого пользователя (держите пароль в тайне от других!).
+   ```WIKIFEAT_DB_PASSWORD``` с паролем для этого пользователя (держите пароль в тайне от других!).
 5. Создайте переменную окружения с названием ```WIKIFEATTOKEN``` и токеном доступа к своему телеграм-боту в качестве
    значения (важно хранить данный токен в тайне от всех других!). После этого может понадобиться перезагрузка
    консоли или даже устройства.
@@ -263,7 +263,7 @@ Assuming your GitHub username is `NickName` and you forked the project:
    User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
 4. Create a local database named `wikifeat` for the user `postgres` and set an environment variable
-   called `POSTGRES_DB_PASSWORD` containing the password for this user (keep it secret!).
+   called `WIKIFEAT_DB_PASSWORD` containing the password for this user (keep it secret!).
 5. Create an environment variable `WIKIFEATTOKEN` with your Telegram bot token (keep it secret!). After that you
    may need to reboot the shell or the OS.
 6. Fill in the fields in `script.py`:
