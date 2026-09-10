@@ -2,7 +2,7 @@ from typing import Optional, Callable
 
 from bs4 import BeautifulSoup, Tag
 
-from constants import User_Agent
+from constants import USER_AGENT
 from filter import get_skip_prefixes
 from models import Article, ParseResult
 from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url
@@ -328,7 +328,7 @@ from bs4 import BeautifulSoup, Tag
 # =========================
 
 async def fetch_html(url: str) -> str:
-    headers = {"User-Agent": User_Agent}
+    headers = {"User-Agent": USER_AGENT}
 
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as resp:

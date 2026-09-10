@@ -40,28 +40,28 @@ https://t.me/wikifeatbot. Его код хранится в файлах пап�
 ## Условия использования кода
 
 Помимо условий лицензии MIT, настоятельно прошу при первом портировании, копировании, клонировании или форке
-моего проекта заменить значение переменной ```User-Agent``` в файле ```config.py```указав собственное название
+моего проекта заменить значение переменной ```USER_AGENT``` в файле ```constants.py```указав собственное название
 проекта и ссылку.
 
 Например, если Ваш никнейм на GitHub это ```NickName``` и Вы сделали форк, то как вариант Вы можете указать:
 
 ```
-User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
+USER_AGENT = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
 ```
 
-Использование собственного ```User-Agent``` позволит избежать путаницы у волонтёров Wikimedia между
+Использование собственного ```USER_AGENT``` позволит избежать путаницы у волонтёров Wikimedia между
 Вашим проектом и моим.
 
-В случае если это правило будет нарушаться(т.е. не только я буду использовать свой User_Agent) и со стороны
+В случае если это правило будет нарушаться(т.е. не только я буду использовать свой USER_AGENT) и со стороны
 сообщества ко мне возникнут претензии, то мне придётся изменить и согласовать с волонтёрами Wikimedia новый
-```User-Agent```, а также скрыть его от публики — по аналогии с тем как сейчас скрыт токен, дающий доступ
+```USER_AGENT```, а также скрыть его от публики — по аналогии с тем как сейчас скрыт токен, дающий доступ
 к управлению телеграм-ботом(т.е. через переменную окружения).
 
-Подобный ```User-Agent``` я использую согласно требованиям
-[Wikimedia Foundation User-Agent Policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy),
+Подобный ```USER_AGENT``` я использую согласно требованиям
+[Wikimedia Foundation USER_AGENT Policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_USER_AGENT_Policy),
 без его указания в заголовке не получится запрашивать страницы напрямую с сайтов проектов Wikimedia.
 В файле ```utils.py``` уже есть готовая функция ```get_request```, которая автоматически подставляет
-```User-Agent``` из ```config.py``` в параметры заголовка.
+```USER_AGENT``` из ```constants.py``` в параметры заголовка.
 
 ## Первый запуск
 
@@ -77,9 +77,9 @@ User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
     ```bash
     pip install -r requirements.txt
     ```
-3. Замените значение переменной ```User-Agent``` в файле ```config.py``` как указано выше:
+3. Замените значение переменной ```USER_AGENT``` в файле ```constants.py``` как указано выше:
     ```python
-   User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
+   USER_AGENT = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
 4. Создайте локальную таблицу ```wikifeat``` для пользователя ```postgres``` и переменную окружения с названием
    ```WIKIFEAT_DB_PASSWORD``` с паролем для этого пользователя (держите пароль в тайне от других!).
@@ -223,26 +223,26 @@ used software.
 
 ## Usage Terms
 
-In addition to the MIT License Terms, please replace the `User-Agent` value in `config.py` when first porting,
+In addition to the MIT License Terms, please replace the `USER_AGENT` value in `constants.py` when first porting,
 copying, cloning, or forking this project. Specify your project name and link.
 
 E.g. if your GitHub username is `NickName` and you forked the project:
 
 ```python
-User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
+USER_AGENT = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
 ```
 
-Using your own `User-Agent` helps avoid confusion for Wikimedia volunteers between your project and mine.
+Using your own `USER_AGENT` helps avoid confusion for Wikimedia volunteers between your project and mine.
 
-If this rule is violated (i.e., others use my `User-Agent`), I may need to change and coordinate a new `User-Agent`
+If this rule is violated (i.e., others use my `USER_AGENT`), I may need to change and coordinate a new `USER_AGENT`
 with Wikimedia and hide it — similar to how the Telegram bot token is kept secret via an environment variable.
 
-This `User-Agent` is required by the
-[Wikimedia Foundation User-Agent Policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy).
+This `USER_AGENT` is required by the
+[Wikimedia Foundation USER_AGENT Policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_USER_AGENT_Policy).
 Without it, direct page requests to Wikimedia projects will fail.
 
-The `utils.py` file contains a ready-made `get_request` function that automatically inserts the `User-Agent` from
-`config.py` into request headers.
+The `utils.py` file contains a ready-made `get_request` function that automatically inserts the `USER_AGENT` from
+`constants.py` into request headers.
 
 ## First Launch
 
@@ -258,9 +258,9 @@ Assuming your GitHub username is `NickName` and you forked the project:
     ```bash
     pip install -r requirements.txt
     ```
-3. Set the `User-Agent` in `config.py` as described above:
+3. Set the `USER_AGENT` in `constants.py` as described above:
     ```python
-   User_Agent = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
+   USER_AGENT = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifeat)'
     ```
 4. Create a local database named `wikifeat` for the user `postgres` and set an environment variable
    called `WIKIFEAT_DB_PASSWORD` containing the password for this user (keep it secret!).

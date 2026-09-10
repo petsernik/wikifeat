@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from constants import User_Agent
+from constants import USER_AGENT
 from db import get_skip_prefixes_from_db, save_skip_prefixes_to_db
 from i18n import ADDITIONAL_TRANSLATIONS, TKey
 from utils import unquote_url
@@ -31,7 +31,7 @@ async def fetch_skip_prefixes(lang: str) -> Tuple[str, ...]:
         "format": "json"
     }
 
-    headers = {"User-Agent": User_Agent}
+    headers = {"User-Agent": USER_AGENT}
 
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url, params=params) as resp:

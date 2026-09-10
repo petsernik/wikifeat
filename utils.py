@@ -16,14 +16,14 @@ from bs4 import Tag, BeautifulSoup
 from bs4.element import PageElement, NavigableString
 from requests import Response
 
-from constants import User_Agent, FONT_PATH, NAZI_IMAGE_CASE
+from constants import USER_AGENT, FONT_PATH, NAZI_IMAGE_CASE
 from i18n import TRANSLATIONS
 from models import ArticleContext, ParagraphResult, Article
 
 
 # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
 def get_request(url: str) -> Response:
-    headers = {'User-Agent': User_Agent}
+    headers = {'User-Agent': USER_AGENT}
     return requests.get(url, headers=headers, allow_redirects=True)
 
 
