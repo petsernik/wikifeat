@@ -668,6 +668,10 @@ NAZI_CATEGORY_WORDS = (
     "фашизм",
 )
 
+NAZI_CATEGORY_EXCEPTIONS = (
+    "беженцы от нацизма",
+)
+
 
 def is_nazi_category(soup: BeautifulSoup) -> bool:
     catlinks = soup.select_one("#mw-normal-catlinks")
@@ -677,6 +681,8 @@ def is_nazi_category(soup: BeautifulSoup) -> bool:
     categories = catlinks.select("li > a")
 
     return any(
-        any(word in category.get_text(strip=True).lower() for word in NAZI_CATEGORY_WORDS)
+        not any(word in category_text for word in NAZI_CATEGORY_EXCEPTIONS)
+        and any(word in category_text for word in NAZI_CATEGORY_WORDS)
         for category in categories
+        if (category_text := category.get_text(strip=True).lower())
     )
