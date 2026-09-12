@@ -5,10 +5,9 @@ from bot.keyboards.reading import build_article_keyboard_with_reading_button, bu
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
 from constants import SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE
 from db import update_image_desc
-from i18n import TKey
 from models import DisambigLevel, get_config
 from parse import get_caption, get_article
-from utils import get_img_buf_by_text, is_nazi_case
+from utils import get_img_buf_by_text
 
 
 async def render_article(
@@ -43,9 +42,6 @@ async def render_article(
     if reading:
         article.image = None
         article.paragraphs = [article.paragraphs[page]]
-
-    if is_nazi_case(article):
-        article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
 
     # =========================
     # MEDIA

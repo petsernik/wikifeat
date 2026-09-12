@@ -658,13 +658,25 @@ async def terminate_process(
             return False
 
 
-def is_nazi_case(article: Article) -> bool:
-    if article.image and article.image.desc == NAZI_IMAGE_CASE:
-        return True
+NAZI_CATEGORY_WORDS = (
+    "нацист",
+    "нацизм",
+    "nazi",
+    "nazism",
+    "fascis",
+    "фашис",
+    "фашизм",
+)
 
-    text = " ".join(article.paragraphs[:5]).lower()
+
+def is_nazi_category(soup: BeautifulSoup) -> bool:
+    catlinks = soup.select_one("#mw-normal-catlinks")
+    if not catlinks:
+        return False
+
+    categories = catlinks.select("li > a")
 
     return any(
-        word in text
-        for word in ("нацис", "нациз", "фашиз", "фашис", "nazi", "fascis")
+        any(word in category.get_text(strip=True).lower() for word in NAZI_CATEGORY_WORDS)
+        for category in categories
     )

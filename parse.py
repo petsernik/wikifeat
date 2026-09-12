@@ -32,7 +32,7 @@ from utils import (
     has_link,
     quote_url,
     get_img_buf_by_text,
-    is_nazi_case,
+    is_nazi_category,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -322,9 +322,6 @@ def get_caption(
 # =========================
 async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, article: Article, targets: list[int | str],
                           rules_url: str, ctx: ArticleContext):
-    if is_nazi_case(article):
-        article.paragraphs = [ctx.t(TKey.NAZI_REJECT_TEXT)] + article.paragraphs
-
     caption = get_caption(article, rules_url, ctx)
 
     for target in targets:
@@ -426,11 +423,20 @@ async def get_article(
     parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     soup = clean_soup(BeautifulSoup(response.text, 'html.parser'))
 
+    has_nazi_category = is_nazi_category(soup)
+
     parser_res = parser(soup, unquote_url(response.url), last_title)
-    article, netloc, main_block = parser_res.article, parser_res.netloc, parser_res.main_block
+    article, netloc, main_block = (
+        parser_res.article,
+        parser_res.netloc,
+        parser_res.main_block,
+    )
 
     if not article:
         return None, ctx
+
+    if has_nazi_category:
+        article.paragraphs.insert(0, ctx.t(TKey.NAZI_REJECT_TEXT))
 
     if ctx.with_image:
         article.image = get_image_by_tag(netloc, main_block, ctx)
