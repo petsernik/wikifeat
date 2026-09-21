@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, Tag
 from constants import USER_AGENT
 from filter import get_skip_prefixes
 from models import Article, ParseResult
-from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url
+from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url, clean_soup
 
 NONE_RESULT = ParseResult(None, None, None)
 
@@ -33,6 +33,7 @@ def _unexpected(lang: str):
 # DEFAULT PARSER
 # =========================
 def parse_default(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
+    soup = clean_soup(soup)
     main_block = soup.find('div', id='mw-content-text')
     title_tag = soup.find('h1', id='firstHeading')
 
@@ -74,6 +75,7 @@ def parse_featured(
         preprocess_block: Optional[Callable[[Tag], Tag]] = None,
         lang: str = "generic",
 ) -> ParseResult:
+    soup = clean_soup(soup)
     netloc, path = split_url(url)
 
     if not any(path.endswith(suffix) for suffix in path_suffixes):
@@ -244,7 +246,20 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
 
     if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
-        main_block = filter_soup(main_block, remove_kwargs={"role": "presentation"}) if main_block else None
+        if main_block:
+            doc = main_block.find(id='doc')
+            if doc:
+                for sibling in list(doc.next_siblings):
+                    sibling.decompose()
+
+                doc.decompose()
+
+            main_block = clean_soup(main_block)
+
+            main_block = filter_soup(
+                main_block,
+                remove_kwargs={"role": "presentation"},
+            )
 
         link_tag = None
         if main_block:
@@ -273,7 +288,8 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
         return ParseResult(article, netloc, main_block)
 
     if path.endswith('/wiki/Заглавная_страница'):
-        main_block = soup.find('div', id='main-tfa')
+        main_block = clean_soup(soup)
+        main_block = main_block.find('div', id='main-tfa')
 
         link_tag = main_block.find(
             'a',
