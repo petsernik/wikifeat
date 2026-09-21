@@ -63,6 +63,67 @@ USER_AGENT = 'wikifeat_fork_by_NickName/0.0 (https://github.com/NickName/wikifea
 В файле ```utils.py``` уже есть готовая функция ```get_request```, которая автоматически подставляет
 ```USER_AGENT``` из ```constants.py``` в параметры заголовка.
 
+## Структура проекта
+
+```
+wikifeat/
+├── bot/
+│   ├── handlers/
+│   │   ├── admin.py          # Административные команды
+│   │   ├── callbacks.py      # Обработка callback-запросов и навигации
+│   │   ├── commands.py       # Обработчики команд бота
+│   │   ├── reading.py        # Обработка режима чтения статей
+│   │   ├── registry.py       # Регистрация и загрузка обработчиков
+│   │   ├── text.py           # Обработка текстовых сообщений
+│   │   └── workers.py        # Фоновые задачи обработки сообщений
+│   │
+│   ├── keyboards/
+│   │   ├── common.py         # Общие клавиатуры бота
+│   │   ├── disambig.py       # Клавиатуры для страниц неоднозначности
+│   │   ├── lang.py           # Выбор языка
+│   │   └── reading.py        # Клавиатуры режима чтения
+│   │
+│   ├── services/
+│   │   ├── access.py         # Проверка доступа, подписки и лимитов
+│   │   ├── article.py        # Обработка и выдача статей пользователю
+│   │   ├── disambig.py       # Работа с состоянием неоднозначных страниц
+│   │   └── render.py         # Формирование и обновление сообщений Telegram
+│   │
+│   ├── state/
+│   │   └── user_state.py     # Состояние пользователей
+│   │
+│   └── main.py               # Запуск и настройка Telegram-бота
+│
+├── parsing/
+│   ├── filter.py             # Проверка и фильтрация Wikipedia-страниц
+│   ├── image.py              # Получение и обработка изображений статей
+│   ├── parse.py              # Основной процесс получения и обработки статей
+│   └── parsers.py            # Парсеры Wikipedia для разных языков
+│
+├── tests/
+│   └── db_test.py            # Тесты работы с базой данных
+│
+├── constants.py              # Константы проекта
+├── db.py                     # Работа с PostgreSQL
+├── getPID.ps1                # Получение PID процесса бота
+├── hardKillPID.ps1           # Принудительное завершение процесса бота
+├── i18n.py                   # Локализация и перевод текстов
+├── LICENSE                   # Лицензия проекта
+├── models.py                 # Модели данных и конфигурация приложения
+├── README.md                 # Документация проекта
+├── Renju.otf                 # Шрифт для генерации изображений
+├── requirements.txt          # Зависимости Python
+├── schema.sql                # SQL-схема базы данных
+├── script.bat                # Запуск служебного скрипта в Windows
+├── script.py                 # Управление запуском и контролем процесса бота
+├── script.sh                 # Запуск служебного скрипта в Linux
+├── script.vbs                # Фоновый запуск в Windows
+├── setup_env.py              # Интерактивная настройка переменных окружения
+├── softKillPID.ps1           # Корректное завершение процесса бота
+├── test.py                   # Интеграционные и ручные тесты парсинга
+└── utils.py                  # Общие вспомогательные функции
+```
+
 ## Первый запуск
 
 Сперва создайте аккаунт телеграм-бота с помощью https://t.me/BotFather.
@@ -243,6 +304,67 @@ Without it, direct page requests to Wikimedia projects will fail.
 
 The `utils.py` file contains a ready-made `get_request` function that automatically inserts the `USER_AGENT` from
 `constants.py` into request headers.
+
+## Project layout
+
+```
+wikifeat/
+├── bot/
+│   ├── handlers/
+│   │   ├── admin.py          # Administrative commands
+│   │   ├── callbacks.py      # Callback query and navigation handling
+│   │   ├── commands.py       # Bot command handlers
+│   │   ├── reading.py        # Reading mode handling
+│   │   ├── registry.py       # Handler registration and loading
+│   │   ├── text.py           # Text message handling
+│   │   └── workers.py        # Background message processing tasks
+│   │
+│   ├── keyboards/
+│   │   ├── common.py         # Common bot keyboards
+│   │   ├── disambig.py       # Disambiguation page keyboards
+│   │   ├── lang.py           # Language selection
+│   │   └── reading.py        # Reading mode keyboards
+│   │
+│   ├── services/
+│   │   ├── access.py         # Access, subscription, and limit checks
+│   │   ├── article.py        # Article processing and delivery
+│   │   ├── disambig.py       # Disambiguation state handling
+│   │   └── render.py         # Telegram message formatting and updating
+│   │
+│   ├── state/
+│   │   └── user_state.py     # User state management
+│   │
+│   └── main.py               # Telegram bot initialization and startup
+│
+├── parsing/
+│   ├── filter.py             # Wikipedia page validation and filtering
+│   ├── image.py              # Article image extraction and processing
+│   ├── parse.py              # Main article fetching and processing
+│   └── parsers.py            # Wikipedia parsers for different languages
+│
+├── tests/
+│   └── db_test.py            # Database tests
+│
+├── constants.py              # Project constants
+├── db.py                     # PostgreSQL database operations
+├── getPID.ps1                # Get the bot process PID
+├── hardKillPID.ps1           # Forcefully terminate the bot process
+├── i18n.py                   # Localization and text translations
+├── LICENSE                   # Project license
+├── models.py                 # Data models and application configuration
+├── README.md                 # Project documentation
+├── Renju.otf                 # Font used for image generation
+├── requirements.txt          # Python dependencies
+├── schema.sql                # Database schema
+├── script.bat                # Service script launcher for Windows
+├── script.py                 # Bot process management and monitoring
+├── script.sh                 # Service script launcher for Linux
+├── script.vbs                # Background launcher for Windows
+├── setup_env.py              # Interactive environment variable setup
+├── softKillPID.ps1           # Gracefully terminate the bot process
+├── test.py                   # Integration and manual parsing tests
+└── utils.py                  # Common utility functions
+```
 
 ## First Launch
 

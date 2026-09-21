@@ -1,0 +1,1 @@
+netstat -ano | Select-String ':10809' | ForEach-Object { ($_ -split '\s+')[-1] } | Sort-Object -Unique | Where-Object { $_ -ne '0' } | ForEach-Object { Get-Process -Id $_ | Select-Object ProcessName, Id, StartTime }
