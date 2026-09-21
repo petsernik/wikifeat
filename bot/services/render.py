@@ -6,7 +6,7 @@ from bot.services.disambig import get_session, get_disambig_keyboard_from_sessio
 from constants import SELF_MADE_IMAGE_CASE, NAZI_IMAGE_CASE
 from db import update_image_desc
 from models import DisambigLevel, get_config
-from parse import get_caption, get_article
+from parsing.parse import get_caption, get_article
 from utils import get_img_buf_by_text
 
 

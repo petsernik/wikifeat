@@ -19,7 +19,7 @@ from db import init_db, close_db, has_featured_articles, update_featured_article
     delete_process_heartbeat
 from i18n import TRANSLATIONS
 from models import get_app
-from parsers import fetch_featured_titles
+from parsing.parsers import fetch_featured_titles
 
 logger = logging.getLogger(__name__)
 

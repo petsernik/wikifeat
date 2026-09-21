@@ -10,7 +10,7 @@ from constants import BOT_PROCESS_NAME, ENSURE_BOT_RUNNING
 from db import get_process_heartbeat, delete_process_heartbeat
 from i18n import TRANSLATIONS, TKey
 from models import Config
-from parse import run, async_run
+from parsing.parse import run, async_run
 from utils import terminate_process
 
 
