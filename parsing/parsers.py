@@ -3,7 +3,7 @@ from typing import Optional, Callable
 from bs4 import BeautifulSoup, Tag
 
 from constants import USER_AGENT
-from filter import get_skip_prefixes
+from parsing.filter import get_skip_prefixes
 from models import Article, ParseResult
 from utils import get_quote_url_by_tag, get_paragraphs, filter_soup, split_url, quote_url, clean_soup
 
