@@ -136,13 +136,13 @@ async def main(app: Application):
     # ===== TEST CASES =====
     # await _test_main_page(app, "fr", True)
     # await _test_main_page(app, "es", True)
-    # await _test_today_template(app, "ru", True)
+    await _test_today_template(app, "ru", True)
     # await cleanup_reserved_pages()
     # await _test_main_page(app, "ru", True)
     # await _test_page(app, 'ru', 'Arbeit macht frei', True)
-    await _test_page(app, 'ru',
-                     'https://web.archive.org/web/20260816155627/https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
-                     True)
+    # await _test_page(app, 'ru',
+    #                  'https://web.archive.org/web/20260816155627/https://ru.wikipedia.org/wiki/Шаблон:Текущая_избранная_статья',
+    #                  True)
     # ====== TEST UPDATING FEATURED ALL ======
     # for lang in TRANSLATIONS.keys():
     #     try:

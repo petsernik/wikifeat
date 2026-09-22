@@ -246,45 +246,51 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
 
     if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
-        if main_block:
-            doc = main_block.find(id='doc')
-            if doc:
-                for sibling in list(doc.next_siblings):
-                    sibling.decompose()
+        if not main_block:
+            _unexpected("ru")
+            return NONE_RESULT
 
-                doc.decompose()
+        doc = main_block.find(id='doc')
+        if doc:
+            for sibling in list(doc.next_siblings):
+                sibling.decompose()
 
-            main_block = clean_soup(main_block)
-
-            main_block = filter_soup(
-                main_block,
-                remove_kwargs={"role": "presentation"},
-            )
+            doc.decompose()
 
         link_tag = None
-        if main_block:
-            for p in main_block.find_all('p'):
-                a = p.find('a', href=True)
-                if a:
-                    link_tag = a
-                    break
+
+        for tag in main_block.find_all(string=True):
+            if 'Заголовок на заглавной:' in tag:
+                link_tag = tag.find_next('a', href=True)
+                break
 
         if not link_tag:
             _unexpected("ru")
             return NONE_RESULT
 
         title = link_tag.get('title')
+
         if not title or title == last_title:
             return NONE_RESULT
+
+        article_link = get_quote_url_by_tag(netloc, link_tag)
+
+        main_block = clean_soup(main_block)  # note: link_tag dies here
+
+        main_block = filter_soup(
+            main_block,
+            remove_kwargs={"role": "presentation"},
+        )
 
         article = Article(
             title=title,
             paragraphs=get_paragraphs(main_block).paragraphs,
-            link=get_quote_url_by_tag(netloc, link_tag),
+            link=article_link,
             image=None,
             is_disambig=False,
             disambig_titles=[],
         )
+
         return ParseResult(article, netloc, main_block)
 
     if path.endswith('/wiki/Заглавная_страница'):
