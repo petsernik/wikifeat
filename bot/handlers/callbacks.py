@@ -9,18 +9,12 @@ from bot.keyboards.common import get_more_random_keyboard, get_retry_keyboard
 from bot.keyboards.disambig import build_disambig_nav_keyboard
 from bot.services.article import handle_article
 from bot.services.disambig import get_session, get_disambig_keyboard_from_session
+from bot.services.lang import set_user_lang, get_user_lang
 from bot.services.render import notify
-from db import get_lang, set_lang, get_random_featured_title
+from db import get_random_featured_title
 from i18n import translate, TKey
 from models import DisambigSession
 from utils import normalize_lang
-
-
-async def get_user_lang(user_id: int, tg_lang: str | None):
-    lang = await get_lang(user_id)
-    if lang:
-        return lang
-    return await set_user_lang(user_id, tg_lang)
 
 
 async def update_message(query, session: DisambigSession):
@@ -57,10 +51,7 @@ async def update_message(query, session: DisambigSession):
         )
 
 
-async def set_user_lang(user_id: int, lang: str) -> str:
-    lang = normalize_lang(lang)
-    await set_lang(user_id, lang)
-    return lang
+
 
 
 @callback("^lang:")
