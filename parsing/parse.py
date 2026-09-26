@@ -5,13 +5,13 @@ import sys
 from bs4 import BeautifulSoup
 from telegram.ext import ContextTypes
 
-from parsing.image import get_image_by_tag
 from constants import SELF_MADE_IMAGE_CASE, DB_TEST_NAME, DB_NAME, NAZI_IMAGE_CASE
 from db import close_db, init_db, get_last_article, set_last_article, get_cached_final_url, article_cached, \
     get_article_from_db, set_cached_final_url, save_article_to_db, update_image_desc, update_featured_articles_in_db
-from parsing.filter import is_article
 from i18n import TKey
 from models import Article, ArticleContext, ArticleContextRequest, Config, get_app
+from parsing.filter import is_article
+from parsing.image import get_image_by_tag
 from parsing.parsers import LANG_PARSERS
 from utils import (
     get_request,
@@ -24,6 +24,7 @@ from utils import (
     quote_url,
     get_img_buf_by_text,
     is_nazi_category,
+    get_quote_url_by_str,
 )
 
 # stdout/stderr → UTF-8 для корректной кириллицы
@@ -219,12 +220,9 @@ async def get_article(
         )
 
     response.encoding = 'utf-8'
-
-    parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    has_nazi_category = is_nazi_category(soup)
-
+    parser = LANG_PARSERS.get(ctx.lang) or LANG_PARSERS['en']
     parser_res = parser(soup, unquote_url(response.url), last_title)
     article, netloc, main_block = (
         parser_res.article,
@@ -234,6 +232,25 @@ async def get_article(
 
     if not article:
         return None, ctx
+
+    url_start = get_quote_url_by_str(config.LANG_CODE, config.WIKI_URL_OR_NAME)
+    url_final = get_quote_url_by_str(config.LANG_CODE, article.title)
+
+    if url_final == url_start:
+        has_nazi_category = is_nazi_category(soup)
+    else:
+        full_article, _ = await get_article(Config(
+            TELEGRAM_CHANNELS=config.TELEGRAM_CHANNELS,
+            RULES_URL=config.RULES_URL,
+            WIKI_URL_OR_NAME=url_final,
+            LANG_CODE=config.LANG_CODE,
+            USE_AND_UPDATE_LAST_FEATURED_TITLE=False,
+            WITH_IMAGE=config.WITH_IMAGE,
+            SAVE_ARTICLE_TO_DB=True,
+        ))
+        if not full_article:
+            return None, ctx
+        has_nazi_category = full_article.paragraphs[0] == ctx.t(TKey.NAZI_REJECT_TEXT)
 
     if has_nazi_category:
         article.paragraphs.insert(0, ctx.t(TKey.NAZI_REJECT_TEXT))

@@ -25,8 +25,8 @@ def _clean_last_paragraph(paragraphs: list[str], *suffixes: str) -> None:
     paragraphs[-1] = p
 
 
-def _unexpected(lang: str):
-    print(f"Unexpected parse case ({lang})")
+def _unexpected(comment: str):
+    print(f"Unexpected parse case ({comment})")
 
 
 # =========================
@@ -244,10 +244,10 @@ def parse_pl(soup, url, last_title):
 def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
     netloc, path = split_url(url)
 
-    if path.endswith('/wiki/Шаблон:Текущая_избранная_статья'):
+    if path.endswith('/Шаблон:Текущая_избранная_статья'):
         main_block = soup.find('div', id='mw-content-text')
         if not main_block:
-            _unexpected("ru")
+            _unexpected("ru, main_block")
             return NONE_RESULT
 
         doc = main_block.find(id='doc')
@@ -265,7 +265,7 @@ def parse_ru(soup: BeautifulSoup, url: str, last_title: str) -> ParseResult:
                 break
 
         if not link_tag:
-            _unexpected("ru")
+            _unexpected("ru, link_tag")
             return NONE_RESULT
 
         title = link_tag.get('title')

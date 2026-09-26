@@ -7,7 +7,7 @@ TELEGRAM_PROXY = os.getenv('TELEGRAM_PROXY')
 OWNER_ID = int(os.getenv('TELEGRAM_ID_OWNER', '0'))
 
 CHANNEL_USERNAME = '@wikifeat'
-USER_AGENT = 'wikifeat/0.55 (https://github.com/petsernik/wikifeat)'
+USER_AGENT = 'wikifeat/0.56 (https://github.com/petsernik/wikifeat)'
 
 # ==== BOT ====
 ENSURE_BOT_RUNNING = os.getenv('WIKIFEATENSUREBOTRUNNING')
