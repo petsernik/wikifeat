@@ -170,6 +170,7 @@ def get_image_by_link(
         image_soup,
         find_kwargs={'class': 'licensetpl_attr'},
         next_tags=None,
+        lang=ctx.lang,
     )
 
     if image_author_html and "Diego Delso" in image_author_html:
@@ -184,12 +185,14 @@ def get_image_by_link(
             image_soup,
             find_kwargs={'id': 'fileinfotpl_aut'},
             next_tags=('td', 'th'),
+            lang=ctx.lang,
         )
 
     source_html = extract_attrs_info(
         image_soup,
         find_kwargs={'id': 'fileinfotpl_src'},
         next_tags=('td', 'th'),
+        lang=ctx.lang,
     )
 
     if not source_html:

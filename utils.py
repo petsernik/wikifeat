@@ -16,9 +16,9 @@ from bs4 import Tag, BeautifulSoup
 from bs4.element import PageElement, NavigableString
 from requests import Response
 
-from constants import USER_AGENT, FONT_PATH, NAZI_IMAGE_CASE
+from constants import USER_AGENT, FONT_PATH
 from i18n import TRANSLATIONS
-from models import ArticleContext, ParagraphResult, Article
+from models import ArticleContext, ParagraphResult
 
 
 # Добавляем хэдер, чтобы соблюсти Wikimedia Foundation User-Agent Policy
@@ -231,7 +231,7 @@ def extract_info(node, parts):
             extract_info(elem, parts)
 
 
-def extract_attrs_info(soup, *, find_kwargs, next_tags):
+def extract_attrs_info(soup, *, find_kwargs, next_tags, lang):
     """
     Универсальное извлечение текстовой/HTML-информации из таблиц MediaWiki по произвольным HTML-атрибутам.
 
@@ -261,7 +261,12 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
         используются в ``find_next``.
 
     :type next_tags: tuple[str, ...] | None
-
+    
+    :param lang:
+        Предпочтительный язык ячеек
+    
+    :type lang: str
+    
     :return:
         Объединённая строка с найденными значениями или ``None``,
         если данные не найдены.
@@ -283,7 +288,7 @@ def extract_attrs_info(soup, *, find_kwargs, next_tags):
             selected = None
 
             for d in descriptions:
-                if 'ru' in (d.get('class') or []):
+                if lang in (d.get('class') or []):
                     selected = d
                     break
 
