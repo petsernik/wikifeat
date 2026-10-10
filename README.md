@@ -396,7 +396,7 @@ Assuming your GitHub username is `NickName` and you forked the project:
     * `LANG_CODE`: language code according to
       the [ISO 639-1 standard](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
       (ru, en, etc.). To avoid the complexity of code maintenance and various parsing methods, the project author 
-      is ready to support only those languages in which at least 500 selected articles have already been written;
+      is ready to support only those languages in which at least 500 featured articles have already been written;
     * `WIKI_URL`: you can specify
       "Шаблон:Текущая избранная статья" or "Wikipedia:Today's featured article".
       In general, it is not difficult to add support for templates in any language —
